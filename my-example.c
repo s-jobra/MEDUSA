@@ -68,30 +68,33 @@ int my_leaf_equals(const uint64_t ldata_a_raw, const uint64_t ldata_b_raw)
     return (ldata_a->a == ldata_b->a) && (ldata_a->b == ldata_b->b) && (ldata_a->c == ldata_b->c) && (ldata_a->d == ldata_b->d) && (ldata_a->k == ldata_b->k);
 }
 
-static inline unsigned int my_hash(unsigned int x) {
+// ??? todo change na c++ hash, test include ??
+static inline uint64_t my_hash(uint64_t x)
+{
     x = ((x >> 16) ^ x) * 0x45d9f3b;
     x = ((x >> 16) ^ x) * 0x45d9f3b;
     x = (x >> 16) ^ x;
     return x;
 }
 
-// ?? je ok ??
-//    - struktura fce (todo rework)
-//    - hash fce tato/jina/zadna
+// ??? rychlost vs citelnost ??
+// ??? predelat nejak dal ??
+#define MY_HASH_COMB(val, data) ( (val) ^ (my_hash((uint64_t)(data)) + 0x9e3779b9 + ((val)<<6) + ((val)>>2)) )
+
 /**
  * Hashing function for calculating leaf's hash.
  */
 uint64_t my_leaf_hash(const uint64_t ldata_raw, const uint64_t seed)
 {
+    (void)seed;
     cnum* ldata = (cnum*) ldata_raw;
 
     uint64_t val = 0;
-
-    val ^= my_hash((uint)ldata->a) + 0x9e3779b9 + (val<<6) + (val>>2);
-    val ^= my_hash((uint)ldata->b) + 0x9e3779b9 + (val<<6) + (val>>2);
-    val ^= my_hash((uint)ldata->c) + 0x9e3779b9 + (val<<6) + (val>>2);
-    val ^= my_hash((uint)ldata->d) + 0x9e3779b9 + (val<<6) + (val>>2);
-    val ^= my_hash((uint)ldata->k) + 0x9e3779b9 + (val<<6) + (val>>2);
+    val = MY_HASH_COMB(val, ldata->a);
+    val = MY_HASH_COMB(val, ldata->b);
+    val = MY_HASH_COMB(val, ldata->c);
+    val = MY_HASH_COMB(val, ldata->d);
+    val = MY_HASH_COMB(val, ldata->k);
 
     return seed * val;
 }
@@ -156,6 +159,8 @@ uint32_t init_my_leaf()
 TASK_DECL_2(MTBDD, my_op_plus, MTBDD*, MTBDD*);
 TASK_DECL_2(MTBDD, my_op_minus, MTBDD*, MTBDD*);
 TASK_DECL_2(MTBDD, my_op_times, MTBDD*, MTBDD*);
+TASK_DECL_2(MTBDD, my_op_negate, MTBDD, size_t);
+TASK_DECL_2(MTBDD, my_op_k_increment, MTBDD, size_t);
 TASK_DECL_2(MTBDD, t_xt_create, MTBDD, uint64_t);
 TASK_DECL_2(MTBDD, t_xt_comp_create, MTBDD, uint64_t);
 
@@ -180,7 +185,7 @@ TASK_IMPL_2(MTBDD, my_op_plus, MTBDD*, p_a, MTBDD*, p_b)
                          .b = a_data->b + b_data->b, \
                          .c = a_data->c + b_data->c, \
                          .d = a_data->d + b_data->d, \
-                         .k = a_data->k + b_data->k};
+                         .k = a_data->k};               // ?? ma se k menit pri scitani nebo ne ??
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
         return res;
     }
@@ -204,7 +209,10 @@ TASK_IMPL_2(MTBDD, my_op_minus, MTBDD*, p_a, MTBDD*, p_b)
     MTBDD b = *p_b;
 
     // Partial function check
-    if (a == mtbdd_false) return b;
+    if (a == mtbdd_false){
+        MTBDD b_minus = mtbdd_uapply(b, TASK(my_op_negate), 0);
+        return b_minus; // return -b
+    } 
     if (b == mtbdd_false) return a;
 
     // Compute a - b if both mtbdds are leaves
@@ -240,7 +248,6 @@ TASK_IMPL_2(MTBDD, my_op_times, MTBDD*, p_a, MTBDD*, p_b)
         cnum* a_data = (cnum*) mtbdd_getvalue(a);
         cnum* b_data = (cnum*) mtbdd_getvalue(b);
 
-        // ?? data malloc ??
         cnum res_data = {.a = a_data->a * b_data->a, \
                          .b = a_data->b * b_data->b, \
                          .c = a_data->c * b_data->c, \
@@ -260,7 +267,59 @@ TASK_IMPL_2(MTBDD, my_op_times, MTBDD*, p_a, MTBDD*, p_b)
     return mtbdd_invalid; // Recurse deeper
 }
 
-// ?? nazev operace ??
+/**
+ * Operation times with constant -1 for my custom MTBDD.
+ */
+TASK_IMPL_2(MTBDD, my_op_negate, MTBDD, a, size_t, x)
+{
+    (void)x; // extra parameter needed for task - not needed
+
+    // Partial function check
+    if (a == mtbdd_false) return mtbdd_false;
+
+    // Compute -a if mtbdd is a leaf
+    if (mtbdd_isleaf(a)) {
+        cnum* a_data = (cnum*) mtbdd_getvalue(a);
+
+        cnum res_data = {.a = -a_data->a, \
+                         .b = -a_data->b, \
+                         .c = -a_data->c, \
+                         .d = -a_data->d, \
+                         .k = a_data->k};
+        MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
+        return res;
+    }
+
+    return mtbdd_invalid; // Recurse deeper
+}
+
+/**
+ * Operation times with constant 1/√2 for my custom MTBDD.
+ */
+TASK_IMPL_2(MTBDD, my_op_k_increment, MTBDD, a, size_t, x)
+{
+    (void)x; // extra parameter needed for task - not needed
+
+    // Partial function check
+    if (a == mtbdd_false) return mtbdd_false;
+
+    // Compute -a if mtbdd is a leaf
+    if (mtbdd_isleaf(a)) {
+        cnum* a_data = (cnum*) mtbdd_getvalue(a);
+
+        cnum res_data = {.a = a_data->a, \
+                         .b = a_data->b, \
+                         .c = a_data->c, \
+                         .d = a_data->d, \
+                         .k = a_data->k + 1};
+        MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
+        return res;
+    }
+
+    return mtbdd_invalid; // Recurse deeper
+}
+
+
 /**
  * Function for creating MTBDD for a target qubit.
  * (low -> 0, high -> 1)
@@ -293,6 +352,7 @@ MTBDD b_xt_comp_create(uint32_t xt)
     return b_xt_comp;
 }
 
+// ?? rework na pointer ??
 /**
  * Function for creating a new MTBDD from a given one with restriction: target qubit = 1.
  */
@@ -344,22 +404,94 @@ TASK_IMPL_2(MTBDD, t_xt_comp_create, MTBDD, a, uint64_t, xt)
 }
 
 /**
- * Function implementing quantum gate X for two MTBDDs.
+ * Function implementing quantum gate X for given MTBDD.
  */
-MTBDD gate_x(MTBDD* p_a, uint32_t xt)
+MTBDD gate_x(MTBDD* p_t, uint32_t xt)
 {
-    MTBDD a = *p_a;
+    MTBDD t = *p_t;
     MTBDD res;
 
     MTBDD b_xt = b_xt_create(xt);
-    MTBDD t_xt_comp = mtbdd_uapply(a, TASK(t_xt_comp_create), xt);
+    MTBDD t_xt_comp = mtbdd_uapply(t, TASK(t_xt_comp_create), xt);
     res = mtbdd_apply(b_xt, t_xt_comp, TASK(my_op_times));
 
     MTBDD b_xt_comp = b_xt_comp_create(xt);
-    MTBDD t_xt = mtbdd_uapply(a, TASK(t_xt_create), xt);
+    MTBDD t_xt = mtbdd_uapply(t, TASK(t_xt_create), xt);
     MTBDD res_temp = mtbdd_apply(b_xt_comp, t_xt, TASK(my_op_times));
 
     res = mtbdd_apply(res, res_temp, TASK(my_op_plus));
+    return res;
+}
+
+/**
+ * Function implementing quantum gate Z for given MTBDD.
+ */
+MTBDD gate_z(MTBDD* p_t, uint32_t xt)
+{
+    MTBDD t = *p_t;
+    MTBDD res;
+
+    MTBDD b_xt_comp = b_xt_comp_create(xt);
+    res = mtbdd_apply(b_xt_comp, t, TASK(my_op_times));
+
+    MTBDD b_xt = b_xt_create(xt);
+    MTBDD res_temp = mtbdd_apply(b_xt, t, TASK(my_op_times));
+
+    res = mtbdd_apply(res, res_temp, TASK(my_op_minus));
+    return res;
+}
+
+/**
+ * Function implementing quantum Hadamard gate for given MTBDD.
+ */
+MTBDD gate_h(MTBDD* p_t, uint32_t xt)
+{
+    MTBDD t = *p_t;
+    MTBDD res;
+
+    res = mtbdd_uapply(t, TASK(t_xt_comp_create), xt);  // t_xt_comp
+
+    MTBDD b_xt_comp = b_xt_comp_create(xt);
+    MTBDD t_xt = mtbdd_uapply(t, TASK(t_xt_create), xt);
+    MTBDD res_temp = mtbdd_apply(b_xt_comp, t_xt, TASK(my_op_times));
+
+    res = mtbdd_apply(res, res_temp, TASK(my_op_plus));
+
+    MTBDD b_xt = b_xt_create(xt);
+    res_temp = mtbdd_apply(b_xt, t, TASK(my_op_times));
+
+    res = mtbdd_apply(res, res_temp, TASK(my_op_minus));
+
+    res = mtbdd_uapply(res, TASK(my_op_k_increment), 0);
+    return res;
+}
+
+/**
+ * Function implementing quantum Hadamard gate for given MTBDD.
+ */
+MTBDD gate_cnot(MTBDD* p_t, uint32_t xt, uint32_t xc)
+{
+    MTBDD t = *p_t;
+    MTBDD res;
+
+    MTBDD b_xc_comp = b_xt_comp_create(xc);
+    res = mtbdd_apply(b_xc_comp, t, TASK(my_op_times)); // b_xc_comp * t
+
+    MTBDD b_xc = b_xt_create(xc);
+    MTBDD b_xt_comp = b_xt_comp_create(xt);
+    MTBDD t_xt = mtbdd_uapply(t, TASK(t_xt_create), xt);
+    MTBDD res_temp = mtbdd_apply(b_xc, b_xt_comp, TASK(my_op_times)); // b_xc * b_xt_comp
+    res_temp = mtbdd_apply(res_temp, t_xt, TASK(my_op_times)); // b_xc * b_xt_comp * t_xt
+
+    res = mtbdd_apply(res, res_temp, TASK(my_op_plus)); // b_xc_comp * t + b_xc * b_xt_comp * t_xt
+
+    MTBDD b_xt = b_xt_create(xt);
+    MTBDD t_xt_comp = mtbdd_uapply(t, TASK(t_xt_comp_create), xt);
+    res_temp = mtbdd_apply(b_xc, b_xt, TASK(my_op_times)); // b_xc * b_xt
+    res_temp = mtbdd_apply(res_temp, t_xt_comp, TASK(my_op_times)); // b_xc * b_xt * t_xt_comp
+
+    res = mtbdd_apply(res, res_temp, TASK(my_op_plus)); // b_xc_comp * t + b_xc * b_xt_comp * t_xt + b_xc * b_xt * t_xt_comp
+
     return res;
 }
 
@@ -389,7 +521,10 @@ int main()
     MTBDD result_add = mtbdd_apply(mtbdd_a, mtbdd_b, TASK(my_op_plus));
     MTBDD result_mul = mtbdd_apply(mtbdd_a, btest_x2, TASK(my_op_times));
     MTBDD result_sub = mtbdd_apply(mtbdd_a, mtbdd_b, TASK(my_op_minus));
-    
+
+    FILE* f_orig = fopen("orig.dot", "w");
+    FILE* f_new = fopen("new.dot", "w");
+
     /*
     printf("ADDITION:\n");
     mtbdd_fprintdot(stdout, result_add);
@@ -401,13 +536,30 @@ int main()
     mtbdd_fprintdot(stdout, result_sub);
     */
     printf("ORIGINAL:\n");
-    mtbdd_fprintdot(stdout, mtbdd_a);
+    mtbdd_fprintdot(f_orig, mtbdd_a);
     printf("===============================================================\n");
+    /*
     printf("X GATE:\n");
     MTBDD result_x = gate_x(&mtbdd_a, 2);
     mtbdd_fprintdot(stdout, result_x);
+    printf("===============================================================\n");
+    printf("Z GATE:\n");
+    MTBDD result_z = gate_z(&mtbdd_a, 1);
+    mtbdd_fprintdot(stdout, result_z);
+    printf("===============================================================\n");
+    printf("H GATE:\n");
+    MTBDD result_h = gate_h(&mtbdd_a, 1);
+    mtbdd_fprintdot(stdout, result_h);
+    printf("===============================================================\n"); */
+    printf("CNOT GATE:\n");
+    MTBDD result_cnot = gate_cnot(&mtbdd_a, 2, 1);
+    mtbdd_fprintdot(f_new, result_cnot);
     //////////////////////////////////////////////////////// test_end
-    
+
+    // ?? todo check x, z, h, cnot
+    //    + shift gates ??
+
+    // ?? todo hlavickove soubory + reorganizace + makefile ??
     sylvan_quit();
     lace_stop();
     return 0;
