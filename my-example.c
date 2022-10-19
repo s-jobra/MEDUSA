@@ -467,7 +467,7 @@ MTBDD gate_h(MTBDD* p_t, uint32_t xt)
 }
 
 /**
- * Function implementing quantum Hadamard gate for given MTBDD.
+ * Function implementing quantum CNOT gate for given MTBDD.
  */
 MTBDD gate_cnot(MTBDD* p_t, uint32_t xt, uint32_t xc)
 {
@@ -491,6 +491,34 @@ MTBDD gate_cnot(MTBDD* p_t, uint32_t xt, uint32_t xc)
     res_temp = mtbdd_apply(res_temp, t_xt_comp, TASK(my_op_times)); // b_xc * b_xt * t_xt_comp
 
     res = mtbdd_apply(res, res_temp, TASK(my_op_plus)); // b_xc_comp * t + b_xc * b_xt_comp * t_xt + b_xc * b_xt * t_xt_comp
+
+    return res;
+}
+
+/**
+ * Function implementing quantum CZ gate for given MTBDD.
+ */
+MTBDD gate_cz(MTBDD* p_t, uint32_t xt, uint32_t xc)
+{
+    MTBDD t = *p_t;
+    MTBDD res;
+
+    MTBDD b_xc_comp = b_xt_comp_create(xc);
+    res = mtbdd_apply(b_xc_comp, t, TASK(my_op_times)); // b_xc_comp * t
+
+    MTBDD b_xt_comp = b_xt_comp_create(xt);
+    MTBDD res_temp = mtbdd_apply(b_xt_comp, t, TASK(my_op_times)); // b_xt_comp * t
+    res = mtbdd_apply(res, res_temp, TASK(my_op_plus)); // b_xc_comp * t +  b_xt_comp * t
+
+    res_temp = mtbdd_apply(b_xc_comp, b_xt_comp, TASK(my_op_times)); // b_xc_comp * b_xt_comp
+    res_temp = mtbdd_apply(res_temp, t, TASK(my_op_times)); // b_xc_comp * b_xt_comp * t
+    res = mtbdd_apply(res, res_temp, TASK(my_op_minus)); // b_xc_comp * t +  b_xt_comp * t - b_xc_comp * b_xt_comp * t
+
+    MTBDD b_xc = b_xt_create(xc);
+    MTBDD b_xt = b_xt_create(xt);
+    res_temp = mtbdd_apply(b_xc, b_xt, TASK(my_op_times)); // b_xc * b_xt
+    res_temp = mtbdd_apply(res_temp, t, TASK(my_op_times)); // b_xc * b_xt * t
+    res = mtbdd_apply(res, res_temp, TASK(my_op_minus)); // final
 
     return res;
 }
@@ -524,6 +552,7 @@ int main()
 
     FILE* f_orig = fopen("orig.dot", "w");
     FILE* f_new = fopen("new.dot", "w");
+    FILE* f_new2 = fopen("new2.dot", "w");
 
     /*
     printf("ADDITION:\n");
@@ -554,7 +583,15 @@ int main()
     printf("CNOT GATE:\n");
     MTBDD result_cnot = gate_cnot(&mtbdd_a, 2, 1);
     mtbdd_fprintdot(f_new, result_cnot);
+    printf("===============================================================\n");
+    printf("CZ GATE:\n");
+    MTBDD result_cz = gate_cz(&mtbdd_a, 2, 1);
+    mtbdd_fprintdot(f_new2, result_cz);
     //////////////////////////////////////////////////////// test_end
+
+    fclose(f_orig);
+    fclose(f_new);
+    fclose(f_new2);
 
     // ?? todo check x, z, h, cnot
     //    + shift gates ??
