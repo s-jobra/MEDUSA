@@ -55,7 +55,7 @@ char* my_leaf_to_str(int complemented, uint64_t ldata_raw, char* sylvan_buf, siz
 /**
  * Hashing function for calculating leaf's hash.
  * 
- * @todo dodelat hash funkci
+ * @todo hash function source
  */
 uint64_t my_leaf_hash(const uint64_t ldata_raw, const uint64_t seed);
 

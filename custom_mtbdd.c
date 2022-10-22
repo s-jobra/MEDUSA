@@ -2,10 +2,26 @@
 
 /**
  * Global variable for my custom leaf type id
-*/
+ */
 uint32_t ltype_id;
 
 /* INTERNAL */
+/**
+ * Hash value and combine it with an already existing hash
+ * Values from: http://www.boost.org/doc/libs/1_64_0/boost/functional/hash/hash.hpp
+ */
+#define MY_HASH_COMB(val, data) ( (val) ^ (my_hash((uint64_t)(data)) + 0x9e3779b9 + ((val)<<6) + ((val)>>2)) )
+/**
+ * Hash function for 64bit integers.
+ * Taken from: https://stackoverflow.com/a/12996028
+ */
+static inline uint64_t my_hash(uint64_t x) {
+    x = (x ^ (x >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
+    x = (x ^ (x >> 27)) * UINT64_C(0x94d049bb133111eb);
+    x = x ^ (x >> 31);
+    return x;
+}
+
 /**
  * Custom malloc function including error handling.
  */
@@ -16,20 +32,6 @@ static void* my_malloc(size_t size) {
     }
 
     return p;
-}
-
-/**
- * Hash value and combine it with an already existing hash
- * Values from: http://www.boost.org/doc/libs/1_64_0/boost/functional/hash/hash.hpp
- */
-#define MY_HASH_COMB(val, data) ( (val) ^ (my_hash((uint64_t)(data)) + 0x9e3779b9 + ((val)<<6) + ((val)>>2)) )
-// ?? rework + data types check ??
-static inline uint64_t my_hash(uint64_t x)
-{
-    x = ((x >> 16) ^ x) * 0x45d9f3b;
-    x = ((x >> 16) ^ x) * 0x45d9f3b;
-    x = (x >> 16) ^ x;
-    return x;
 }
 
 /* SETUP */

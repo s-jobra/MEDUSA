@@ -4,14 +4,13 @@
 /*
  * ULTIMATE TODO:
  * ---------------
- * hash funkce pro int64_t
  * test hradla
- * predelat print
- *
- * valgrind
- * redo makefile
  * podivat se na testy
  * 
+ * predelat print
+ * redo makefile
+ * 
+ * valgrind
  * resolve vsechny todo a ??
  */
 
