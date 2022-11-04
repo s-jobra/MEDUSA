@@ -1,6 +1,6 @@
-SOURCES:=my-example.c custom_mtbdd.c gates.c
+SOURCES:=simulator.c custom_mtbdd.c gates.c
 HEADER_FILES:=custom_mtbdd.h gates.h
-OUTPUT_BINARY:=my-example
+OUTPUT_BINARY:=sim
 
 CC:=gcc
 CFLAGS:=-g
@@ -17,10 +17,17 @@ N_JOBS=4
 example: $(SOURCES) $(HEADER_FILES) sylvan/build/src/libsylvan.a lace/build/liblace.a
 	gcc $(INC_DIRS) $(CFLAGS) -o $(OUTPUT_BINARY) $^ $(CLIBS)
 
-clean: clean-artifacts clean-deps
+run:
+	$(MAKE)
+	@./$(OUTPUT_BINARY) test.qasm
+	@dot -Tjpeg orig.dot -o orig.jpeg
+	@dot -Tjpeg res.dot -o res.jpeg
+	@rm *.dot
+
+clean: clean-artifacts #clean-deps
 
 clean-artifacts:
-	rm -f $(OUTPUT_BINARY)
+	rm -f $(OUTPUT_BINARY) *.dot *.jpeg out.txt
 
 clean-deps:
 	rm -rf sylvan lace

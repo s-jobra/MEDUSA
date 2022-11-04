@@ -35,6 +35,13 @@ static void* my_malloc(size_t size) {
 }
 
 /* SETUP */
+void init_sylvan() {
+    lace_start(1, 0); // 1 thread, default task queue size
+    sylvan_set_limits(500LL*1024*1024, 3, 5); // Allocate 100MB
+    sylvan_init_package();
+    sylvan_init_mtbdd();
+}
+
 void init_my_leaf()
 {
     ltype_id = sylvan_mt_create_type();

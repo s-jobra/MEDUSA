@@ -22,6 +22,10 @@ typedef struct cnum {
 
 /* SETUP */
 /**
+ * Function for sylvan and lace setup.
+ */
+void init_sylvan();
+/**
  * Function for my custom leaf setup.
  */
 void init_my_leaf();

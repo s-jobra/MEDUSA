@@ -5,26 +5,19 @@
  * ULTIMATE TODO:
  * ---------------
  * test hradla
- * podivat se na testy
+ * podivat se na Q???
+ * parser na priklady z Qsim + test
+ * .pla ??
  * 
- * predelat print
  * redo makefile
  * 
- * valgrind
  * resolve vsechny todo a ??
+ * 
+ * valgrind
+ * predelat print
  */
 
 extern uint32_t ltype_id;
-
-/**
- * Function for sylvan and lace setup.
- */
-void init_sylvan() {
-    lace_start(1, 0); // 1 thread, default task queue size
-    sylvan_set_limits(500LL*1024*1024, 3, 5); // Allocate 100MB
-    sylvan_init_package();
-    sylvan_init_mtbdd();
-}
 
 int main()
 {
