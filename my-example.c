@@ -5,8 +5,8 @@
  * ULTIMATE TODO:
  * ---------------
  * test hradla
- * podivat se na Q???
- * parser na priklady z Qsim + test
+ * podivat se na QASM
+ * test QASM files
  * .pla ??
  * 
  * redo makefile
@@ -46,9 +46,9 @@ int main()
     MTBDD result_mul = mtbdd_apply(mtbdd_a, btest_x2, TASK(my_op_times));
     MTBDD result_sub = mtbdd_apply(mtbdd_a, mtbdd_b, TASK(my_op_minus));
 
-    FILE* f_orig = fopen("orig.dot", "w");
-    FILE* f_new = fopen("new.dot", "w");
-    FILE* f_new2 = fopen("new2.dot", "w");
+    FILE* f_orig = fopen("to.dot", "w");
+    FILE* f_new = fopen("tn.dot", "w");
+    FILE* f_new2 = fopen("tn2.dot", "w");
 
     /*
     printf("ADDITION:\n");
@@ -61,12 +61,11 @@ int main()
     mtbdd_fprintdot(stdout, result_sub);
     */
     printf("ORIGINAL:\n");
-    mtbdd_fprintdot(f_orig, mtbdd_a);
+    mtbdd_fprintdot(stdout, mtbdd_a);
     printf("===============================================================\n");
-    /*
     printf("X GATE:\n");
     MTBDD result_x = gate_x(&mtbdd_a, 2);
-    mtbdd_fprintdot(stdout, result_x);
+    mtbdd_fprintdot(stdout, result_x);/*
     printf("===============================================================\n");
     printf("Z GATE:\n");
     MTBDD result_z = gate_z(&mtbdd_a, 1);
@@ -75,14 +74,14 @@ int main()
     printf("H GATE:\n");
     MTBDD result_h = gate_h(&mtbdd_a, 1);
     mtbdd_fprintdot(stdout, result_h);
-    printf("===============================================================\n"); */
+    printf("===============================================================\n");
     printf("CNOT GATE:\n");
     MTBDD result_cnot = gate_cnot(&mtbdd_a, 2, 1);
     mtbdd_fprintdot(f_new, result_cnot);
     printf("===============================================================\n");
     printf("CZ GATE:\n");
     MTBDD result_cz = gate_cz(&mtbdd_a, 2, 1);
-    mtbdd_fprintdot(f_new2, result_cz);
+    mtbdd_fprintdot(f_new2, result_cz);*/
 
     fclose(f_orig);
     fclose(f_new);

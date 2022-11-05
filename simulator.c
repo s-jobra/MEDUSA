@@ -8,11 +8,13 @@
 #include "gates.h"
 
 #include <ctype.h>
+#include <stdbool.h>
 
 #define CMD_MAX_LEN 10
 #define Q_ID_MAX_LEN 20
 
 extern uint32_t ltype_id;
+
 /* TEST */
 MTBDD circ;
 FILE* f_orig;
@@ -95,10 +97,8 @@ void sim_file(FILE *in)
 {
     int c;
     char cmd[CMD_MAX_LEN];
-    //MTBDD circ; //TODO: kam toto patri
-/* TEST */
-    FILE* out = fopen("out.txt", "w");
-/* TEST */
+    bool init = false;
+    //MTBDD circ; //FIXME: kam toto patri
 
     while ((c = fgetc(in)) != EOF) {
         for (int i=0; i< CMD_MAX_LEN; i++) {
@@ -126,78 +126,85 @@ void sim_file(FILE *in)
             error_exit("Invalid format - reached an unexpected end of file.");
         }
 
-        //printf("---cmd=%s---\n",cmd);/* TEST */
+        //TODO: vypocet maybe spatne? dalsi testy
+        // ?? problem asi Bxt - potreba jine nasobeni/uzel 1?
 
         // Identify the command
-        if (strcmp(cmd, "OPENQASM") == 0) {fprintf(out,"OPENQASM\n")/*TEST*/;}
-        else if (strcmp(cmd, "include") == 0) {fprintf(out,"include\n")/*TEST*/;}
-        else if (strcmp(cmd, "creg") == 0) {fprintf(out,"creg\n")/*TEST*/;} //FIXME: zjistit co to znamena
+        if (strcmp(cmd, "OPENQASM") == 0) {;}
+        else if (strcmp(cmd, "include") == 0) {;}
+        else if (strcmp(cmd, "creg") == 0) {;} //FIXME: zjistit co to znamena
         else if (strcmp(cmd, "qreg") == 0) {
             uint32_t n = get_q_num(in);
-            fprintf(out,"init %d qubits\n", n)/*TEST*/;
             circuit_init(&circ, n);
+            init = true;
 /* TEST */ mtbdd_fprintdot(f_orig, circ);
         }
-        else if (strcmp(cmd, "measure") == 0) {
-            //TODO: jak na print?
+        else if (init) {
+            if (strcmp(cmd, "measure") == 0) {
+                //TODO: jak na print?
+            }
+            else if (strcmp(cmd, "x") == 0) {
+                uint32_t qt = get_q_num(in);
+                circ = gate_x(&circ, qt);
+            }
+            else if (strcmp(cmd, "y") == 0) {
+                uint32_t qt = get_q_num(in);
+                circ = gate_y(&circ, qt);
+            }
+            else if (strcmp(cmd, "z") == 0) {
+                uint32_t qt = get_q_num(in);
+                circ = gate_z(&circ, qt);
+            }
+            else if (strcmp(cmd, "h") == 0) {
+                uint32_t qt = get_q_num(in);
+                circ = gate_h(&circ, qt);
+            }
+            else if (strcmp(cmd, "s") == 0) {
+                uint32_t qt = get_q_num(in);
+                circ = gate_s(&circ, qt);
+            }
+            else if (strcmp(cmd, "t") == 0) {
+                uint32_t qt = get_q_num(in);
+                circ = gate_t(&circ, qt);
+            }
+            else if (strcmp(cmd, "rx(pi/2)") == 0) {
+                uint32_t qt = get_q_num(in);
+                circ = gate_rx_pihalf(&circ, qt);
+            }
+            else if (strcmp(cmd, "ry(pi/2)") == 0) {
+                uint32_t qt = get_q_num(in);
+                circ = gate_ry_pihalf(&circ, qt);
+            }
+            else if (strcmp(cmd, "cx") == 0) {
+                uint32_t qc = get_q_num(in);
+                uint32_t qt = get_q_num(in);
+                circ = gate_cnot(&circ, qt, qc);
+            }
+            else if (strcmp(cmd, "cz") == 0) {
+                uint32_t qc = get_q_num(in);
+                uint32_t qt = get_q_num(in);
+                circ = gate_cz(&circ, qt, qc);
+            }
+            else if (strcmp(cmd, "cxx") == 0) {
+                uint32_t qc1 = get_q_num(in);
+                uint32_t qc2 = get_q_num(in);
+                uint32_t qt = get_q_num(in);
+                circ = gate_toffoli(&circ, qt, qc1, qc2);
+            }
+            else if (strcmp(cmd, "cswap") == 0) {
+                uint32_t qc1 = get_q_num(in);
+                uint32_t qc2 = get_q_num(in);
+                uint32_t qt = get_q_num(in);
+                circ = gate_fredkin(&circ, qt, qc1, qc2);
+            }
+            else {
+                error_exit("Invalid command.");
+            }
         }
-        else if (strcmp(cmd, "x") == 0) {
-            uint32_t qt = get_q_num(in);
-            fprintf(out, "x[%d]\n", qt)/*TEST*/;
-            gate_x(&circ, qt);
-        }
-        else if (strcmp(cmd, "y") == 0) {
-            uint32_t qt = get_q_num(in);
-            gate_y(&circ, qt);
-        }
-        else if (strcmp(cmd, "z") == 0) {
-            uint32_t qt = get_q_num(in);
-            gate_z(&circ, qt);
-        }
-        else if (strcmp(cmd, "h") == 0) {
-            uint32_t qt = get_q_num(in);
-            fprintf(out, "h[%d]\n", qt)/*TEST*/;
-            gate_h(&circ, qt);
-        }
-        else if (strcmp(cmd, "s") == 0) {
-            uint32_t qt = get_q_num(in);
-            gate_s(&circ, qt);
-        }
-        else if (strcmp(cmd, "t") == 0) {
-            uint32_t qt = get_q_num(in);
-            gate_t(&circ, qt);
-        }
-        else if (strcmp(cmd, "rx(pi/2)") == 0) {
-            uint32_t qt = get_q_num(in);
-            gate_rx_pihalf(&circ, qt);
-        }
-        else if (strcmp(cmd, "ry(pi/2)") == 0) {
-            uint32_t qt = get_q_num(in);
-            gate_ry_pihalf(&circ, qt);
-        }
-        else if (strcmp(cmd, "cx") == 0) {
-            uint32_t qt = get_q_num(in);
-            uint32_t qc = get_q_num(in);
-            fprintf(out, "cx[%d][c=%d]\n", qt, qc)/*TEST*/;
-            gate_cnot(&circ, qt, qc);
-        }
-        else if (strcmp(cmd, "cz") == 0) {
-            uint32_t qt = get_q_num(in);
-            uint32_t qc = get_q_num(in);
-            gate_cz(&circ, qt, qc);
-        }
-        /* TODO: Toffoli & Fredkin 
-        else if (strcmp(cmd, "") == 0) {
-
-        }
-        else if (strcmp(cmd, "") == 0) {
-
-        }
-        */
         else {
-            error_exit("Invalid command.");
+            error_exit("Circuit not initialized.");
         }
-        
+
         // Skip all remaining characters on the currently read line
         while ((c = fgetc(in)) != ';') {
             if (c == EOF) {
@@ -205,10 +212,6 @@ void sim_file(FILE *in)
             }
         }
     }
-
-/* TEST */
-    fclose(out);
-/* TEST */
 }
 
 int main(int argc, char *argv[])
@@ -240,7 +243,6 @@ int main(int argc, char *argv[])
     fclose(f_orig);
     fclose(f_res);
 /*TEST*/
-
 
     if (argc == 2){
         fclose(input);

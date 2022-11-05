@@ -9,12 +9,12 @@ INC_DIRS:=-I sylvan/src/ -I lace/src/ -I lace/build/
 
 N_JOBS=4
 
-.DEFAULT := example
-.PHONY := clean clean-artifacts clean-deps
+.DEFAULT := all
+.PHONY := clean clean-artifacts clean-deps example
 
-#TODO: graphviz + deps
+#TODO: deps
 
-example: $(SOURCES) $(HEADER_FILES) sylvan/build/src/libsylvan.a lace/build/liblace.a
+all: $(SOURCES) $(HEADER_FILES) sylvan/build/src/libsylvan.a lace/build/liblace.a
 	gcc $(INC_DIRS) $(CFLAGS) -o $(OUTPUT_BINARY) $^ $(CLIBS)
 
 run:
@@ -31,6 +31,17 @@ clean-artifacts:
 
 clean-deps:
 	rm -rf sylvan lace
+
+#test:
+example: my-example.c custom_mtbdd.c gates.c $(HEADER_FILES) sylvan/build/src/libsylvan.a lace/build/liblace.a
+	gcc $(INC_DIRS) $(CFLAGS) -o my-example $^ $(CLIBS)
+
+#test:
+#	$(MAKE) test_example
+#	@./my-example
+#	@dot -Tjpeg to.dot -o torig.jpeg
+#	@dot -Tjpeg tn.dot -o tres.jpeg
+#	@rm *.dot
 
 #################################
 #download-sylvan:
