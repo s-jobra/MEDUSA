@@ -9,6 +9,9 @@ INC_DIRS:=-I sylvan/src/ -I lace/src/ -I lace/build/
 
 N_JOBS=4
 
+F=bell-state.qasm
+OF_TYPE=svg
+
 .DEFAULT := all
 .PHONY := clean clean-artifacts clean-deps example
 
@@ -19,15 +22,15 @@ all: $(SOURCES) $(HEADER_FILES) sylvan/build/src/libsylvan.a lace/build/liblace.
 
 run:
 	$(MAKE)
-	@./$(OUTPUT_BINARY) test.qasm
-	@dot -Tjpeg orig.dot -o orig.jpeg
-	@dot -Tjpeg res.dot -o res.jpeg
+	@./$(OUTPUT_BINARY) ./examples/$(F)
+	@dot -T$(OF_TYPE) orig.dot -o orig.$(OF_TYPE)
+	@dot -T$(OF_TYPE) res.dot -o res.$(OF_TYPE)
 	@rm *.dot
 
 clean: clean-artifacts #clean-deps
 
 clean-artifacts:
-	rm -f $(OUTPUT_BINARY) *.dot *.jpeg out.txt
+	rm -f $(OUTPUT_BINARY) *.$(OF_TYPE)
 
 clean-deps:
 	rm -rf sylvan lace

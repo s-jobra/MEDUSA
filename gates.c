@@ -247,7 +247,7 @@ MTBDD gate_fredkin(MTBDD* p_t, uint32_t xt1, uint32_t xt2, uint32_t xc)
     inter_res = my_mtbdd_times(inter_res, t); // (Bxt * Bxt' * Bxc) * T
     res = my_mtbdd_plus(res, inter_res); // (Bxc_c * T) + (Bxt * Bxt' * Bxc * T)
 
-    MTBDD b_xt1_comp = create_b_xt_comp(xt2);
+    MTBDD b_xt1_comp = create_b_xt_comp(xt1);
     MTBDD b_xt2_comp = create_b_xt_comp(xt2);
     inter_res = my_mtbdd_times(b_xt1_comp, b_xt2_comp); // Bxt_c * Bxt'_c
     inter_res = my_mtbdd_times(inter_res, b_xc); // (Bxt_c * Bxt'_c) * Bxc
@@ -269,7 +269,7 @@ MTBDD gate_fredkin(MTBDD* p_t, uint32_t xt1, uint32_t xt2, uint32_t xc)
     inter_res = my_mtbdd_times(inter_res, t_xt1_xt2_comp); // (Bxt_c * Bxt' * Bxc) * T(xt)xt'_c
     res = my_mtbdd_plus(res, inter_res); // (Bxc_c * T + Bxt * Bxt' * Bxc * T + Bxt_c * Bxt'_c * Bxc * T \
                                              + Bxt * Bxt'_c * Bxc * T(xt_c)xt') \
-                                            + (Bxt_c * Bxt' * Bxc * T(xt)xt'_c)
+                                          + (Bxt_c * Bxt' * Bxc * T(xt)xt'_c)
 
     return res;
 }

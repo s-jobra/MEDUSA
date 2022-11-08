@@ -43,7 +43,7 @@ void circuit_init(MTBDD *a, const uint32_t n)
         variables = mtbdd_set_add(variables, i);
     }
 
-    cnum point = {.a = 1, .b = 0, .c = 0, .d = 0, .k = 1}; //FIXME: check
+    cnum point = {.a = 1, .b = 0, .c = 0, .d = 0, .k = 0};
     uint8_t point_symbol[n];
     memset(point_symbol, 0, n*sizeof(uint8_t));
     MTBDD leaf  = mtbdd_makeleaf(ltype_id, (uint64_t) &point);
@@ -80,12 +80,7 @@ uint32_t get_q_num(FILE *in)
     }
 
     // Convert to integer value
-    char *end;
-    n = strtoul(num, &end, 10);
-    if (*end != '\0') {
-        //FIXME: ma tu byt error?
-        error_exit("Invalid format - not a valid qubit identifier.");
-    }
+    n = strtoul(num, NULL, 10);
     if (n > UINT32_MAX) {
         error_exit("Invalid format - not a valid qubit identifier.");
     }
@@ -95,10 +90,11 @@ uint32_t get_q_num(FILE *in)
 
 void sim_file(FILE *in)
 {
+    
     int c;
     char cmd[CMD_MAX_LEN];
     bool init = false;
-    //MTBDD circ; //FIXME: kam toto patri
+    //MTBDD circ; /* TEST */
 
     while ((c = fgetc(in)) != EOF) {
         for (int i=0; i< CMD_MAX_LEN; i++) {
@@ -107,6 +103,25 @@ void sim_file(FILE *in)
 
         while (isspace(c)) {
             c = fgetc(in);
+        }
+
+        if (c == EOF) {
+            return;
+        }
+
+        // Skip one line comments
+        if (c == '/') {
+            if ((c = fgetc(in)) == '/') {
+                while ((c = fgetc(in)) != '\n') {
+                    if (c == EOF) {
+                        return;
+                    }
+                }
+                continue;
+            }
+            else {
+                error_exit("Invalid command.");
+            }
         }
 
         // Load the command
@@ -126,13 +141,16 @@ void sim_file(FILE *in)
             error_exit("Invalid format - reached an unexpected end of file.");
         }
 
-        //TODO: vypocet maybe spatne? dalsi testy
-        // ?? problem asi Bxt - potreba jine nasobeni/uzel 1?
+        //FIXME:izolovany testy
 
+        //TODO: valgrind
+        //TODO: mcx hradlo?
+        //TODO: k!=0 * (0,0,0,0) hradlo?
+        
         // Identify the command
-        if (strcmp(cmd, "OPENQASM") == 0) {;}
-        else if (strcmp(cmd, "include") == 0) {;}
-        else if (strcmp(cmd, "creg") == 0) {;} //FIXME: zjistit co to znamena
+        if (strcmp(cmd, "OPENQASM") == 0) {}
+        else if (strcmp(cmd, "include") == 0) {}
+        else if (strcmp(cmd, "creg") == 0) {}
         else if (strcmp(cmd, "qreg") == 0) {
             uint32_t n = get_q_num(in);
             circuit_init(&circ, n);
@@ -141,7 +159,7 @@ void sim_file(FILE *in)
         }
         else if (init) {
             if (strcmp(cmd, "measure") == 0) {
-                //TODO: jak na print?
+                //TODO: jak na measure?
             }
             else if (strcmp(cmd, "x") == 0) {
                 uint32_t qt = get_q_num(in);
@@ -185,7 +203,7 @@ void sim_file(FILE *in)
                 uint32_t qt = get_q_num(in);
                 circ = gate_cz(&circ, qt, qc);
             }
-            else if (strcmp(cmd, "cxx") == 0) {
+            else if (strcmp(cmd, "ccx") == 0) {
                 uint32_t qc1 = get_q_num(in);
                 uint32_t qc2 = get_q_num(in);
                 uint32_t qt = get_q_num(in);

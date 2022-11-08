@@ -5,16 +5,12 @@
  * ULTIMATE TODO:
  * ---------------
  * test hradla
- * podivat se na QASM
  * test QASM files
  * .pla ??
  * 
  * redo makefile
  * 
  * resolve vsechny todo a ??
- * 
- * valgrind
- * predelat print
  */
 
 extern uint32_t ltype_id;

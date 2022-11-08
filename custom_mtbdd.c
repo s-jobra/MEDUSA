@@ -207,7 +207,7 @@ TASK_IMPL_2(MTBDD, my_op_times, MTBDD*, p_a, MTBDD*, p_b)
                          .b = a_data->b * b_data->b, \
                          .c = a_data->c * b_data->c, \
                          .d = a_data->d * b_data->d, \
-                         .k = a_data->k + b_data->k}; // ?? zmena k ??
+                         .k = a_data->k + b_data->k}; // ?? FIXME: zmena k ??
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
         return res;
     }
@@ -279,7 +279,7 @@ TASK_IMPL_2(MTBDD, my_op_coef_rot1, MTBDD, a, size_t, x)
     if (mtbdd_isleaf(a)) {
         cnum* a_data = (cnum*) mtbdd_getvalue(a);
 
-        cnum res_data = {.a = a_data->d, \
+        cnum res_data = {.a = -(a_data->d), \
                          .b = a_data->a, \
                          .c = a_data->b, \
                          .d = a_data->c, \
@@ -302,8 +302,8 @@ TASK_IMPL_2(MTBDD, my_op_coef_rot2, MTBDD, a, size_t, x)
     if (mtbdd_isleaf(a)) {
         cnum* a_data = (cnum*) mtbdd_getvalue(a);
 
-        cnum res_data = {.a = a_data->c, \
-                         .b = a_data->d, \
+        cnum res_data = {.a = -(a_data->c), \
+                         .b = -(a_data->d), \
                          .c = a_data->a, \
                          .d = a_data->b, \
                          .k = a_data->k};
@@ -364,7 +364,7 @@ MTBDD b_xt_create(uint32_t xt)
     BDDSET variables = mtbdd_set_empty();
     variables = mtbdd_set_add(variables, xt); // list of all nonterminal node names
 
-    cnum num1 = {.a = 1, .b = 1, .c = 1, .d = 1, .k = 1};
+    cnum num1 = {.a = 1, .b = 1, .c = 1, .d = 1, .k = 0};
     uint8_t num1_symbol[] = {1}; // symbol seq. 0/1/2 means where will leaf be (low/high/both)
     MTBDD leaf1  = mtbdd_makeleaf(ltype_id, (uint64_t) &num1);
     MTBDD b_xt = mtbdd_cube(variables, num1_symbol, leaf1); // creates mtbdd with leaves based on variables and symbol. seq.
@@ -376,7 +376,7 @@ MTBDD b_xt_comp_create(uint32_t xt)
     BDDSET variables = mtbdd_set_empty();
     variables = mtbdd_set_add(variables, xt); // list of all nonterminal node names
 
-    cnum num1 = {.a = 1, .b = 1, .c = 1, .d = 1, .k = 1};
+    cnum num1 = {.a = 1, .b = 1, .c = 1, .d = 1, .k = 0};
     uint8_t num1_symbol_comp[] = {0}; // symbol seq. 0/1/2 means where will leaf be (low/high/both)
     MTBDD leaf1  = mtbdd_makeleaf(ltype_id, (uint64_t) &num1);
     MTBDD b_xt_comp = mtbdd_cube(variables, num1_symbol_comp, leaf1); // creates mtbdd with leaves based on variables and symbol. seq.
