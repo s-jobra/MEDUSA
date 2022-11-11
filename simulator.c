@@ -10,28 +10,11 @@
 #include <ctype.h>
 #include <stdbool.h>
 
-#define CMD_MAX_LEN 10
-#define Q_ID_MAX_LEN 20
+#define CMD_MAX_LEN 10 // Max. supported length of qasm command
+#define Q_ID_MAX_LEN 10 // Max. number of characters in qubit identificator
+#define OUT_FILE "res" // Name of the output .dot file
 
 extern uint32_t ltype_id;
-
-/* TEST */
-MTBDD circ;
-FILE* f_orig;
-/* TEST */
-
-#define ERROR_TEXT "ERROR: "
-void error_exit(const char *error)
-{
-    // create error message format
-    unsigned error_len = strlen(error) + strlen(ERROR_TEXT);
-    char msg[error_len + 1];
-    strcpy(msg, ERROR_TEXT);
-    strcat(msg, error);
-
-    fprintf(stderr, "%s\n",msg);
-    exit(1);
-}
 
 /** 
  * Initialize for all qubit values 0.
@@ -50,6 +33,9 @@ void circuit_init(MTBDD *a, const uint32_t n)
     *a = mtbdd_cube(variables, point_symbol, leaf);
 }
 
+/** 
+ * Function for getting the next qubit index for the command on the given line.
+ */
 uint32_t get_q_num(FILE *in)
 {
     int c;
@@ -88,13 +74,12 @@ uint32_t get_q_num(FILE *in)
     return ((uint32_t)n);
 }
 
-void sim_file(FILE *in)
+void sim_file(FILE *in, MTBDD *circ)
 {
     
     int c;
     char cmd[CMD_MAX_LEN];
     bool init = false;
-    //MTBDD circ; /* TEST */
 
     while ((c = fgetc(in)) != EOF) {
         for (int i=0; i< CMD_MAX_LEN; i++) {
@@ -141,11 +126,9 @@ void sim_file(FILE *in)
             error_exit("Invalid format - reached an unexpected end of file.");
         }
 
-        //FIXME:izolovany testy
-
-        //TODO: valgrind
-        //TODO: mcx hradlo?
-        //TODO: k!=0 * (0,0,0,0) hradlo?
+        //TODO: mcx hradlo: najit v include "..."
+        //TODO: print pravdepodobnosti
+        //TODO: k!=0 * (0,0,0,0) osetrit
         
         // Identify the command
         if (strcmp(cmd, "OPENQASM") == 0) {}
@@ -153,67 +136,66 @@ void sim_file(FILE *in)
         else if (strcmp(cmd, "creg") == 0) {}
         else if (strcmp(cmd, "qreg") == 0) {
             uint32_t n = get_q_num(in);
-            circuit_init(&circ, n);
+            circuit_init(circ, n);
             init = true;
-/* TEST */ mtbdd_fprintdot(f_orig, circ);
         }
         else if (init) {
             if (strcmp(cmd, "measure") == 0) {
-                //TODO: jak na measure?
+                //TODO: dodelat
             }
             else if (strcmp(cmd, "x") == 0) {
                 uint32_t qt = get_q_num(in);
-                circ = gate_x(&circ, qt);
+                *circ = gate_x(circ, qt);
             }
             else if (strcmp(cmd, "y") == 0) {
                 uint32_t qt = get_q_num(in);
-                circ = gate_y(&circ, qt);
+                *circ = gate_y(circ, qt);
             }
             else if (strcmp(cmd, "z") == 0) {
                 uint32_t qt = get_q_num(in);
-                circ = gate_z(&circ, qt);
+                *circ = gate_z(circ, qt);
             }
             else if (strcmp(cmd, "h") == 0) {
                 uint32_t qt = get_q_num(in);
-                circ = gate_h(&circ, qt);
+                *circ = gate_h(circ, qt);
             }
             else if (strcmp(cmd, "s") == 0) {
                 uint32_t qt = get_q_num(in);
-                circ = gate_s(&circ, qt);
+                *circ = gate_s(circ, qt);
             }
             else if (strcmp(cmd, "t") == 0) {
                 uint32_t qt = get_q_num(in);
-                circ = gate_t(&circ, qt);
+                *circ = gate_t(circ, qt);
             }
             else if (strcmp(cmd, "rx(pi/2)") == 0) {
                 uint32_t qt = get_q_num(in);
-                circ = gate_rx_pihalf(&circ, qt);
+                *circ = gate_rx_pihalf(circ, qt);
             }
             else if (strcmp(cmd, "ry(pi/2)") == 0) {
                 uint32_t qt = get_q_num(in);
-                circ = gate_ry_pihalf(&circ, qt);
+                *circ = gate_ry_pihalf(circ, qt);
             }
             else if (strcmp(cmd, "cx") == 0) {
                 uint32_t qc = get_q_num(in);
                 uint32_t qt = get_q_num(in);
-                circ = gate_cnot(&circ, qt, qc);
+                *circ = gate_cnot(circ, qt, qc);
             }
             else if (strcmp(cmd, "cz") == 0) {
                 uint32_t qc = get_q_num(in);
                 uint32_t qt = get_q_num(in);
-                circ = gate_cz(&circ, qt, qc);
+                *circ = gate_cz(circ, qt, qc);
             }
             else if (strcmp(cmd, "ccx") == 0) {
                 uint32_t qc1 = get_q_num(in);
                 uint32_t qc2 = get_q_num(in);
                 uint32_t qt = get_q_num(in);
-                circ = gate_toffoli(&circ, qt, qc1, qc2);
+                *circ = gate_toffoli(circ, qt, qc1, qc2);
             }
             else if (strcmp(cmd, "cswap") == 0) {
-                uint32_t qc1 = get_q_num(in);
-                uint32_t qc2 = get_q_num(in);
-                uint32_t qt = get_q_num(in);
-                circ = gate_fredkin(&circ, qt, qc1, qc2);
+                uint32_t qc = get_q_num(in);
+                uint32_t qt1 = get_q_num(in);
+                uint32_t qt2 = get_q_num(in);
+                *circ = gate_fredkin(circ, qt1, qt2, qc);
             }
             else {
                 error_exit("Invalid command.");
@@ -244,24 +226,16 @@ int main(int argc, char *argv[])
     else {
         error_exit("Invalid number of arguments.");
     }
-
     init_sylvan();
     init_my_leaf();
+    FILE* out = fopen(OUT_FILE".dot", "w");
+    MTBDD circ;
 
-/*TEST*/
-    f_orig = fopen("orig.dot", "w");
-    FILE* f_res = fopen("res.dot", "w");
-/*TEST*/
+    sim_file(input, &circ);
 
-    sim_file(input);
-
-/*TEST*/
-    mtbdd_fprintdot(f_res, circ);
+    mtbdd_fprintdot(out, circ);
     
-    fclose(f_orig);
-    fclose(f_res);
-/*TEST*/
-
+    fclose(out);
     if (argc == 2){
         fclose(input);
     }

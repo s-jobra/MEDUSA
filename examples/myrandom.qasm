@@ -41,9 +41,6 @@ z qr[0];
 z qr[1];
 ccx qr[1],qr[2],qr[0];
 ry(pi/2) qr[3];
-
-//ry(pi/2) qr[1]; //2* 0000 chance than expected = chci k+1
-
 cx qr[0],qr[1];
 ccx qr[0],qr[2],qr[3]; 
 x qr[2];
@@ -59,4 +56,3 @@ cx qr[1],qr[2];
 cswap qr[1],qr[0],qr[2];
 t qr[2];
 h qr[3];
-//plus jeste nekde tady chyba

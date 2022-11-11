@@ -1,6 +1,8 @@
 #include <sylvan.h>
 #include <string.h>
 
+#include <ctype.h> //FIXME: for overflow/underflow detection - will be removed
+
 #ifndef CUSTOM_MTBDD_H
 #define CUSTOM_MTBDD_H
 
@@ -19,6 +21,15 @@ typedef struct cnum {
     coef_t d;
     coef_t k;
 }cnum;
+
+/* ERROR HANDLING */
+#define ERROR_TEXT "ERROR: " // Beginning of an error message. FIXME: separate header file?
+/**
+ * Function that handles program exiting in case of error.
+ * 
+ * @param error Error message.
+*/
+void error_exit(const char *error);
 
 /* SETUP */
 /**
