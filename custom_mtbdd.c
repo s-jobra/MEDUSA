@@ -167,7 +167,12 @@ TASK_IMPL_2(MTBDD, my_op_plus, MTBDD*, p_a, MTBDD*, p_b)
                             .b = a_data->b + b_data->b, \
                             .c = a_data->c + b_data->c, \
                             .d = a_data->d + b_data->d, \
-                            .k = a_data->k};               // ?? ma se k menit pri scitani nebo ne ??
+                            .k = a_data->k};
+            
+            if (res_data.a == 0 && res_data.b == 0 && res_data.c == 0 && res_data.d == 0) {
+                return (MTBDD)NULL;
+            }
+            
             MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
             return res;
         }
@@ -213,6 +218,11 @@ TASK_IMPL_2(MTBDD, my_op_minus, MTBDD*, p_a, MTBDD*, p_b)
                             .c = a_data->c - b_data->c, \
                             .d = a_data->d - b_data->d, \
                             .k = a_data->k};
+            
+            if (res_data.a == 0 && res_data.b == 0 && res_data.c == 0 && res_data.d == 0) {
+                return (MTBDD)NULL;
+            }
+            
             MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
             return res;
         }
@@ -254,6 +264,11 @@ TASK_IMPL_2(MTBDD, my_op_times, MTBDD*, p_a, MTBDD*, p_b)
                              .c = a_data->c * b_data->c, \
                              .d = a_data->d * b_data->d, \
                              .k = a_data->k + b_data->k};
+
+            if (res_data.a == 0 && res_data.b == 0 && res_data.c == 0 && res_data.d == 0) {
+                return (MTBDD)NULL;
+            }
+
             MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
             return res;
         }

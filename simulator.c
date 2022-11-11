@@ -126,9 +126,7 @@ void sim_file(FILE *in, MTBDD *circ)
             error_exit("Invalid format - reached an unexpected end of file.");
         }
 
-        //TODO: mcx hradlo: najit v include "..."
         //TODO: print pravdepodobnosti
-        //TODO: k!=0 * (0,0,0,0) osetrit
         
         // Identify the command
         if (strcmp(cmd, "OPENQASM") == 0) {}
