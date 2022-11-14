@@ -126,8 +126,16 @@ void sim_file(FILE *in, MTBDD *circ)
             error_exit("Invalid format - reached an unexpected end of file.");
         }
 
-        //TODO: print pravdepodobnosti
+        //TODO: pridat vic testu
         
+        //TOD0: doxygen comments
+        //TOD0: projit kod vsechny ?? a !todo
+        //TOD0: print pravdepodobnosti:
+            /*
+             * 1. my op probability print do extra filu - problem: jiny typ stromu (floaty)
+             * 2. dodelat dalsi output file: strom vs tabulka?
+             */
+
         // Identify the command
         if (strcmp(cmd, "OPENQASM") == 0) {}
         else if (strcmp(cmd, "include") == 0) {}
