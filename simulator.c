@@ -126,7 +126,10 @@ void sim_file(FILE *in, MTBDD *circ)
             error_exit("Invalid format - reached an unexpected end of file.");
         }
 
-        //TODO: pridat vic testu
+        //TODO: asserty
+        //TODO: test SliQsim, pocatecni stav?
+        //TODO: shell skript na spousteni testu
+        //      idk neco ze to mam spustit pro 0000,0001 a tak
         
         //TOD0: doxygen comments
         //TOD0: projit kod vsechny ?? a !todo

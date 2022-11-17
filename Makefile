@@ -27,6 +27,8 @@ run:
 	@dot -T$(OF_TYPE) $(F_OUT_NAME).dot -o $(F_OUT_NAME).$(OF_TYPE)
 	@rm $(F_OUT_NAME).dot
 
+test:
+	bash ./test.sh
 # INIT:
 install: make-sylvan make-lace
 
