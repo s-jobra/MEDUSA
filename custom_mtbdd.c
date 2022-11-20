@@ -156,26 +156,22 @@ TASK_IMPL_2(MTBDD, my_op_plus, MTBDD*, p_a, MTBDD*, p_b)
         cnum* b_data = (cnum*) mtbdd_getvalue(b);
 
         //FIXME: overflow/underflow solve:
-        if ((a_data->a > 0 && b_data->a > INT64_MAX - a_data->a) || (a_data->a < 0 && b_data->a < INT64_MIN - a_data->a) ||
-            (a_data->b > 0 && b_data->b > INT64_MAX - a_data->b) || (a_data->b < 0 && b_data->b < INT64_MIN - a_data->b) ||
-            (a_data->c > 0 && b_data->c > INT64_MAX - a_data->c) || (a_data->c < 0 && b_data->c < INT64_MIN - a_data->c) ||
-            (a_data->d > 0 && b_data->d > INT64_MAX - a_data->d) || (a_data->d < 0 && b_data->d < INT64_MIN - a_data->d) ) {
-            error_exit("Integer overflow or underflow occured in one of the coefficients.");
+        assert (!((a_data->a > 0 && b_data->a > INT64_MAX - a_data->a) || (a_data->a < 0 && b_data->a < INT64_MIN - a_data->a) ||
+                  (a_data->b > 0 && b_data->b > INT64_MAX - a_data->b) || (a_data->b < 0 && b_data->b < INT64_MIN - a_data->b) ||
+                  (a_data->c > 0 && b_data->c > INT64_MAX - a_data->c) || (a_data->c < 0 && b_data->c < INT64_MIN - a_data->c) ||
+                  (a_data->d > 0 && b_data->d > INT64_MAX - a_data->d) || (a_data->d < 0 && b_data->d < INT64_MIN - a_data->d) ));
+        cnum res_data = {.a = a_data->a + b_data->a, \
+                        .b = a_data->b + b_data->b, \
+                        .c = a_data->c + b_data->c, \
+                        .d = a_data->d + b_data->d, \
+                        .k = a_data->k};
+        
+        if (res_data.a == 0 && res_data.b == 0 && res_data.c == 0 && res_data.d == 0) {
+            return (MTBDD)NULL;
         }
-        else {
-            cnum res_data = {.a = a_data->a + b_data->a, \
-                            .b = a_data->b + b_data->b, \
-                            .c = a_data->c + b_data->c, \
-                            .d = a_data->d + b_data->d, \
-                            .k = a_data->k};
-            
-            if (res_data.a == 0 && res_data.b == 0 && res_data.c == 0 && res_data.d == 0) {
-                return (MTBDD)NULL;
-            }
-            
-            MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
-            return res;
-        }
+        
+        MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
+        return res;
     }
 
     // ?? vykon ??
@@ -206,26 +202,22 @@ TASK_IMPL_2(MTBDD, my_op_minus, MTBDD*, p_a, MTBDD*, p_b)
         cnum* b_data = (cnum*) mtbdd_getvalue(b);
 
         //FIXME: overflow/underflow solve:
-        if ((b_data->a < 0 && a_data->a > INT64_MAX + b_data->a) || (b_data->a > 0 && a_data->a < INT64_MIN + b_data->a) ||
-            (b_data->b < 0 && a_data->b > INT64_MAX + b_data->b) || (b_data->b > 0 && a_data->b < INT64_MIN + b_data->b) ||
-            (b_data->c < 0 && a_data->c > INT64_MAX + b_data->c) || (b_data->c > 0 && a_data->c < INT64_MIN + b_data->c) ||
-            (b_data->d < 0 && a_data->d > INT64_MAX + b_data->d) || (b_data->d > 0 && a_data->d < INT64_MIN + b_data->d) ) {
-            error_exit("Integer overflow or underflow occured in one of the coefficients.");
+        assert (!((b_data->a < 0 && a_data->a > INT64_MAX + b_data->a) || (b_data->a > 0 && a_data->a < INT64_MIN + b_data->a) ||
+                  (b_data->b < 0 && a_data->b > INT64_MAX + b_data->b) || (b_data->b > 0 && a_data->b < INT64_MIN + b_data->b) ||
+                  (b_data->c < 0 && a_data->c > INT64_MAX + b_data->c) || (b_data->c > 0 && a_data->c < INT64_MIN + b_data->c) ||
+                  (b_data->d < 0 && a_data->d > INT64_MAX + b_data->d) || (b_data->d > 0 && a_data->d < INT64_MIN + b_data->d) ));
+        cnum res_data = {.a = a_data->a - b_data->a, \
+                        .b = a_data->b - b_data->b, \
+                        .c = a_data->c - b_data->c, \
+                        .d = a_data->d - b_data->d, \
+                        .k = a_data->k};
+        
+        if (res_data.a == 0 && res_data.b == 0 && res_data.c == 0 && res_data.d == 0) {
+            return (MTBDD)NULL;
         }
-        else {
-            cnum res_data = {.a = a_data->a - b_data->a, \
-                            .b = a_data->b - b_data->b, \
-                            .c = a_data->c - b_data->c, \
-                            .d = a_data->d - b_data->d, \
-                            .k = a_data->k};
-            
-            if (res_data.a == 0 && res_data.b == 0 && res_data.c == 0 && res_data.d == 0) {
-                return (MTBDD)NULL;
-            }
-            
-            MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
-            return res;
-        }
+        
+        MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
+        return res;
     }
 
     return mtbdd_invalid; // Recurse deeper
@@ -245,33 +237,29 @@ TASK_IMPL_2(MTBDD, my_op_times, MTBDD*, p_a, MTBDD*, p_b)
         cnum* b_data = (cnum*) mtbdd_getvalue(b);
 
         //FIXME: overflow/underflow solve:
-        if ((a_data->a > 0 && b_data->a > 0 && a_data->a > INT64_MAX / b_data->a) || (a_data->b > 0 && b_data->b > 0 && a_data->b > INT64_MAX / b_data->b) ||
-            (a_data->c > 0 && b_data->c > 0 && a_data->c > INT64_MAX / b_data->c) || (a_data->c > 0 && b_data->d > 0 && a_data->c > INT64_MAX / b_data->d) ||
+        assert (!((a_data->a > 0 && b_data->a > 0 && a_data->a > INT64_MAX / b_data->a) || (a_data->b > 0 && b_data->b > 0 && a_data->b > INT64_MAX / b_data->b) ||
+                  (a_data->c > 0 && b_data->c > 0 && a_data->c > INT64_MAX / b_data->c) || (a_data->c > 0 && b_data->d > 0 && a_data->c > INT64_MAX / b_data->d) ||
             
-            (a_data->a > 0 && b_data->a < 0 && b_data->a < INT64_MIN / a_data->a) || (a_data->b > 0 && b_data->b < 0 && b_data->b > INT64_MIN / a_data->b) ||
-            (a_data->c > 0 && b_data->c < 0 && b_data->c < INT64_MIN / a_data->c) || (a_data->c > 0 && b_data->d < 0 && b_data->c > INT64_MIN / a_data->d) ||
+                  (a_data->a > 0 && b_data->a < 0 && b_data->a < INT64_MIN / a_data->a) || (a_data->b > 0 && b_data->b < 0 && b_data->b > INT64_MIN / a_data->b) ||
+                  (a_data->c > 0 && b_data->c < 0 && b_data->c < INT64_MIN / a_data->c) || (a_data->c > 0 && b_data->d < 0 && b_data->c > INT64_MIN / a_data->d) ||
             
-            (a_data->a < 0 && b_data->a > 0 && a_data->a < INT64_MIN / b_data->a) || (a_data->b < 0 && b_data->b > 0 && a_data->b < INT64_MIN / b_data->b) ||
-            (a_data->c < 0 && b_data->c > 0 && a_data->c < INT64_MIN / b_data->c) || (a_data->c < 0 && b_data->d > 0 && a_data->c < INT64_MIN / b_data->d) ||
+                  (a_data->a < 0 && b_data->a > 0 && a_data->a < INT64_MIN / b_data->a) || (a_data->b < 0 && b_data->b > 0 && a_data->b < INT64_MIN / b_data->b) ||
+                  (a_data->c < 0 && b_data->c > 0 && a_data->c < INT64_MIN / b_data->c) || (a_data->c < 0 && b_data->d > 0 && a_data->c < INT64_MIN / b_data->d) ||
             
-            (a_data->a < 0 && b_data->a < 0 && b_data->a < INT64_MAX / a_data->a) || (a_data->b < 0 && b_data->b < 0 && b_data->b < INT64_MAX / a_data->b) ||
-            (a_data->c < 0 && b_data->c < 0 && b_data->c < INT64_MAX / a_data->c) || (a_data->c < 0 && b_data->d < 0 && b_data->c < INT64_MAX / a_data->d)) {
-            error_exit("Integer overflow or underflow occured in one of the coefficients.");
-        }
-        else {
-            cnum res_data = {.a = a_data->a * b_data->a, \
-                             .b = a_data->b * b_data->b, \
-                             .c = a_data->c * b_data->c, \
-                             .d = a_data->d * b_data->d, \
-                             .k = a_data->k + b_data->k};
+                  (a_data->a < 0 && b_data->a < 0 && b_data->a < INT64_MAX / a_data->a) || (a_data->b < 0 && b_data->b < 0 && b_data->b < INT64_MAX / a_data->b) ||
+                  (a_data->c < 0 && b_data->c < 0 && b_data->c < INT64_MAX / a_data->c) || (a_data->c < 0 && b_data->d < 0 && b_data->c < INT64_MAX / a_data->d)));
+        cnum res_data = {.a = a_data->a * b_data->a, \
+                            .b = a_data->b * b_data->b, \
+                            .c = a_data->c * b_data->c, \
+                            .d = a_data->d * b_data->d, \
+                            .k = a_data->k + b_data->k};
 
-            if (res_data.a == 0 && res_data.b == 0 && res_data.c == 0 && res_data.d == 0) {
-                return (MTBDD)NULL;
-            }
-
-            MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
-            return res;
+        if (res_data.a == 0 && res_data.b == 0 && res_data.c == 0 && res_data.d == 0) {
+            return (MTBDD)NULL;
         }
+
+        MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
+        return res;
     }
 
     // ?? vykon ??

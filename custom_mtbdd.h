@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include <ctype.h> //FIXME: for overflow/underflow detection - will be removed
+#include <assert.h>
 
 #ifndef CUSTOM_MTBDD_H
 #define CUSTOM_MTBDD_H
