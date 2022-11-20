@@ -28,7 +28,16 @@ run:
 	@rm $(F_OUT_NAME).dot
 
 test:
-	bash ./test.sh
+	@bash ./test.sh
+
+test-init:
+	cd .. &&\
+	git clone https://github.com/NTU-ALComLab/SliQSim.git || true &&\
+	cd SliQSim/cudd &&\
+	./configure --enable-dddmp --enable-obj --enable-shared --enable-static &&\
+	cd .. &&\
+	make
+
 # INIT:
 install: make-sylvan make-lace
 
@@ -50,7 +59,7 @@ download-sylvan:
 	@git clone https://github.com/trolando/sylvan.git || true
 
 download-lace:
-	git clone https://github.com/trolando/lace.git || true
+	@git clone https://github.com/trolando/lace.git || true
 
 # CLEAN:
 clean: clean-artifacts

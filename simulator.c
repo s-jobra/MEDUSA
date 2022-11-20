@@ -7,6 +7,7 @@
 #include "custom_mtbdd.h"
 #include "gates.h"
 
+#include <time.h>
 #include <ctype.h>
 #include <stdbool.h>
 
@@ -15,6 +16,12 @@
 #define OUT_FILE "res" // Name of the output .dot file
 
 extern uint32_t ltype_id;
+
+//FIXME: doxygen comments
+//       projit kod vsechny ?? a !todo
+//       print pravdepodobnosti:
+         /** 1. my op probability print do extra filu - problem: jiny typ stromu (floaty)
+           * 2. dodelat dalsi output file: strom vs tabulka? */
 
 /** 
  * Initialize for all qubit values 0.
@@ -126,19 +133,8 @@ void sim_file(FILE *in, MTBDD *circ)
             error_exit("Invalid format - reached an unexpected end of file.");
         }
 
-        //TODO: asserty
-        //TODO: test SliQsim, pocatecni stav?
-        //TODO: shell skript na spousteni testu
-        //      idk neco ze to mam spustit pro 0000,0001 a tak
+        //TODO: vic testu
         
-        //TOD0: doxygen comments
-        //TOD0: projit kod vsechny ?? a !todo
-        //TOD0: print pravdepodobnosti:
-            /*
-             * 1. my op probability print do extra filu - problem: jiny typ stromu (floaty)
-             * 2. dodelat dalsi output file: strom vs tabulka?
-             */
-
         // Identify the command
         if (strcmp(cmd, "OPENQASM") == 0) {}
         else if (strcmp(cmd, "include") == 0) {}
@@ -225,19 +221,55 @@ void sim_file(FILE *in, MTBDD *circ)
 
 int main(int argc, char *argv[])
 {
-    FILE *input;
-    if (argc == 1){
-        input = stdin;
+    clock_t start = clock();
+    
+    FILE *input = stdin;
+    bool time = false;
+    
+    //FIXME: not univerzal
+    switch (argc) {
+        case 1:
+            break;
+        case 2:
+            if(strcmp(argv[1], "--time") == 0) {
+                time = true;
+            }
+            else {
+                input = fopen(argv[1], "r");
+                if (input == NULL) {
+                    error_exit("Invalid input file.");
+                }
+            }
+            break;
+        case 3:
+            if(strcmp(argv[1], "--time") == 0) {
+                time = true;
+                input = fopen(argv[2], "r");
+                if (input == NULL) {
+                    error_exit("Invalid input file.");
+                }
+            }
+            else if (strcmp(argv[2], "--time") == 0) {
+                time = true;
+                input = fopen(argv[1], "r");
+                if (input == NULL) {
+                    error_exit("Invalid input file.");
+                }
+            }
+            else {
+                error_exit("Unknown argument.");
+            }
+        default:
+            error_exit("Invalid number of arguments.");
+            break;
     }
-    else if (argc == 2){
-        input = fopen(argv[1], "r");
-    }
-    else {
-        error_exit("Invalid number of arguments.");
-    }
+
     init_sylvan();
     init_my_leaf();
     FILE* out = fopen(OUT_FILE".dot", "w");
+    if (out == NULL) {
+        error_exit("Cannot open output file.");
+    }
     MTBDD circ;
 
     sim_file(input, &circ);
@@ -250,6 +282,10 @@ int main(int argc, char *argv[])
     }
     sylvan_quit();
     lace_stop();
+
+    if (time) {
+        printf("Time=%.3gs\n", (double)(clock() - start)/CLOCKS_PER_SEC);
+    }
 
     return 0;
 }
