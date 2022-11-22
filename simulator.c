@@ -259,7 +259,9 @@ int main(int argc, char *argv[])
             else {
                 error_exit("Unknown argument.");
             }
+            break;
         default:
+            printf("args=%d\n", argc);
             error_exit("Invalid number of arguments.");
             break;
     }
