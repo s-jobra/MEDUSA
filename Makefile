@@ -30,6 +30,9 @@ run:
 test:
 	@bash ./test.sh
 
+benchmark:
+	@bash ./test-all.sh > test.out
+
 test-init:
 	cd .. &&\
 	git clone https://github.com/NTU-ALComLab/SliQSim.git || true &&\

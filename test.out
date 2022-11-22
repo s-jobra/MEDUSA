@@ -1,0 +1,453 @@
+=================================================
+File                 MySim           SliQSim
+=================================================
+BernsteinVazirani/01 [32m0.0023s (B[m        [33m0.0053s(B[m
+BernsteinVazirani/02 [32m0.0034s (B[m        [33m0.0052s(B[m
+BernsteinVazirani/03 [32m0.0014s (B[m        [33m0.0050s(B[m
+BernsteinVazirani/04 [33m0.0061s (B[m        [32m0.0058s(B[m
+BernsteinVazirani/05 [32m0.0044s (B[m        [33m0.0051s(B[m
+BernsteinVazirani/06 [33m0.0056s (B[m        [32m0.0053s(B[m
+BernsteinVazirani/07 [33m0.0064s (B[m        [32m0.0051s(B[m
+BernsteinVazirani/08 [33m0.0069s (B[m        [32m0.0058s(B[m
+BernsteinVazirani/09 [32m0.0053s (B[m        [33m0.0056s(B[m
+BernsteinVazirani/10 [33m0.0097s (B[m        [32m0.0055s(B[m
+BernsteinVazirani/11 [33m0.0071s (B[m        [32m0.0056s(B[m
+BernsteinVazirani/12 [33m0.0084s (B[m        [32m0.0066s(B[m
+BernsteinVazirani/13 [33m0.0100s (B[m        [32m0.0088s(B[m
+BernsteinVazirani/14 [33m0.0109s (B[m        [32m0.0062s(B[m
+BernsteinVazirani/15 [33m0.0114s (B[m        [32m0.0084s(B[m
+BernsteinVazirani/16 [33m0.0242s (B[m        [32m0.0070s(B[m
+BernsteinVazirani/17 [33m0.0155s (B[m        [32m0.0071s(B[m
+BernsteinVazirani/18 [33m0.0098s (B[m        [32m0.0068s(B[m
+BernsteinVazirani/19 [33m0.0087s (B[m        [32m0.0065s(B[m
+BernsteinVazirani/20 [33m0.0164s (B[m        [32m0.0065s(B[m
+BernsteinVazirani/21 [33m0.0134s (B[m        [32m0.0068s(B[m
+BernsteinVazirani/22 [33m0.0111s (B[m        [32m0.0069s(B[m
+BernsteinVazirani/23 [33m0.0106s (B[m        [32m0.0071s(B[m
+BernsteinVazirani/24 [33m0.0115s (B[m        [32m0.0069s(B[m
+BernsteinVazirani/25 [33m0.0143s (B[m        [32m0.0076s(B[m
+BernsteinVazirani/26 [33m0.0133s (B[m        [32m0.0077s(B[m
+BernsteinVazirani/27 [33m0.0143s (B[m        [32m0.0072s(B[m
+BernsteinVazirani/28 [33m0.0160s (B[m        [32m0.0073s(B[m
+BernsteinVazirani/29 [33m0.0144s (B[m        [32m0.0079s(B[m
+BernsteinVazirani/30 [33m0.0156s (B[m        [32m0.0080s(B[m
+BernsteinVazirani/31 [33m0.0146s (B[m        [32m0.0080s(B[m
+BernsteinVazirani/32 [33m0.0165s (B[m        [32m0.0081s(B[m
+BernsteinVazirani/33 [33m0.0218s (B[m        [32m0.0079s(B[m
+BernsteinVazirani/34 [33m0.0236s (B[m        [32m0.0080s(B[m
+BernsteinVazirani/35 [33m0.0189s (B[m        [32m0.0081s(B[m
+BernsteinVazirani/36 [33m0.0240s (B[m        [32m0.0085s(B[m
+BernsteinVazirani/37 [33m0.0204s (B[m        [32m0.0084s(B[m
+BernsteinVazirani/38 [33m0.0202s (B[m        [32m0.0083s(B[m
+BernsteinVazirani/39 [33m0.0279s (B[m        [32m0.0090s(B[m
+BernsteinVazirani/40 [33m0.0199s (B[m        [32m0.0093s(B[m
+BernsteinVazirani/41 [33m0.0198s (B[m        [32m0.0096s(B[m
+BernsteinVazirani/42 [33m0.0254s (B[m        [32m0.0094s(B[m
+BernsteinVazirani/43 [33m0.0233s (B[m        [32m0.0096s(B[m
+BernsteinVazirani/44 [33m0.0223s (B[m        [32m0.0095s(B[m
+BernsteinVazirani/45 [33m0.0220s (B[m        [32m0.0106s(B[m
+BernsteinVazirani/46 [33m0.0245s (B[m        [32m0.0109s(B[m
+BernsteinVazirani/47 [33m0.0232s (B[m        [32m0.0115s(B[m
+BernsteinVazirani/48 [33m0.0207s (B[m        [32m0.0117s(B[m
+BernsteinVazirani/49 [33m0.0323s (B[m        [32m0.0104s(B[m
+BernsteinVazirani/50 [33m0.0273s (B[m        [32m0.0119s(B[m
+BernsteinVazirani/51 [33m0.0248s (B[m        [32m0.0133s(B[m
+BernsteinVazirani/52 [33m0.0209s (B[m        [32m0.0116s(B[m
+BernsteinVazirani/53 [33m0.0272s (B[m        [32m0.0128s(B[m
+BernsteinVazirani/54 [33m0.0294s (B[m        [32m0.0139s(B[m
+BernsteinVazirani/55 [33m0.0400s (B[m        [32m0.0124s(B[m
+BernsteinVazirani/56 [33m0.0320s (B[m        [32m0.0133s(B[m
+BernsteinVazirani/57 [33m0.0404s (B[m        [32m0.0129s(B[m
+BernsteinVazirani/58 [33m0.0296s (B[m        [32m0.0134s(B[m
+BernsteinVazirani/59 [33m0.0300s (B[m        [32m0.0136s(B[m
+BernsteinVazirani/60 [33m0.0448s (B[m        [32m0.0138s(B[m
+BernsteinVazirani/61 [33m0.0307s (B[m        [32m0.0175s(B[m
+BernsteinVazirani/62 [31mFailed(B[m          [32m0.0147s(B[m
+BernsteinVazirani/63 [31mFailed(B[m          [32m0.0195s(B[m
+BernsteinVazirani/64 [31mFailed(B[m          [32m0.0157s(B[m
+BernsteinVazirani/65 [31mFailed(B[m          [32m0.0148s(B[m
+BernsteinVazirani/66 [31mFailed(B[m          [32m0.0149s(B[m
+BernsteinVazirani/67 [31mFailed(B[m          [32m0.0156s(B[m
+BernsteinVazirani/68 [31mFailed(B[m          [32m0.0152s(B[m
+BernsteinVazirani/69 [31mFailed(B[m          [32m0.0170s(B[m
+BernsteinVazirani/70 [31mFailed(B[m          [32m0.0173s(B[m
+BernsteinVazirani/71 [31mFailed(B[m          [32m0.0160s(B[m
+BernsteinVazirani/72 [31mFailed(B[m          [32m0.0191s(B[m
+BernsteinVazirani/73 [31mFailed(B[m          [32m0.0175s(B[m
+BernsteinVazirani/74 [31mFailed(B[m          [32m0.0177s(B[m
+BernsteinVazirani/75 [31mFailed(B[m          [32m0.0181s(B[m
+BernsteinVazirani/76 [31mFailed(B[m          [32m0.0185s(B[m
+BernsteinVazirani/77 [31mFailed(B[m          [32m0.0188s(B[m
+BernsteinVazirani/78 [31mFailed(B[m          [32m0.0193s(B[m
+BernsteinVazirani/79 [31mFailed(B[m          [32m0.0261s(B[m
+BernsteinVazirani/80 [31mFailed(B[m          [32m0.0211s(B[m
+BernsteinVazirani/81 [31mFailed(B[m          [32m0.0204s(B[m
+BernsteinVazirani/82 [31mFailed(B[m          [32m0.0253s(B[m
+BernsteinVazirani/83 [31mFailed(B[m          [32m0.0246s(B[m
+BernsteinVazirani/84 [31mFailed(B[m          [32m0.0223s(B[m
+BernsteinVazirani/85 [31mFailed(B[m          [32m0.0215s(B[m
+BernsteinVazirani/86 [31mFailed(B[m          [32m0.0237s(B[m
+BernsteinVazirani/87 [31mFailed(B[m          [32m0.0232s(B[m
+BernsteinVazirani/88 [31mFailed(B[m          [32m0.0224s(B[m
+BernsteinVazirani/89 [31mFailed(B[m          [32m0.0239s(B[m
+BernsteinVazirani/90 [31mFailed(B[m          [32m0.0228s(B[m
+BernsteinVazirani/91 [31mFailed(B[m          [32m0.0247s(B[m
+BernsteinVazirani/92 [31mFailed(B[m          [32m0.0261s(B[m
+BernsteinVazirani/93 [31mFailed(B[m          [32m0.0361s(B[m
+BernsteinVazirani/94 [31mFailed(B[m          [32m0.0239s(B[m
+BernsteinVazirani/95 [31mFailed(B[m          [32m0.0258s(B[m
+BernsteinVazirani/96 [31mFailed(B[m          [32m0.0248s(B[m
+BernsteinVazirani/97 [31mFailed(B[m          [32m0.0261s(B[m
+BernsteinVazirani/98 [31mFailed(B[m          [32m0.0274s(B[m
+BernsteinVazirani/99 [31mFailed(B[m          [32m0.0271s(B[m
+Feynman/adder_8      [31mFailed(B[m          [32m0.0159s(B[m
+Feynman/barenco_tof_10 [33m0.0173s (B[m        [32m0.0074s(B[m
+Feynman/barenco_tof_3 [33m0.0062s (B[m        [32m0.0051s(B[m
+Feynman/barenco_tof_4 [33m0.0082s (B[m        [32m0.0054s(B[m
+Feynman/barenco_tof_5 [33m0.0101s (B[m        [32m0.0056s(B[m
+Feynman/csla_mux_3   [33m0.0153s (B[m        [32m0.0060s(B[m
+Feynman/csum_mux_9   [33m0.0218s (B[m        [32m0.0077s(B[m
+Feynman/cycle_17_3   [32m[31mFailed(B[m(B[m [31mFailed(B[m
+Feynman/gf2^10_mult  [31mFailed(B[m          [32m0.0164s(B[m
+Feynman/gf2^128_mult [32m[31mFailed(B[m(B[m [31mFailed(B[m
+Feynman/gf2^16_mult  [31mFailed(B[m          [32m0.0663s(B[m
+Feynman/gf2^256_mult [32m[31mFailed(B[m(B[m [31mFailed(B[m
+Feynman/gf2^32_mult  [31mFailed(B[m          [32m0.8143s(B[m
+Feynman/gf2^4_mult   [33m0.0179s (B[m        [32m0.0061s(B[m
+Feynman/gf2^5_mult   [33m0.0185s (B[m        [32m0.0068s(B[m
+Feynman/gf2^64_mult  [31mFailed(B[m          [32m11.6012s(B[m
+Feynman/gf2^6_mult   [33m0.0293s (B[m        [32m0.0088s(B[m
+Feynman/gf2^7_mult   [33m0.0279s (B[m        [32m0.0089s(B[m
+Feynman/gf2^8_mult   [31mFailed(B[m          [32m0.0137s(B[m
+Feynman/gf2^9_mult   [31mFailed(B[m          [32m0.0147s(B[m
+Feynman/grover_5     [31mFailed(B[m          [32m0.0166s(B[m
+Feynman/ham15-high   [31mFailed(B[m          [32m0.2915s(B[m
+Feynman/ham15-low    [33m0.0249s (B[m        [32m0.0089s(B[m
+Feynman/ham15-med    [31mFailed(B[m          [32m0.0249s(B[m
+Feynman/hwb10        [31mFailed(B[m          [32m57.4336s(B[m
+Feynman/hwb11        [32m[31mFailed(B[m(B[m [31mFailed(B[m
+Feynman/hwb12        [32m[31mFailed(B[m(B[m [31mFailed(B[m
+Feynman/hwb6         [33m0.0157s (B[m        [32m0.0072s(B[m
+Feynman/hwb8         [31mFailed(B[m          [32m2.3554s(B[m
+Feynman/mod5_4       [32m0.0025s (B[m        [33m0.0051s(B[m
+Feynman/mod_adder_1024 [31mFailed(B[m          [32m0.1866s(B[m
+Feynman/mod_adder_1048576 [32m[31mFailed(B[m(B[m [31mFailed(B[m
+Feynman/mod_mult_55  [33m0.0098s (B[m        [32m0.0057s(B[m
+Feynman/mod_red_21   [33m0.0131s (B[m        [32m0.0069s(B[m
+Feynman/qcla_adder_10 [33m0.0328s (B[m        [32m0.0120s(B[m
+Feynman/qcla_com_7   [33m0.0286s (B[m        [32m0.0140s(B[m
+Feynman/qcla_mod_7   [31mFailed(B[m          [32m0.0152s(B[m
+Feynman/qft_4        [31mFailed(B[m          [32m0.0077s(B[m
+Feynman/rc_adder_6   [33m0.0206s (B[m        [32m0.0070s(B[m
+Feynman/shor_2_21    [31mFailed(B[m          [32m0.6417s(B[m
+Feynman/tof_10       [33m0.0198s (B[m        [32m0.0070s(B[m
+Feynman/tof_3        [33m0.0071s (B[m        [32m0.0051s(B[m
+Feynman/tof_4        [33m0.0067s (B[m        [32m0.0058s(B[m
+Feynman/tof_5        [33m0.0092s (B[m        [32m0.0058s(B[m
+Feynman/vbe_adder_3  [33m0.0148s (B[m        [32m0.0057s(B[m
+Grover/02            [32m0.0036s (B[m        [33m0.0068s(B[m
+Grover/03            [33m0.0124s (B[m        [32m0.0077s(B[m
+Grover/04            [33m0.0164s (B[m        [32m0.0087s(B[m
+Grover/05            [33m0.0194s (B[m        [32m0.0106s(B[m
+Grover/06            [33m0.0328s (B[m        [32m0.0201s(B[m
+Grover/07            [33m0.0451s (B[m        [32m0.0311s(B[m
+Grover/08            [31mFailed(B[m          [32m0.0667s(B[m
+Grover/09            [31mFailed(B[m          [32m0.1647s(B[m
+Grover/10            [31mFailed(B[m          [32m0.4457s(B[m
+Grover/11            [31mFailed(B[m          [32m1.1440s(B[m
+Grover/12            [31mFailed(B[m          [32m2.9326s(B[m
+Grover/13            [31mFailed(B[m          [32m7.3866s(B[m
+Grover/14            [31mFailed(B[m          [32m18.0893s(B[m
+Grover/15            [31mFailed(B[m          [32m45.3429s(B[m
+Grover/16            [31mFailed(B[m          [32m107.8710s(B[m
+Grover/17            [32m[31mFailed(B[m(B[m [31mFailed(B[m
+Grover/18            [32m[31mFailed(B[m(B[m [31mFailed(B[m
+Grover/19            [32m[31mFailed(B[m(B[m [31mFailed(B[m
+Grover/20            [32m[31mFailed(B[m(B[m [31mFailed(B[m
+Grover/21            [32m[31mFailed(B[m(B[m [31mFailed(B[m
+Grover/23            [32m[31mFailed(B[m(B[m [31mFailed(B[m
+Grover/24            [32m[31mFailed(B[m(B[m [31mFailed(B[m
+MCToffoli/03         [32m0.0034s (B[m        [33m0.0047s(B[m
+MCToffoli/04         [32m0.0041s (B[m        [33m0.0048s(B[m
+MCToffoli/05         [32m0.0047s (B[m        [33m0.0051s(B[m
+MCToffoli/06         [32m0.0047s (B[m        [33m0.0052s(B[m
+MCToffoli/07         [33m0.0053s (B[m        [32m0.0052s(B[m
+MCToffoli/08         [33m0.0057s (B[m        [32m0.0050s(B[m
+MCToffoli/09         [32m0.0048s (B[m        [33m0.0052s(B[m
+MCToffoli/10         [33m0.0063s (B[m        [32m0.0051s(B[m
+MCToffoli/11         [33m0.0078s (B[m        [32m0.0051s(B[m
+MCToffoli/12         [33m0.0086s (B[m        [32m0.0055s(B[m
+MCToffoli/13         [33m0.0094s (B[m        [32m0.0053s(B[m
+MCToffoli/14         [33m0.0065s (B[m        [32m0.0054s(B[m
+MCToffoli/15         [33m0.0098s (B[m        [32m0.0055s(B[m
+MCToffoli/16         [33m0.0076s (B[m        [32m0.0054s(B[m
+MCToffoli/17         [33m0.0112s (B[m        [32m0.0059s(B[m
+MCToffoli/18         [33m0.0117s (B[m        [32m0.0054s(B[m
+MCToffoli/19         [33m0.0127s (B[m        [32m0.0055s(B[m
+MCToffoli/20         [33m0.0128s (B[m        [32m0.0057s(B[m
+MCToffoli/21         [33m0.0134s (B[m        [32m0.0057s(B[m
+MCToffoli/22         [33m0.0132s (B[m        [32m0.0057s(B[m
+MCToffoli/23         [33m0.0136s (B[m        [32m0.0057s(B[m
+MCToffoli/24         [33m0.0177s (B[m        [32m0.0057s(B[m
+MCToffoli/25         [33m0.0145s (B[m        [32m0.0059s(B[m
+MCToffoli/26         [33m0.0132s (B[m        [32m0.0059s(B[m
+MCToffoli/27         [33m0.0154s (B[m        [32m0.0057s(B[m
+MCToffoli/28         [33m0.0164s (B[m        [32m0.0063s(B[m
+MCToffoli/29         [33m0.0173s (B[m        [32m0.0068s(B[m
+MCToffoli/30         [33m0.0148s (B[m        [32m0.0061s(B[m
+MCToffoli/31         [33m0.0190s (B[m        [32m0.0061s(B[m
+MCToffoli/32         [33m0.0167s (B[m        [32m0.0063s(B[m
+MCToffoli/33         [33m0.0163s (B[m        [32m0.0065s(B[m
+MCToffoli/34         [33m0.0177s (B[m        [32m0.0062s(B[m
+MCToffoli/35         [33m0.0224s (B[m        [32m0.0061s(B[m
+MCToffoli/36         [33m0.0209s (B[m        [32m0.0067s(B[m
+MCToffoli/37         [33m0.0196s (B[m        [32m0.0067s(B[m
+MCToffoli/38         [33m0.0199s (B[m        [32m0.0064s(B[m
+MCToffoli/39         [33m0.0218s (B[m        [32m0.0067s(B[m
+MCToffoli/40         [33m0.0267s (B[m        [32m0.0065s(B[m
+MCToffoli/41         [33m0.0217s (B[m        [32m0.0068s(B[m
+MCToffoli/42         [33m0.0217s (B[m        [32m0.0070s(B[m
+MCToffoli/43         [33m0.0186s (B[m        [32m0.0073s(B[m
+MCToffoli/44         [33m0.0201s (B[m        [32m0.0069s(B[m
+MCToffoli/45         [33m0.0209s (B[m        [32m0.0068s(B[m
+MCToffoli/46         [33m0.0236s (B[m        [32m0.0070s(B[m
+MCToffoli/47         [33m0.0255s (B[m        [32m0.0071s(B[m
+MCToffoli/48         [33m0.0246s (B[m        [32m0.0073s(B[m
+MCToffoli/49         [33m0.0227s (B[m        [32m0.0079s(B[m
+MCToffoli/50         [33m0.0241s (B[m        [32m0.0080s(B[m
+MCToffoli/51         [33m0.0228s (B[m        [32m0.0077s(B[m
+MCToffoli/52         [33m0.0221s (B[m        [32m0.0078s(B[m
+MCToffoli/53         [33m0.0235s (B[m        [32m0.0076s(B[m
+MCToffoli/54         [33m0.0250s (B[m        [32m0.0074s(B[m
+MCToffoli/55         [33m0.0245s (B[m        [32m0.0075s(B[m
+MCToffoli/56         [33m0.0248s (B[m        [32m0.0078s(B[m
+MCToffoli/57         [33m0.0321s (B[m        [32m0.0075s(B[m
+MCToffoli/58         [33m0.0239s (B[m        [32m0.0074s(B[m
+MCToffoli/59         [33m0.0338s (B[m        [32m0.0081s(B[m
+MCToffoli/60         [33m0.0261s (B[m        [32m0.0083s(B[m
+MCToffoli/61         [33m0.0252s (B[m        [32m0.0082s(B[m
+MCToffoli/62         [33m0.0256s (B[m        [32m0.0084s(B[m
+MCToffoli/63         [33m0.0273s (B[m        [32m0.0088s(B[m
+MCToffoli/64         [33m0.0277s (B[m        [32m0.0086s(B[m
+MCToffoli/65         [33m0.0259s (B[m        [32m0.0097s(B[m
+MCToffoli/66         [33m0.0278s (B[m        [32m0.0086s(B[m
+MCToffoli/67         [33m0.0287s (B[m        [32m0.0084s(B[m
+MCToffoli/68         [33m0.0299s (B[m        [32m0.0089s(B[m
+MCToffoli/69         [33m0.0295s (B[m        [32m0.0088s(B[m
+MCToffoli/70         [33m0.0349s (B[m        [32m0.0088s(B[m
+MCToffoli/71         [33m0.0312s (B[m        [32m0.0090s(B[m
+MCToffoli/72         [33m0.0320s (B[m        [32m0.0087s(B[m
+MCToffoli/73         [33m0.0345s (B[m        [32m0.0093s(B[m
+MCToffoli/74         [33m0.0360s (B[m        [32m0.0090s(B[m
+MCToffoli/75         [33m0.0338s (B[m        [32m0.0094s(B[m
+MCToffoli/76         [33m0.0375s (B[m        [32m0.0090s(B[m
+MCToffoli/77         [33m0.0387s (B[m        [32m0.0100s(B[m
+MCToffoli/78         [33m0.0367s (B[m        [32m0.0092s(B[m
+MCToffoli/79         [33m0.0374s (B[m        [32m0.0092s(B[m
+MCToffoli/80         [33m0.0363s (B[m        [32m0.0093s(B[m
+MCToffoli/81         [33m0.0370s (B[m        [32m0.0098s(B[m
+MCToffoli/82         [33m0.0374s (B[m        [32m0.0098s(B[m
+MCToffoli/83         [33m0.0398s (B[m        [32m0.0095s(B[m
+MCToffoli/84         [33m0.0416s (B[m        [32m0.0104s(B[m
+MCToffoli/85         [33m0.0384s (B[m        [32m0.0095s(B[m
+MCToffoli/86         [33m0.0415s (B[m        [32m0.0097s(B[m
+MCToffoli/87         [33m0.0389s (B[m        [32m0.0103s(B[m
+MCToffoli/88         [33m0.0382s (B[m        [32m0.0109s(B[m
+MCToffoli/89         [33m0.0398s (B[m        [32m0.0102s(B[m
+MCToffoli/90         [33m0.0392s (B[m        [32m0.0103s(B[m
+MCToffoli/91         [33m0.0454s (B[m        [32m0.0103s(B[m
+MCToffoli/92         [33m0.0432s (B[m        [32m0.0110s(B[m
+MCToffoli/93         [33m0.0423s (B[m        [32m0.0102s(B[m
+MCToffoli/94         [33m0.0423s (B[m        [32m0.0106s(B[m
+MCToffoli/95         [33m0.0520s (B[m        [32m0.0126s(B[m
+MCToffoli/96         [33m0.0486s (B[m        [32m0.0104s(B[m
+MCToffoli/97         [33m0.0569s (B[m        [32m0.0106s(B[m
+MCToffoli/98         [33m0.0444s (B[m        [32m0.0113s(B[m
+MCToffoli/99         [33m0.0465s (B[m        [32m0.0107s(B[m
+MOGrover/03          [33m0.0138s (B[m        [32m0.0067s(B[m
+MOGrover/04          [33m0.0146s (B[m        [32m0.0096s(B[m
+MOGrover/05          [33m0.0226s (B[m        [32m0.0143s(B[m
+MOGrover/06          [33m0.0442s (B[m        [32m0.0263s(B[m
+MOGrover/07          [33m0.0604s (B[m        [32m0.0432s(B[m
+MOGrover/08          [31mFailed(B[m          [32m0.1121s(B[m
+MOGrover/09          [31mFailed(B[m          [32m0.2687s(B[m
+MOGrover/10          [31mFailed(B[m          [32m0.7399s(B[m
+MOGrover/11          [31mFailed(B[m          [32m2.0088s(B[m
+Random/03            [32m0.0016s (B[m        [33m0.0049s(B[m
+Random/04            [32m0.0038s (B[m        [33m0.0051s(B[m
+Random/05            [32m0.0033s (B[m        [33m0.0049s(B[m
+Random/06            [32m0.0049s (B[m        [33m0.0059s(B[m
+Random/07            [33m0.0055s (B[m        [32m0.0052s(B[m
+Random/08            [33m0.0124s (B[m        [32m0.0054s(B[m
+Random/09            [33m0.0077s (B[m        [32m0.0055s(B[m
+Random/10            [33m0.0091s (B[m        [32m0.0053s(B[m
+Random/11            [33m0.0082s (B[m        [32m0.0059s(B[m
+Random/12            [33m0.0104s (B[m        [32m0.0063s(B[m
+Random/13            [33m0.0114s (B[m        [32m0.0063s(B[m
+Random/14            [33m0.0097s (B[m        [32m0.0069s(B[m
+Random/15            [33m0.0129s (B[m        [32m0.0071s(B[m
+Random/16            [31mFailed(B[m          [32m0.0102s(B[m
+Random/17            [33m0.0101s (B[m        [32m0.0074s(B[m
+Random/18            [33m0.0121s (B[m        [32m0.0082s(B[m
+Random/19            [33m0.0184s (B[m        [32m0.0147s(B[m
+Random/20            [33m0.0181s (B[m        [32m0.0133s(B[m
+Random/21            [33m0.0172s (B[m        [32m0.0112s(B[m
+Random/22            [33m0.0140s (B[m        [32m0.0080s(B[m
+Random/23            [33m0.0170s (B[m        [32m0.0105s(B[m
+Random/24            [33m0.0187s (B[m        [32m0.0085s(B[m
+Random/25            [33m0.0283s (B[m        [32m0.0109s(B[m
+Random/26            [32m0.0207s (B[m        [33m0.0248s(B[m
+Random/27            [33m0.0276s (B[m        [32m0.0267s(B[m
+Random/28            [33m0.0381s (B[m        [32m0.0312s(B[m
+Random/29            [33m0.0199s (B[m        [32m0.0159s(B[m
+Random/30            [33m0.0329s (B[m        [32m0.0302s(B[m
+Random/31            [32m0.0328s (B[m        [33m0.0357s(B[m
+Random/32            [33m0.0243s (B[m        [32m0.0230s(B[m
+Random/33            [33m0.0746s (B[m        [32m0.0712s(B[m
+Random/34            [33m0.0354s (B[m        [32m0.0306s(B[m
+Random/35            [32m0.0392s (B[m        [33m0.0581s(B[m
+Random/36            [33m0.0340s (B[m        [32m0.0326s(B[m
+Random/37            [33m0.0659s (B[m        [32m0.0579s(B[m
+Random/38            [33m0.0390s (B[m        [32m0.0329s(B[m
+Random/39            [32m0.0325s (B[m        [33m0.0365s(B[m
+Random/40            [33m0.0446s (B[m        [32m0.0437s(B[m
+Random/41            [32m0.0641s (B[m        [33m0.0822s(B[m
+Random/42            [32m0.0692s (B[m        [33m0.0778s(B[m
+Random/43            [33m0.0237s (B[m        [32m0.0201s(B[m
+Random/44            [32m0.0418s (B[m        [33m0.0473s(B[m
+Random/45            [33m0.1620s (B[m        [32m0.0868s(B[m
+Random/46            [33m0.4120s (B[m        [32m0.1458s(B[m
+Random/47            [33m0.0426s (B[m        [32m0.0322s(B[m
+Random/48            [33m0.0449s (B[m        [32m0.0316s(B[m
+Random/49            [32m0.0598s (B[m        [33m0.0929s(B[m
+Random/50            [33m0.1040s (B[m        [32m0.0836s(B[m
+Random/51            [32m0.0448s (B[m        [33m0.0765s(B[m
+Random/52            [32m0.0433s (B[m        [33m0.0459s(B[m
+Random/53            [33m0.2060s (B[m        [32m0.0600s(B[m
+Random/54            [33m0.1210s (B[m        [32m0.0833s(B[m
+Random/55            [33m0.3710s (B[m        [32m0.1597s(B[m
+Random/56            [33m0.0796s (B[m        [32m0.0584s(B[m
+Random/57            [33m0.2710s (B[m        [32m0.1011s(B[m
+Random/58            [33m0.0895s (B[m        [32m0.0652s(B[m
+Random/59            [33m0.1590s (B[m        [32m0.1273s(B[m
+Random/60            [33m0.4510s (B[m        [32m0.1457s(B[m
+Random/61            [33m0.1170s (B[m        [32m0.0780s(B[m
+Random/62            [32m0.0840s (B[m        [33m0.0842s(B[m
+Random/63            [33m0.1510s (B[m        [32m0.1297s(B[m
+Random/64            [33m0.0963s (B[m        [32m0.0845s(B[m
+Random/65            [33m0.1560s (B[m        [32m0.1181s(B[m
+Random/66            [32m0.0787s (B[m        [33m0.0896s(B[m
+Random/67            [31mFailed(B[m          [32m0.1753s(B[m
+Random/68            [33m0.8290s (B[m        [32m0.1401s(B[m
+Random/69            [33m0.3290s (B[m        [32m0.1629s(B[m
+Random/70            [33m0.2970s (B[m        [32m0.1011s(B[m
+Random/71            [33m0.1280s (B[m        [32m0.1167s(B[m
+Random/72            [33m0.3930s (B[m        [32m0.1667s(B[m
+Random/73            [31mFailed(B[m          [32m0.1799s(B[m
+Random/74            [31mFailed(B[m          [32m0.2268s(B[m
+Random/75            [31mFailed(B[m          [32m0.1749s(B[m
+Random/76            [31mFailed(B[m          [32m0.1290s(B[m
+Random/77            [31mFailed(B[m          [32m0.2789s(B[m
+Random/78            [31mFailed(B[m          [32m0.2256s(B[m
+Random/79            [33m0.6450s (B[m        [32m0.2129s(B[m
+Random/80            [33m0.3840s (B[m        [32m0.1957s(B[m
+Random/81            [31mFailed(B[m          [32m0.2138s(B[m
+Random/82            [33m0.4240s (B[m        [32m0.1563s(B[m
+Random/83            [31mFailed(B[m          [32m0.1861s(B[m
+Random/84            [33m0.3160s (B[m        [32m0.2066s(B[m
+Random/85            [33m2.3000s (B[m        [32m0.3422s(B[m
+Random/86            [31mFailed(B[m          [32m0.3663s(B[m
+Random/87            [31mFailed(B[m          [32m0.2451s(B[m
+Random/88            [33m0.2790s (B[m        [32m0.2240s(B[m
+Random/89            [31mFailed(B[m          [32m0.5231s(B[m
+Random/90            [33m0.9140s (B[m        [32m0.1785s(B[m
+Random/91            [33m0.6200s (B[m        [32m0.1813s(B[m
+Random/92            [31mFailed(B[m          [32m0.2719s(B[m
+Random/93            [31mFailed(B[m          [32m0.2420s(B[m
+Random/94            [31mFailed(B[m          [32m0.5991s(B[m
+Random/95            [33m0.4120s (B[m        [32m0.2426s(B[m
+Random/96            [31mFailed(B[m          [32m0.2578s(B[m
+Random/97            [31mFailed(B[m          [32m0.3191s(B[m
+Random/98            [31mFailed(B[m          [32m0.2350s(B[m
+Random/99            [31mFailed(B[m          [32m0.2908s(B[m
+RevLib/0410184_169   [32m0.0047s (B[m        [33m0.0061s(B[m
+RevLib/4gt11-v1_85   [32m0.0022s (B[m        [33m0.0050s(B[m
+RevLib/4gt11_82      [32m0.0028s (B[m        [33m0.0049s(B[m
+RevLib/4gt11_83      [32m0.0026s (B[m        [33m0.0049s(B[m
+RevLib/4gt11_84      [32m0.0026s (B[m        [33m0.0048s(B[m
+RevLib/4mod5-bdd_287 [32m0.0040s (B[m        [33m0.0059s(B[m
+RevLib/add16_174     [33m0.0154s (B[m        [32m0.0063s(B[m
+RevLib/add32_183     [33m0.0266s (B[m        [32m0.0081s(B[m
+RevLib/add64_184     [33m0.0492s (B[m        [32m0.0154s(B[m
+RevLib/add8_172      [33m0.0101s (B[m        [32m0.0056s(B[m
+RevLib/alu-bdd_288   [32m0.0016s (B[m        [33m0.0049s(B[m
+RevLib/alu-v0_27     [32m0.0035s (B[m        [33m0.0051s(B[m
+RevLib/alu-v1_28     [32m0.0033s (B[m        [33m0.0049s(B[m
+RevLib/alu-v1_29     [32m0.0029s (B[m        [33m0.0051s(B[m
+RevLib/alu-v2_33     [32m0.0019s (B[m        [33m0.0055s(B[m
+RevLib/alu-v3_34     [32m0.0032s (B[m        [33m0.0048s(B[m
+RevLib/alu-v3_35     [32m0.0034s (B[m        [33m0.0049s(B[m
+RevLib/alu-v4_37     [32m0.0037s (B[m        [33m0.0049s(B[m
+RevLib/apex2_289     [33m0.3070s (B[m        [32m0.0754s(B[m
+RevLib/apex5_290     [31mFailed(B[m          [32m0.2992s(B[m
+RevLib/avg16_324     [33m0.4660s (B[m        [32m0.1238s(B[m
+RevLib/avg8_325      [33m0.1860s (B[m        [32m0.0525s(B[m
+RevLib/bw_291        [33m0.0363s (B[m        [32m0.0125s(B[m
+RevLib/cnt3-5_179    [33m0.0074s (B[m        [32m0.0052s(B[m
+RevLib/cps_292       [31mFailed(B[m          [32m0.2053s(B[m
+RevLib/cycle10_293   [33m0.0122s (B[m        [32m0.0063s(B[m
+RevLib/decod24-bdd_294 [32m0.0024s (B[m        [33m0.0049s(B[m
+RevLib/decod24-enable_125 [32m0.0021s (B[m        [33m0.0052s(B[m
+RevLib/decod24-v0_38 [32m0.0032s (B[m        [33m0.0050s(B[m
+RevLib/decod24-v2_43 [32m0.0029s (B[m        [33m0.0048s(B[m
+RevLib/e64-bdd_295   [33m0.0611s (B[m        [32m0.0171s(B[m
+RevLib/ex-1_166      [32m0.0024s (B[m        [33m0.0053s(B[m
+RevLib/ex1_226       [32m0.0027s (B[m        [33m0.0050s(B[m
+RevLib/ex5p_296      [33m0.0900s (B[m        [32m0.0248s(B[m
+RevLib/fredkin_6     [32m0.0029s (B[m        [33m0.0052s(B[m
+RevLib/frg2_297      [31mFailed(B[m          [32m0.4067s(B[m
+RevLib/ham15_298     [33m0.0175s (B[m        [32m0.0074s(B[m
+RevLib/ham3_102      [32m0.0028s (B[m        [33m0.0050s(B[m
+RevLib/ham7_106      [32m0.0018s (B[m        [33m0.0052s(B[m
+RevLib/ham7_299      [33m0.0101s (B[m        [32m0.0061s(B[m
+RevLib/hwb5_300      [33m0.0141s (B[m        [32m0.0065s(B[m
+RevLib/hwb6_301      [33m0.0206s (B[m        [32m0.0082s(B[m
+RevLib/hwb7_302      [33m0.0317s (B[m        [32m0.0112s(B[m
+RevLib/hwb8_303      [33m0.0524s (B[m        [32m0.0155s(B[m
+RevLib/hwb9_304      [33m0.0947s (B[m        [32m0.0238s(B[m
+RevLib/mini_alu_305  [33m0.0063s (B[m        [32m0.0050s(B[m
+RevLib/mod5adder_306 [33m0.0163s (B[m        [32m0.0074s(B[m
+RevLib/mod5d2_70     [32m0.0015s (B[m        [33m0.0049s(B[m
+RevLib/mod5mils_71   [32m0.0030s (B[m        [33m0.0049s(B[m
+RevLib/one-two-three-v2_100 [32m0.0025s (B[m        [33m0.0048s(B[m
+RevLib/one-two-three-v3_101 [32m0.0025s (B[m        [33m0.0048s(B[m
+RevLib/parity_247    [33m0.0057s (B[m        [32m0.0055s(B[m
+RevLib/pdc_307       [33m0.4930s (B[m        [32m0.1082s(B[m
+RevLib/peres_9       [32m0.0013s (B[m        [33m0.0047s(B[m
+RevLib/plus127mod8192_308 [33m0.0100s (B[m        [32m0.0057s(B[m
+RevLib/plus63mod4096_309 [33m0.0085s (B[m        [32m0.0058s(B[m
+RevLib/plus63mod8192_310 [33m0.0099s (B[m        [32m0.0059s(B[m
+RevLib/rd32_270      [32m0.0036s (B[m        [33m0.0050s(B[m
+RevLib/rd32_271      [32m0.0021s (B[m        [33m0.0051s(B[m
+RevLib/rd32_272      [32m0.0035s (B[m        [33m0.0049s(B[m
+RevLib/rd53_138      [32m0.0044s (B[m        [33m0.0051s(B[m
+RevLib/rd53_311      [33m0.0064s (B[m        [32m0.0054s(B[m
+RevLib/rd73_140      [33m0.0051s (B[m        [32m0.0051s(B[m
+RevLib/rd73_312      [33m0.0096s (B[m        [32m0.0065s(B[m
+RevLib/rd84_142      [33m0.0072s (B[m        [32m0.0061s(B[m
+RevLib/rd84_313      [33m0.0199s (B[m        [32m0.0068s(B[m
+RevLib/seq_314       [31mFailed(B[m          [32m1.1131s(B[m
+RevLib/spla_315      [33m0.2990s (B[m        [32m0.0739s(B[m
+RevLib/sym6_316      [33m0.0069s (B[m        [32m0.0052s(B[m
+RevLib/sym9_146      [32m0.0046s (B[m        [33m0.0057s(B[m
+RevLib/sym9_192      [33m0.0065s (B[m        [32m0.0052s(B[m
+RevLib/sym9_317      [33m0.0119s (B[m        [32m0.0060s(B[m
+RevLib/sys6-v0_111   [32m0.0035s (B[m        [33m0.0051s(B[m
+RevLib/urf1_149      [33m0.5080s (B[m        [32m0.2074s(B[m
+RevLib/urf2_152      [33m0.2610s (B[m        [32m0.0933s(B[m
+RevLib/urf3_155      [33m0.9540s (B[m        [32m0.4712s(B[m
+RevLib/urf4_187      [33m1.2700s (B[m        [32m0.5696s(B[m
+RevLib/urf5_158      [33m0.3720s (B[m        [32m0.1871s(B[m
+RevLib/urf6_160      [33m0.4570s (B[m        [32m0.1957s(B[m
+RevLib/xor5_254      [32m0.0015s (B[m        [33m0.0049s(B[m
+=================================================

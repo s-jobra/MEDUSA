@@ -16,15 +16,15 @@ SEP="================================================="
 printf "$SEP\n"
 printf '%-20s %-15s %s\n' "File" "MySim" "SliQSim"
 printf "$SEP\n"
-for i in ./examples/*.qasm; do
-    FILE=${i#./examples/}
+for i in ../benchmarks/*/*/*.qasm; do
+    FILE=${i#../benchmarks/}
     
-    MY_TIME=$(./$EXEC --time <$i 2>/dev/null | awk -F: '{gsub(/Time=/,""); printf "%.4fs \n", $1}')
+    MY_TIME=$( timeout 2m ./$EXEC --time <$i 2>/dev/null | awk -F: '{gsub(/Time=/,""); printf "%.4fs \n", $1}')
     if [[ -z $MY_TIME ]]; then
         MY_TIME="${RED}Failed$NC"
     fi
 
-    SLIQ_TIME="$( ./../SliQSim/SliQSim --sim_qasm $i --type 0 --shots 1024 --print_info 2>/dev/null | \
+    SLIQ_TIME="$( timeout 2m ./../SliQSim/SliQSim --sim_qasm $i --type 0 --shots 1024 --print_info 2>/dev/null | \
                   awk -F: '/Runtime:/{gsub(/ seconds/,""); printf "%.4fs \n", $2}')"
     SLIQ_TIME=${SLIQ_TIME% *}
     
@@ -45,6 +45,6 @@ for i in ./examples/*.qasm; do
         fi
     fi
 
-    printf '%-20s %-26s %s\n' "${FILE%.*}" "$MY_TIME" "$SLIQ_TIME"
+    printf '%-20s %-26s %s\n' "${FILE%/circuit*}" "$MY_TIME" "$SLIQ_TIME"
 done
 printf "${SEP}\n"
