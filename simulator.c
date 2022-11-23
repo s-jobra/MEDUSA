@@ -23,6 +23,12 @@ extern uint32_t ltype_id;
          /** 1. my op probability print do extra filu - problem: jiny typ stromu (floaty)
            * 2. dodelat dalsi output file: strom vs tabulka? */
 
+//TODO: check kdy se spousti time
+//TODO: udelat z 10 prumeru scatter plot
+//TODO: basic analyza - jaky konkretni testy, hradla
+// Profiling?, GMP?
+
+
 /** 
  * Initialize for all qubit values 0.
  */
@@ -133,8 +139,6 @@ void sim_file(FILE *in, MTBDD *circ)
             error_exit("Invalid format - reached an unexpected end of file.");
         }
 
-        //TODO: vic testu
-        
         // Identify the command
         if (strcmp(cmd, "OPENQASM") == 0) {}
         else if (strcmp(cmd, "include") == 0) {}
@@ -261,7 +265,6 @@ int main(int argc, char *argv[])
             }
             break;
         default:
-            printf("args=%d\n", argc);
             error_exit("Invalid number of arguments.");
             break;
     }
