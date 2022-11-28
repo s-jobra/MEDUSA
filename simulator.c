@@ -23,7 +23,6 @@ extern uint32_t ltype_id;
          /** 1. my op probability print do extra filu - problem: jiny typ stromu (floaty)
            * 2. dodelat dalsi output file: strom vs tabulka? */
 
-//TODO: check kdy se spousti time
 //TODO: udelat z 10 prumeru scatter plot
 //TODO: basic analyza - jaky konkretni testy, hradla
 // Profiling?, GMP?
@@ -138,7 +137,6 @@ void sim_file(FILE *in, MTBDD *circ)
         if (c == EOF) {
             error_exit("Invalid format - reached an unexpected end of file.");
         }
-
         // Identify the command
         if (strcmp(cmd, "OPENQASM") == 0) {}
         else if (strcmp(cmd, "include") == 0) {}
@@ -225,7 +223,6 @@ void sim_file(FILE *in, MTBDD *circ)
 
 int main(int argc, char *argv[])
 {
-    clock_t start = clock();
     
     FILE *input = stdin;
     bool time = false;
@@ -271,6 +268,10 @@ int main(int argc, char *argv[])
 
     init_sylvan();
     init_my_leaf();
+
+    // start the timer
+    clock_t t_start = clock();
+
     FILE* out = fopen(OUT_FILE".dot", "w");
     if (out == NULL) {
         error_exit("Cannot open output file.");
@@ -278,6 +279,9 @@ int main(int argc, char *argv[])
     MTBDD circ;
 
     sim_file(input, &circ);
+
+    // end the timer FIXME: here or after printdot?
+    clock_t t_end = clock();
 
     mtbdd_fprintdot(out, circ);
     
@@ -289,7 +293,7 @@ int main(int argc, char *argv[])
     lace_stop();
 
     if (time) {
-        printf("Time=%.3gs\n", (double)(clock() - start)/CLOCKS_PER_SEC);
+        printf("Time=%.3gs\n", (double)(t_end - t_start)/CLOCKS_PER_SEC);
     }
 
     return 0;
