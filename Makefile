@@ -31,7 +31,7 @@ test:
 	@bash ./test.sh
 
 benchmark:
-	@bash ./test-all.sh > test.out
+	@bash ./test-all.sh > test_new.out
 
 test-init:
 	cd .. &&\
