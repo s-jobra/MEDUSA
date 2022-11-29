@@ -28,10 +28,13 @@ run:
 	@rm $(F_OUT_NAME).dot
 
 test:
-	@bash ./test.sh
+	@bash ./benchmark-files/test.sh
 
 benchmark:
-	@bash ./test-all.sh > test_new.out
+	@bash ./benchmark-files/test-all.sh
+
+test-graph:
+	@cd ./benchmark-files/ && bash ./plot.sh
 
 test-init:
 	cd .. &&\
