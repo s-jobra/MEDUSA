@@ -22,11 +22,9 @@ extern uint32_t ltype_id;
 //       print pravdepodobnosti:
          /** 1. my op probability print do extra filu - problem: jiny typ stromu (floaty)
            * 2. dodelat dalsi output file: strom vs tabulka? */
-
-//TODO: udelat z 10 prumeru scatter plot
-//TODO: basic analyza - jaky konkretni testy, hradla
-// Profiling?, GMP?
-
+//TODO: GMP
+//TODO: logaritmicke osy? a dalsi upravy grafu - velikost bodu, zoom, barvy, vetsi legenda apod
+// Profiling?
 
 /** 
  * Initialize for all qubit values 0.
@@ -280,7 +278,6 @@ int main(int argc, char *argv[])
 
     sim_file(input, &circ);
 
-    // end the timer FIXME: here or after printdot?
     clock_t t_end = clock();
 
     mtbdd_fprintdot(out, circ);
