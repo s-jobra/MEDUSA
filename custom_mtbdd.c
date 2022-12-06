@@ -1,5 +1,7 @@
 #include "custom_mtbdd.h"
 
+// FIXME: mpz_clear(n); ???
+
 /**
  * Global variable for my custom leaf type id
  */
@@ -74,11 +76,11 @@ void my_leaf_create(uint64_t* ldata_p_raw)
     cnum* orig_ldata = *ldata_p;
     cnum* new_ldata = (cnum*)my_malloc(sizeof(cnum));
 
-    new_ldata->a = orig_ldata->a;
-    new_ldata->b = orig_ldata->b;
-    new_ldata->c = orig_ldata->c;
-    new_ldata->d = orig_ldata->d;
-    new_ldata->k = orig_ldata->k;
+    mpz_init_set(new_ldata->a, orig_ldata->a);
+    mpz_init_set(new_ldata->b, orig_ldata->b);
+    mpz_init_set(new_ldata->c, orig_ldata->c);
+    mpz_init_set(new_ldata->d, orig_ldata->d);
+    mpz_init_set(new_ldata->k, orig_ldata->k);
 
     *ldata_p = new_ldata;
 }
@@ -105,9 +107,12 @@ char* my_leaf_to_str(int complemented, uint64_t ldata_raw, char* sylvan_buf, siz
     cnum* ldata = (cnum*) ldata_raw;
 
     // !todo makro na velikost
-    char ldata_string[100] = {0};
+    char ldata_string[1000] = {0};
     // ?? resit zapornou navrat. hodnotu a vel. > 100 ??
-    int chars_written = snprintf(ldata_string, 100, "(1/√2)^(%ld) * (%ld%+ldω%+ldω²%+ldω³)", ldata->k, ldata->a, ldata->b, ldata->c, ldata->d);
+
+    int chars_written = snprintf(ldata_string, 1000, "(1/√2)^(%s) * (%s + %sω + %sω² + %sω³)", \
+    mpz_get_str(NULL, 10, ldata->k), mpz_get_str(NULL, 10, ldata->a), mpz_get_str(NULL, 10, ldata->b), \
+    mpz_get_str(NULL, 10, ldata->c), mpz_get_str(NULL, 10, ldata->d));
 
     // ?? je potreba null termination ??
     // Is buffer large enough?
@@ -155,16 +160,17 @@ TASK_IMPL_2(MTBDD, my_op_plus, MTBDD*, p_a, MTBDD*, p_b)
         cnum* a_data = (cnum*) mtbdd_getvalue(a);
         cnum* b_data = (cnum*) mtbdd_getvalue(b);
 
-        //FIXME: overflow/underflow solve:
-        assert (!((a_data->a > 0 && b_data->a > INT64_MAX - a_data->a) || (a_data->a < 0 && b_data->a < INT64_MIN - a_data->a) ||
-                  (a_data->b > 0 && b_data->b > INT64_MAX - a_data->b) || (a_data->b < 0 && b_data->b < INT64_MIN - a_data->b) ||
-                  (a_data->c > 0 && b_data->c > INT64_MAX - a_data->c) || (a_data->c < 0 && b_data->c < INT64_MIN - a_data->c) ||
-                  (a_data->d > 0 && b_data->d > INT64_MAX - a_data->d) || (a_data->d < 0 && b_data->d < INT64_MIN - a_data->d) ));
-        cnum res_data = {.a = a_data->a + b_data->a, \
-                        .b = a_data->b + b_data->b, \
-                        .c = a_data->c + b_data->c, \
-                        .d = a_data->d + b_data->d, \
-                        .k = a_data->k};
+        cnum res_data;
+        mpz_init(res_data.a);
+        mpz_init(res_data.b);
+        mpz_init(res_data.c);
+        mpz_init(res_data.d);
+        mpz_init(res_data.k);
+        mpz_add(res_data.a, a_data->a, b_data->a);
+        mpz_add(res_data.b, a_data->b, b_data->b);
+        mpz_add(res_data.c, a_data->c, b_data->c);
+        mpz_add(res_data.d, a_data->d, b_data->d);
+        mpz_set(res_data.k, a_data->k);
         
         if (res_data.a == 0 && res_data.b == 0 && res_data.c == 0 && res_data.d == 0) {
             return (MTBDD)NULL;
@@ -201,16 +207,17 @@ TASK_IMPL_2(MTBDD, my_op_minus, MTBDD*, p_a, MTBDD*, p_b)
         cnum* a_data = (cnum*) mtbdd_getvalue(a);
         cnum* b_data = (cnum*) mtbdd_getvalue(b);
 
-        //FIXME: overflow/underflow solve:
-        assert (!((b_data->a < 0 && a_data->a > INT64_MAX + b_data->a) || (b_data->a > 0 && a_data->a < INT64_MIN + b_data->a) ||
-                  (b_data->b < 0 && a_data->b > INT64_MAX + b_data->b) || (b_data->b > 0 && a_data->b < INT64_MIN + b_data->b) ||
-                  (b_data->c < 0 && a_data->c > INT64_MAX + b_data->c) || (b_data->c > 0 && a_data->c < INT64_MIN + b_data->c) ||
-                  (b_data->d < 0 && a_data->d > INT64_MAX + b_data->d) || (b_data->d > 0 && a_data->d < INT64_MIN + b_data->d) ));
-        cnum res_data = {.a = a_data->a - b_data->a, \
-                        .b = a_data->b - b_data->b, \
-                        .c = a_data->c - b_data->c, \
-                        .d = a_data->d - b_data->d, \
-                        .k = a_data->k};
+        cnum res_data;
+        mpz_init(res_data.a);
+        mpz_init(res_data.b);
+        mpz_init(res_data.c);
+        mpz_init(res_data.d);
+        mpz_init(res_data.k);
+        mpz_sub(res_data.a, a_data->a, b_data->a);
+        mpz_sub(res_data.b, a_data->b, b_data->b);
+        mpz_sub(res_data.c, a_data->c, b_data->c);
+        mpz_sub(res_data.d, a_data->d, b_data->d);
+        mpz_set(res_data.k, a_data->k);
         
         if (res_data.a == 0 && res_data.b == 0 && res_data.c == 0 && res_data.d == 0) {
             return (MTBDD)NULL;
@@ -236,23 +243,17 @@ TASK_IMPL_2(MTBDD, my_op_times, MTBDD*, p_a, MTBDD*, p_b)
         cnum* a_data = (cnum*) mtbdd_getvalue(a);
         cnum* b_data = (cnum*) mtbdd_getvalue(b);
 
-        //FIXME: overflow/underflow solve:
-        assert (!((a_data->a > 0 && b_data->a > 0 && a_data->a > INT64_MAX / b_data->a) || (a_data->b > 0 && b_data->b > 0 && a_data->b > INT64_MAX / b_data->b) ||
-                  (a_data->c > 0 && b_data->c > 0 && a_data->c > INT64_MAX / b_data->c) || (a_data->c > 0 && b_data->d > 0 && a_data->c > INT64_MAX / b_data->d) ||
-            
-                  (a_data->a > 0 && b_data->a < 0 && b_data->a < INT64_MIN / a_data->a) || (a_data->b > 0 && b_data->b < 0 && b_data->b > INT64_MIN / a_data->b) ||
-                  (a_data->c > 0 && b_data->c < 0 && b_data->c < INT64_MIN / a_data->c) || (a_data->c > 0 && b_data->d < 0 && b_data->c > INT64_MIN / a_data->d) ||
-            
-                  (a_data->a < 0 && b_data->a > 0 && a_data->a < INT64_MIN / b_data->a) || (a_data->b < 0 && b_data->b > 0 && a_data->b < INT64_MIN / b_data->b) ||
-                  (a_data->c < 0 && b_data->c > 0 && a_data->c < INT64_MIN / b_data->c) || (a_data->c < 0 && b_data->d > 0 && a_data->c < INT64_MIN / b_data->d) ||
-            
-                  (a_data->a < 0 && b_data->a < 0 && b_data->a < INT64_MAX / a_data->a) || (a_data->b < 0 && b_data->b < 0 && b_data->b < INT64_MAX / a_data->b) ||
-                  (a_data->c < 0 && b_data->c < 0 && b_data->c < INT64_MAX / a_data->c) || (a_data->c < 0 && b_data->d < 0 && b_data->c < INT64_MAX / a_data->d)));
-        cnum res_data = {.a = a_data->a * b_data->a, \
-                            .b = a_data->b * b_data->b, \
-                            .c = a_data->c * b_data->c, \
-                            .d = a_data->d * b_data->d, \
-                            .k = a_data->k + b_data->k};
+        cnum res_data;
+        mpz_init(res_data.a);
+        mpz_init(res_data.b);
+        mpz_init(res_data.c);
+        mpz_init(res_data.d);
+        mpz_init(res_data.k);
+        mpz_mul(res_data.a, a_data->a, b_data->a);
+        mpz_mul(res_data.b, a_data->b, b_data->b);
+        mpz_mul(res_data.c, a_data->c, b_data->c);
+        mpz_mul(res_data.d, a_data->d, b_data->d);
+        mpz_add(res_data.k, a_data->k, b_data->k);
 
         if (res_data.a == 0 && res_data.b == 0 && res_data.c == 0 && res_data.d == 0) {
             return (MTBDD)NULL;
@@ -283,11 +284,18 @@ TASK_IMPL_2(MTBDD, my_op_negate, MTBDD, a, size_t, x)
     if (mtbdd_isleaf(a)) {
         cnum* a_data = (cnum*) mtbdd_getvalue(a);
 
-        cnum res_data = {.a = -a_data->a, \
-                         .b = -a_data->b, \
-                         .c = -a_data->c, \
-                         .d = -a_data->d, \
-                         .k = a_data->k};
+        cnum res_data;
+        mpz_init(res_data.a);
+        mpz_init(res_data.b);
+        mpz_init(res_data.c);
+        mpz_init(res_data.d);
+        mpz_init(res_data.k);
+        mpz_neg(res_data.a, a_data->a);
+        mpz_neg(res_data.b, a_data->b);
+        mpz_neg(res_data.c, a_data->c);
+        mpz_neg(res_data.d, a_data->d);
+        mpz_set(res_data.k, a_data->k);
+        
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
         return res;
     }
@@ -306,11 +314,14 @@ TASK_IMPL_2(MTBDD, my_op_coef_k_incr, MTBDD, a, size_t, x)
     if (mtbdd_isleaf(a)) {
         cnum* a_data = (cnum*) mtbdd_getvalue(a);
 
-        cnum res_data = {.a = a_data->a, \
-                         .b = a_data->b, \
-                         .c = a_data->c, \
-                         .d = a_data->d, \
-                         .k = a_data->k + 1};
+        cnum res_data;
+        mpz_init_set(res_data.a, a_data->a);
+        mpz_init_set(res_data.b, a_data->b);
+        mpz_init_set(res_data.c, a_data->c);
+        mpz_init_set(res_data.d, a_data->d);
+        mpz_init(res_data.k);
+        mpz_add_ui(res_data.k, a_data->k, 1);
+
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
         return res;
     }
@@ -329,11 +340,14 @@ TASK_IMPL_2(MTBDD, my_op_coef_rot1, MTBDD, a, size_t, x)
     if (mtbdd_isleaf(a)) {
         cnum* a_data = (cnum*) mtbdd_getvalue(a);
 
-        cnum res_data = {.a = -(a_data->d), \
-                         .b = a_data->a, \
-                         .c = a_data->b, \
-                         .d = a_data->c, \
-                         .k = a_data->k};
+        cnum res_data;
+        mpz_init(res_data.a);
+        mpz_neg(res_data.a, a_data->d);
+        mpz_init_set(res_data.b, a_data->a);
+        mpz_init_set(res_data.c, a_data->b);
+        mpz_init_set(res_data.d, a_data->c);
+        mpz_init_set(res_data.k, a_data->k);
+
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
         return res;
     }
@@ -352,11 +366,15 @@ TASK_IMPL_2(MTBDD, my_op_coef_rot2, MTBDD, a, size_t, x)
     if (mtbdd_isleaf(a)) {
         cnum* a_data = (cnum*) mtbdd_getvalue(a);
 
-        cnum res_data = {.a = -(a_data->c), \
-                         .b = -(a_data->d), \
-                         .c = a_data->a, \
-                         .d = a_data->b, \
-                         .k = a_data->k};
+        cnum res_data;
+        mpz_init(res_data.a);
+        mpz_neg(res_data.a, a_data->c);
+        mpz_init(res_data.b);
+        mpz_neg(res_data.b, a_data->d);
+        mpz_init_set(res_data.c, a_data->a);
+        mpz_init_set(res_data.d, a_data->b);
+        mpz_init_set(res_data.k, a_data->k);
+        
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
         return res;
     }

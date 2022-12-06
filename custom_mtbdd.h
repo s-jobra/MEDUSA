@@ -4,13 +4,15 @@
 #include <ctype.h> //FIXME: for overflow/underflow detection - will be removed
 #include <assert.h>
 
+#include <gmp.h>
+
 #ifndef CUSTOM_MTBDD_H
 #define CUSTOM_MTBDD_H
 
 /**
  * Type of single complex number coefficient
  */
-typedef int64_t coef_t;
+typedef mpz_t coef_t;
 
 /**
  * Complex number in algebraic representation
