@@ -14,7 +14,8 @@ OF_TYPE=svg
 F_OUT_NAME=res
 
 .DEFAULT := all
-.PHONY := clean clean-all clean-artifacts clean-deps run install
+.PHONY := clean clean-all clean-artifacts clean-deps run install test benchmark plot plot-log \
+          test-init install make-sylvan make-lace download-sylvan download-lace
 
 #TODO: deps + srcs
 
@@ -33,7 +34,10 @@ test:
 benchmark:
 	@bash ./benchmark-files/test-all.sh
 
-test-graph:
+plot-log:
+	@cd ./benchmark-files/ && bash ./plot_log.sh
+
+plot:
 	@cd ./benchmark-files/ && bash ./plot.sh
 
 test-init:
