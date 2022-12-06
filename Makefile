@@ -9,7 +9,7 @@ INC_DIRS:=-I sylvan/src/ -I lace/src/ -I lace/build/
 
 N_JOBS=4
 
-F=bell-state.qasm
+F=bell-state
 OF_TYPE=svg
 F_OUT_NAME=res
 
@@ -24,7 +24,7 @@ all: $(SOURCES) $(HEADER_FILES) sylvan/build/src/libsylvan.a lace/build/liblace.
 
 run:
 	$(MAKE)
-	@./$(OUTPUT_BINARY) ./examples/$(F)
+	@./$(OUTPUT_BINARY) ./examples/$(F).qasm
 	@dot -T$(OF_TYPE) $(F_OUT_NAME).dot -o $(F_OUT_NAME).$(OF_TYPE)
 	@rm $(F_OUT_NAME).dot
 
