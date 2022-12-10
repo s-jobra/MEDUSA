@@ -23,7 +23,7 @@ extern uint32_t ltype_id;
          /** 1. my op probability print do extra filu - problem: jiny typ stromu (floaty)
            * 2. dodelat dalsi output file: strom vs tabulka? */
 //TODO: GMP
-//TODO: logaritmicke osy? a dalsi upravy grafu - velikost bodu, zoom, barvy, vetsi legenda apod
+//TODO: dalsi upravy grafu - velikost bodu, zoom, barvy, vetsi legenda apod
 // Profiling?
 
 /** 
@@ -36,7 +36,9 @@ void circuit_init(MTBDD *a, const uint32_t n)
         variables = mtbdd_set_add(variables, i);
     }
 
-    cnum point = {.a = 1, .b = 0, .c = 0, .d = 0, .k = 0};
+    cnum point;
+    mpz_init_set_ui(point.a, 1);
+    mpz_inits(point.b, point.c, point.d, point.k);
     uint8_t point_symbol[n];
     memset(point_symbol, 0, n*sizeof(uint8_t));
     MTBDD leaf  = mtbdd_makeleaf(ltype_id, (uint64_t) &point);
