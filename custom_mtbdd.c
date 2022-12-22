@@ -88,6 +88,7 @@ void my_leaf_create(uint64_t* ldata_p_raw)
 void my_leaf_destroy(uint64_t ldata)
 {
     cnum* data_p = (cnum*) ldata; // Data in leaf = pointer to my data
+    mpz_clears(data_p->a, data_p->b, data_p->c, data_p->d, data_p->k, NULL);
     free(data_p);
 }
 
@@ -96,8 +97,8 @@ int my_leaf_equals(const uint64_t ldata_a_raw, const uint64_t ldata_b_raw)
     cnum* ldata_a = (cnum*) ldata_a_raw;
     cnum* ldata_b = (cnum*) ldata_b_raw;
 
-    // !todo makro
-    return (ldata_a->a == ldata_b->a) && (ldata_a->b == ldata_b->b) && (ldata_a->c == ldata_b->c) && (ldata_a->d == ldata_b->d) && (ldata_a->k == ldata_b->k);
+    return !mpz_cmp(ldata_a->a, ldata_b->a) && !mpz_cmp(ldata_a->b, ldata_b->b) && !mpz_cmp(ldata_a->c, ldata_b->c) \
+           && !mpz_cmp(ldata_a->d, ldata_b->d) && !mpz_cmp(ldata_a->k, ldata_b->k);
 }
 
 char* my_leaf_to_str(int complemented, uint64_t ldata_raw, char* sylvan_buf, size_t sylvan_bufsize)
@@ -107,12 +108,10 @@ char* my_leaf_to_str(int complemented, uint64_t ldata_raw, char* sylvan_buf, siz
     cnum* ldata = (cnum*) ldata_raw;
 
     // !todo makro na velikost
-    char ldata_string[1000] = {0};
+    char ldata_string[1000] = {0}; //FIXME: velikost
     // ?? resit zapornou navrat. hodnotu a vel. > 100 ??
-
-    int chars_written = snprintf(ldata_string, 1000, "(1/√2)^(%s) * (%s + %sω + %sω² + %sω³)", \
-    mpz_get_str(NULL, 10, ldata->k), mpz_get_str(NULL, 10, ldata->a), mpz_get_str(NULL, 10, ldata->b), \
-    mpz_get_str(NULL, 10, ldata->c), mpz_get_str(NULL, 10, ldata->d));
+    
+    int chars_written = gmp_snprintf(ldata_string, 1000, "(1/√2)^(%Zd) * (%Zd%+Zdω%+Zdω²%+Zdω³)", ldata->k, ldata->a, ldata->b, ldata->c, ldata->d);
 
     // ?? je potreba null termination ??
     // Is buffer large enough?
@@ -172,7 +171,7 @@ TASK_IMPL_2(MTBDD, my_op_plus, MTBDD*, p_a, MTBDD*, p_b)
         mpz_add(res_data.d, a_data->d, b_data->d);
         mpz_set(res_data.k, a_data->k);
         
-        if (res_data.a == 0 && res_data.b == 0 && res_data.c == 0 && res_data.d == 0) {
+        if (!mpz_cmp_si(res_data.a, 0) && !mpz_cmp_si(res_data.b, 0) && !mpz_cmp_si(res_data.c, 0) && !mpz_cmp_si(res_data.d, 0)) {
             return (MTBDD)NULL;
         }
         
@@ -219,7 +218,7 @@ TASK_IMPL_2(MTBDD, my_op_minus, MTBDD*, p_a, MTBDD*, p_b)
         mpz_sub(res_data.d, a_data->d, b_data->d);
         mpz_set(res_data.k, a_data->k);
         
-        if (res_data.a == 0 && res_data.b == 0 && res_data.c == 0 && res_data.d == 0) {
+        if (!mpz_cmp_si(res_data.a, 0) && !mpz_cmp_si(res_data.b, 0) && !mpz_cmp_si(res_data.c, 0) && !mpz_cmp_si(res_data.d, 0)) {
             return (MTBDD)NULL;
         }
         
@@ -255,7 +254,7 @@ TASK_IMPL_2(MTBDD, my_op_times, MTBDD*, p_a, MTBDD*, p_b)
         mpz_mul(res_data.d, a_data->d, b_data->d);
         mpz_add(res_data.k, a_data->k, b_data->k);
 
-        if (res_data.a == 0 && res_data.b == 0 && res_data.c == 0 && res_data.d == 0) {
+        if (!mpz_cmp_si(res_data.a, 0) && !mpz_cmp_si(res_data.b, 0) && !mpz_cmp_si(res_data.c, 0) && !mpz_cmp_si(res_data.d, 0)) {
             return (MTBDD)NULL;
         }
 
@@ -374,7 +373,7 @@ TASK_IMPL_2(MTBDD, my_op_coef_rot2, MTBDD, a, size_t, x)
         mpz_init_set(res_data.c, a_data->a);
         mpz_init_set(res_data.d, a_data->b);
         mpz_init_set(res_data.k, a_data->k);
-        
+
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
         return res;
     }
@@ -432,10 +431,16 @@ MTBDD b_xt_create(uint32_t xt)
     BDDSET variables = mtbdd_set_empty();
     variables = mtbdd_set_add(variables, xt); // list of all nonterminal node names
 
-    cnum num1 = {.a = 1, .b = 1, .c = 1, .d = 1, .k = 0};
-    uint8_t num1_symbol[] = {1}; // symbol seq. 0/1/2 means where will leaf be (low/high/both)
-    MTBDD leaf1  = mtbdd_makeleaf(ltype_id, (uint64_t) &num1);
-    MTBDD b_xt = mtbdd_cube(variables, num1_symbol, leaf1); // creates mtbdd with leaves based on variables and symbol. seq.
+    cnum num;
+    mpz_init_set_ui(num.a, 1);
+    mpz_init_set_ui(num.b, 1);
+    mpz_init_set_ui(num.c, 1);
+    mpz_init_set_ui(num.d, 1);
+    mpz_init(num.k);
+
+    uint8_t num_symbol[] = {1}; // symbol seq. 0/1/2 means where will leaf be (low/high/both)
+    MTBDD leaf1  = mtbdd_makeleaf(ltype_id, (uint64_t) &num);
+    MTBDD b_xt = mtbdd_cube(variables, num_symbol, leaf1); // creates mtbdd with leaves based on variables and symbol. seq.
     return b_xt;
 }
 
@@ -444,10 +449,16 @@ MTBDD b_xt_comp_create(uint32_t xt)
     BDDSET variables = mtbdd_set_empty();
     variables = mtbdd_set_add(variables, xt); // list of all nonterminal node names
 
-    cnum num1 = {.a = 1, .b = 1, .c = 1, .d = 1, .k = 0};
-    uint8_t num1_symbol_comp[] = {0}; // symbol seq. 0/1/2 means where will leaf be (low/high/both)
-    MTBDD leaf1  = mtbdd_makeleaf(ltype_id, (uint64_t) &num1);
-    MTBDD b_xt_comp = mtbdd_cube(variables, num1_symbol_comp, leaf1); // creates mtbdd with leaves based on variables and symbol. seq.
+    cnum num;
+    mpz_init_set_ui(num.a, 1);
+    mpz_init_set_ui(num.b, 1);
+    mpz_init_set_ui(num.c, 1);
+    mpz_init_set_ui(num.d, 1);
+    mpz_init(num.k);
+
+    uint8_t num_symbol_comp[] = {0}; // symbol seq. 0/1/2 means where will leaf be (low/high/both)
+    MTBDD leaf  = mtbdd_makeleaf(ltype_id, (uint64_t) &num);
+    MTBDD b_xt_comp = mtbdd_cube(variables, num_symbol_comp, leaf); // creates mtbdd with leaves based on variables and symbol. seq.
     return b_xt_comp;
 }
 

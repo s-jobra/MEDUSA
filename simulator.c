@@ -38,7 +38,7 @@ void circuit_init(MTBDD *a, const uint32_t n)
 
     cnum point;
     mpz_init_set_ui(point.a, 1);
-    mpz_inits(point.b, point.c, point.d, point.k);
+    mpz_inits(point.b, point.c, point.d, point.k, NULL);
     uint8_t point_symbol[n];
     memset(point_symbol, 0, n*sizeof(uint8_t));
     MTBDD leaf  = mtbdd_makeleaf(ltype_id, (uint64_t) &point);
@@ -283,6 +283,8 @@ int main(int argc, char *argv[])
     clock_t t_end = clock();
 
     mtbdd_fprintdot(out, circ);
+
+    // FIXME: garbage collection sylvan (circ + gates.c) + dealloc gmp values
     
     fclose(out);
     if (argc == 2){
