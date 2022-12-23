@@ -17,12 +17,14 @@
 
 extern uint32_t ltype_id;
 
+//FIXME: garbage collection sylvan (circ + gates.c)
 //FIXME: doxygen comments
 //       projit kod vsechny ?? a !todo
 //       print pravdepodobnosti:
          /** 1. my op probability print do extra filu - problem: jiny typ stromu (floaty)
            * 2. dodelat dalsi output file: strom vs tabulka? */
-//TODO: GMP
+
+//TODO: GMP check velky obvod
 //TODO: dalsi upravy grafu - velikost bodu, zoom, barvy, vetsi legenda apod
 // Profiling?
 
@@ -43,6 +45,8 @@ void circuit_init(MTBDD *a, const uint32_t n)
     memset(point_symbol, 0, n*sizeof(uint8_t));
     MTBDD leaf  = mtbdd_makeleaf(ltype_id, (uint64_t) &point);
     *a = mtbdd_cube(variables, point_symbol, leaf);
+
+    mpz_clears(point.a, point.b, point.c, point.d, point.k, NULL);
 }
 
 /** 
@@ -283,8 +287,6 @@ int main(int argc, char *argv[])
     clock_t t_end = clock();
 
     mtbdd_fprintdot(out, circ);
-
-    // FIXME: garbage collection sylvan (circ + gates.c) + dealloc gmp values
     
     fclose(out);
     if (argc == 2){

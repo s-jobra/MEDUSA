@@ -1,7 +1,5 @@
 #include "custom_mtbdd.h"
 
-// FIXME: mpz_clear(n); ???
-
 /**
  * Global variable for my custom leaf type id
  */
@@ -172,10 +170,12 @@ TASK_IMPL_2(MTBDD, my_op_plus, MTBDD*, p_a, MTBDD*, p_b)
         mpz_set(res_data.k, a_data->k);
         
         if (!mpz_cmp_si(res_data.a, 0) && !mpz_cmp_si(res_data.b, 0) && !mpz_cmp_si(res_data.c, 0) && !mpz_cmp_si(res_data.d, 0)) {
+            mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, res_data.k, NULL);
             return (MTBDD)NULL;
         }
         
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
+        mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, res_data.k, NULL);
         return res;
     }
 
@@ -219,10 +219,12 @@ TASK_IMPL_2(MTBDD, my_op_minus, MTBDD*, p_a, MTBDD*, p_b)
         mpz_set(res_data.k, a_data->k);
         
         if (!mpz_cmp_si(res_data.a, 0) && !mpz_cmp_si(res_data.b, 0) && !mpz_cmp_si(res_data.c, 0) && !mpz_cmp_si(res_data.d, 0)) {
+            mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, res_data.k, NULL);
             return (MTBDD)NULL;
         }
         
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
+        mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, res_data.k, NULL);
         return res;
     }
 
@@ -255,10 +257,12 @@ TASK_IMPL_2(MTBDD, my_op_times, MTBDD*, p_a, MTBDD*, p_b)
         mpz_add(res_data.k, a_data->k, b_data->k);
 
         if (!mpz_cmp_si(res_data.a, 0) && !mpz_cmp_si(res_data.b, 0) && !mpz_cmp_si(res_data.c, 0) && !mpz_cmp_si(res_data.d, 0)) {
+            mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, res_data.k, NULL);
             return (MTBDD)NULL;
         }
 
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
+        mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, res_data.k, NULL);
         return res;
     }
 
@@ -296,6 +300,7 @@ TASK_IMPL_2(MTBDD, my_op_negate, MTBDD, a, size_t, x)
         mpz_set(res_data.k, a_data->k);
         
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
+        mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, res_data.k, NULL);
         return res;
     }
 
@@ -322,6 +327,7 @@ TASK_IMPL_2(MTBDD, my_op_coef_k_incr, MTBDD, a, size_t, x)
         mpz_add_ui(res_data.k, a_data->k, 1);
 
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
+        mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, res_data.k, NULL);
         return res;
     }
 
@@ -348,6 +354,7 @@ TASK_IMPL_2(MTBDD, my_op_coef_rot1, MTBDD, a, size_t, x)
         mpz_init_set(res_data.k, a_data->k);
 
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
+        mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, res_data.k, NULL);
         return res;
     }
 
@@ -375,6 +382,7 @@ TASK_IMPL_2(MTBDD, my_op_coef_rot2, MTBDD, a, size_t, x)
         mpz_init_set(res_data.k, a_data->k);
 
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
+        mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, res_data.k, NULL);
         return res;
     }
 
@@ -441,6 +449,7 @@ MTBDD b_xt_create(uint32_t xt)
     uint8_t num_symbol[] = {1}; // symbol seq. 0/1/2 means where will leaf be (low/high/both)
     MTBDD leaf1  = mtbdd_makeleaf(ltype_id, (uint64_t) &num);
     MTBDD b_xt = mtbdd_cube(variables, num_symbol, leaf1); // creates mtbdd with leaves based on variables and symbol. seq.
+    mpz_clears(num.a, num.b, num.c, num.d, num.k, NULL);
     return b_xt;
 }
 
@@ -459,6 +468,7 @@ MTBDD b_xt_comp_create(uint32_t xt)
     uint8_t num_symbol_comp[] = {0}; // symbol seq. 0/1/2 means where will leaf be (low/high/both)
     MTBDD leaf  = mtbdd_makeleaf(ltype_id, (uint64_t) &num);
     MTBDD b_xt_comp = mtbdd_cube(variables, num_symbol_comp, leaf); // creates mtbdd with leaves based on variables and symbol. seq.
+    mpz_clears(num.a, num.b, num.c, num.d, num.k, NULL);
     return b_xt_comp;
 }
 
