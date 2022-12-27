@@ -81,16 +81,3 @@ clean-artifacts:
 
 clean-deps:
 	rm -rf sylvan lace
-
-# OLD:
-########
-#test:
-#example: my-example.c custom_mtbdd.c gates.c $(HEADER_FILES) sylvan/build/src/libsylvan.a lace/build/liblace.a
-#	gcc $(INC_DIRS) $(CFLAGS) -o my-example $^ $(CLIBS)
-
-#test:
-#	$(MAKE) test_example
-#	@./my-example
-#	@dot -Tjpeg to.dot -o torig.jpeg
-#	@dot -Tjpeg tn.dot -o tres.jpeg
-#	@rm *.dot

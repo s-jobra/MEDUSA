@@ -1,19 +1,24 @@
 #include "custom_mtbdd.h"
 
 /**
- * Global variable for my custom leaf type id
+ * Max. size of string written as leaf value in output file.
  */
+#define MAX_LEAF_STR_LEN 1000
+
 uint32_t ltype_id;
 
 /* INTERNAL */
 /**
  * Hash value and combine it with an already existing hash
- * Values from: http://www.boost.org/doc/libs/1_64_0/boost/functional/hash/hash.hpp
+ * 
+ * Taken from: http://www.boost.org/doc/libs/1_64_0/boost/functional/hash/hash.hpp
  */
 #define MY_HASH_COMB(val, data) ( (val) ^ (my_hash((uint64_t)(data)) + 0x9e3779b9 + ((val)<<6) + ((val)>>2)) )
+
 /**
  * Hash function for 64bit integers.
- * Taken from: https://stackoverflow.com/a/12996028
+ * 
+ * Taken from: https://stackoverflow.com/a/12996028, author: Thomas Mueller
  */
 static inline uint64_t my_hash(uint64_t x) {
     x = (x ^ (x >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
@@ -34,23 +39,10 @@ static void* my_malloc(size_t size) {
     return p;
 }
 
-/* ERROR HANDLING */
-void error_exit(const char *error)
-{
-    // create error message format
-    unsigned error_len = strlen(error) + strlen(ERROR_TEXT);
-    char msg[error_len + 1];
-    strcpy(msg, ERROR_TEXT);
-    strcat(msg, error);
-
-    fprintf(stderr, "%s\n",msg);
-    exit(1);
-}
-
 /* SETUP */
 void init_sylvan() {
     lace_start(1, 0); // 1 thread, default task queue size
-    sylvan_set_limits(500LL*1024*1024, 3, 5); // Allocate 500MB
+    sylvan_set_limits(500LL*1024*1024, 3, 1); // Allocate 500MB FIXME: original vals - 500LL*1024*1024, 3, 5
     sylvan_init_package();
     sylvan_init_mtbdd();
 }
@@ -101,17 +93,20 @@ int my_leaf_equals(const uint64_t ldata_a_raw, const uint64_t ldata_b_raw)
 
 char* my_leaf_to_str(int complemented, uint64_t ldata_raw, char* sylvan_buf, size_t sylvan_bufsize)
 {
-    // ?? proc complemented k nicemu ??
     (void) complemented;
     cnum* ldata = (cnum*) ldata_raw;
 
-    // !todo makro na velikost
-    char ldata_string[1000] = {0}; //FIXME: velikost
-    // ?? resit zapornou navrat. hodnotu a vel. > 100 ??
+    char ldata_string[MAX_LEAF_STR_LEN] = {0};
     
-    int chars_written = gmp_snprintf(ldata_string, 1000, "(1/√2)^(%Zd) * (%Zd%+Zdω%+Zdω²%+Zdω³)", ldata->k, ldata->a, ldata->b, ldata->c, ldata->d);
+    int chars_written = gmp_snprintf(ldata_string, MAX_LEAF_STR_LEN, "(1/√2)^(%Zd) * (%Zd%+Zdω%+Zdω²%+Zdω³)", ldata->k, ldata->a, ldata->b, ldata->c, ldata->d);
+    // Was string truncated?
+    if (chars_written >= MAX_LEAF_STR_LEN) {
+        error_exit("Allocated string length for leaf value output has not been sufficient.\n");
+    }
+    else if (chars_written < 0) {
+        error_exit("An encoding error has occured when producing leaf value output.\n");
+    }
 
-    // ?? je potreba null termination ??
     // Is buffer large enough?
     if (chars_written < sylvan_bufsize) {
         memcpy(sylvan_buf, ldata_string, chars_written * sizeof(char));
@@ -179,7 +174,6 @@ TASK_IMPL_2(MTBDD, my_op_plus, MTBDD*, p_a, MTBDD*, p_b)
         return res;
     }
 
-    // ?? vykon ??
     /* Commutative, so swap a,b for better cache performance*/
     if (a < b) {
         *p_a = b;
@@ -266,7 +260,6 @@ TASK_IMPL_2(MTBDD, my_op_times, MTBDD*, p_a, MTBDD*, p_b)
         return res;
     }
 
-    // ?? vykon ??
     /* Commutative, so swap a,b for better cache performance */
     if (a < b) {
         *p_a = b;
