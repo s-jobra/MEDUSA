@@ -3,7 +3,7 @@
 /**
  * Max. size of string written as leaf value in output file.
  */
-#define MAX_LEAF_STR_LEN 1000
+#define MAX_LEAF_STR_LEN 32000
 
 uint32_t ltype_id;
 
@@ -42,7 +42,7 @@ static void* my_malloc(size_t size) {
 /* SETUP */
 void init_sylvan() {
     lace_start(1, 0); // 1 thread, default task queue size
-    sylvan_set_limits(500LL*1024*1024, 3, 1); // Allocate 500MB FIXME: original vals - 500LL*1024*1024, 3, 5
+    sylvan_set_limits(500LL*1024*1024, 3, 5); // Allocate 500MB
     sylvan_init_package();
     sylvan_init_mtbdd();
 }
@@ -115,7 +115,7 @@ char* my_leaf_to_str(int complemented, uint64_t ldata_raw, char* sylvan_buf, siz
     }
     
     // Else return newly allocated string
-    char* new_buf = (char*)my_malloc(chars_written * sizeof(char));
+    char* new_buf = (char*)my_malloc((chars_written + 1) * sizeof(char));
     memcpy(new_buf, ldata_string, chars_written * sizeof(char));
     new_buf[chars_written] = '\0';
     return new_buf;
