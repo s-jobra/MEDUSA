@@ -12,9 +12,11 @@ N_JOBS=4
 F=bell-state
 OF_TYPE=svg
 F_OUT_NAME=res
+T=BernsteinVazirani/01
+TEST_OUT=benchmark.out
 
 .DEFAULT := all
-.PHONY := clean clean-all clean-artifacts clean-deps run install test benchmark plot plot-log \
+.PHONY := clean clean-all clean-artifacts clean-deps clean-benchmark run install test benchmark plot plot-log \
           test-init install make-sylvan make-lace download-sylvan download-lace
 
 #TODO: deps + srcs
@@ -22,17 +24,21 @@ F_OUT_NAME=res
 all: $(SOURCES) $(HEADER_FILES) sylvan/build/src/libsylvan.a lace/build/liblace.a
 	gcc $(INC_DIRS) $(CFLAGS) -o $(OUTPUT_BINARY) $^ $(CLIBS)
 
-run:
-	$(MAKE)
+run-my:
 	@./$(OUTPUT_BINARY) ./examples/$(F).qasm
+	@dot -T$(OF_TYPE) $(F_OUT_NAME).dot -o $(F_OUT_NAME).$(OF_TYPE)
+	@rm $(F_OUT_NAME).dot
+
+run-b:
+	@./$(OUTPUT_BINARY) ../benchmarks/$(T)/circuit.qasm
 	@dot -T$(OF_TYPE) $(F_OUT_NAME).dot -o $(F_OUT_NAME).$(OF_TYPE)
 	@rm $(F_OUT_NAME).dot
 
 test:
 	@bash ./benchmark-files/test.sh
 
-benchmark:
-	@bash ./benchmark-files/test-all.sh
+test-all:
+	@bash ./benchmark-files/test-all.sh >$(TEST_OUT)
 
 plot-log:
 	@cd ./benchmark-files/ && bash ./plot_log.sh
@@ -51,7 +57,7 @@ test-init:
 	mv AutoQ/benchmarks . && rm -rf AutoQ
 
 # INIT:
-install: make-sylvan make-lace
+install-deps: make-sylvan make-lace
 
 make-sylvan: download-sylvan
 	cd sylvan;			\
@@ -76,10 +82,13 @@ download-lace:
 # CLEAN:
 clean: clean-artifacts
 
-clean-all: clean-artifacts clean-deps
+clean-all: clean-artifacts clean-deps clean-benchmark
 
 clean-artifacts:
 	rm -f $(OUTPUT_BINARY) *.dot $(F_OUT_NAME).$(OF_TYPE)
 
 clean-deps:
 	rm -rf sylvan lace
+
+clean-benchmark:
+	cd .. && rm -rf benchmarks SliQSim
