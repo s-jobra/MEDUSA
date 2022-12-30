@@ -56,6 +56,7 @@ int main(int argc, char *argv[])
         error_exit("Cannot open output file.");
     }
     MTBDD circ;
+    mtbdd_protect(&circ);
 
     clock_t t_start = clock(); // Start the timer
 
