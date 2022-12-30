@@ -126,7 +126,6 @@ void sim_file(FILE *in, MTBDD *circ)
         }
         else if (init) {
             if (strcmp(cmd, "measure") == 0) {
-                //TODO: dodelat
             }
             else if (strcmp(cmd, "x") == 0) {
                 uint32_t qt = get_q_num(in);
