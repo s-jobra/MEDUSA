@@ -1,11 +1,16 @@
-SOURCES:= *.c
-HEADER_FILES:= *.h
-OUTPUT_BINARY:=sim
+SRC_DIR:=src
+OBJ_DIR:=obj
+BIN_DIR:=.
+LIB_DIR:=lib
+
+SRCS:=$(wildcard $(SRC_DIR)/*.c)
+EXEC:=$(BIN_DIR)/sim
+OBJS:=$(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRCS))
 
 CC:=gcc
 CFLAGS:=-g -O2
 CLIBS=-lgmp -lpthread -lm
-INC_DIRS:=-I sylvan/src/ -I lace/src/ -I lace/build/
+INC_DIRS:=-I $(LIB_DIR)/sylvan/src/ -I $(LIB_DIR)/lace/src/ -I $(LIB_DIR)/lace/build/
 
 N_JOBS=4
 
@@ -13,38 +18,45 @@ F=bell-state
 OF_TYPE=svg
 F_OUT_NAME=res
 T=BernsteinVazirani/01
+BSCRIPT_PATH=benchmarks/scripts/
 TEST_OUT=benchmark.out
 
 .DEFAULT := all
 .PHONY := clean clean-all clean-artifacts clean-deps clean-benchmark run install test benchmark plot plot-log \
           test-init install make-sylvan make-lace download-sylvan download-lace
 
-#TODO: deps + srcs
+all: $(OBJS) $(LIB_DIR)/sylvan/build/src/libsylvan.a $(LIB_DIR)/lace/build/liblace.a | $(BIN_DIR)
+	$(CC) $(INC_DIRS) $(CFLAGS) -o $(EXEC) $^ $(CLIBS)
 
-all: $(SOURCES) $(HEADER_FILES) sylvan/build/src/libsylvan.a lace/build/liblace.a
-	gcc $(INC_DIRS) $(CFLAGS) -o $(OUTPUT_BINARY) $^ $(CLIBS)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+	$(CC) $(INC_DIRS) $(CFLAGS) -c $< -o $@
+
+$(BIN_DIR) $(OBJ_DIR):
+	mkdir -p $@
+
+-include $(OBJ:.o=.d)
 
 run-my:
-	@./$(OUTPUT_BINARY) ./examples/$(F).qasm
+	@./$(EXEC) ./examples/$(F).qasm
 	@dot -T$(OF_TYPE) $(F_OUT_NAME).dot -o $(F_OUT_NAME).$(OF_TYPE)
 	@rm $(F_OUT_NAME).dot
 
 run-b:
-	@./$(OUTPUT_BINARY) ../benchmarks/$(T)/circuit.qasm
+	@./$(EXEC) ../benchmarks/$(T)/circuit.qasm
 	@dot -T$(OF_TYPE) $(F_OUT_NAME).dot -o $(F_OUT_NAME).$(OF_TYPE)
 	@rm $(F_OUT_NAME).dot
 
 test:
-	@bash ./benchmark-files/test.sh
+	@bash ./$(BSCRIPT_PATH)/test-my.sh
 
 test-all:
-	@bash ./benchmark-files/test-all.sh >$(TEST_OUT)
+	@bash ./$(BSCRIPT_PATH)/test-all.sh
 
 plot-log:
-	@cd ./benchmark-files/ && bash ./plot_log.sh
+	@cd ./$(BSCRIPT_PATH)/ && bash ./plot_log.sh
 
 plot:
-	@cd ./benchmark-files/ && bash ./plot.sh
+	@cd ./$(BSCRIPT_PATH)/ && bash ./plot.sh
 
 test-init:
 	cd .. &&\
@@ -58,6 +70,7 @@ test-init:
 
 # INIT:
 install-deps: make-sylvan make-lace
+	mkdir $(LIB_DIR) && mv sylvan $(LIB_DIR) && mv lace $(LIB_DIR)
 
 make-sylvan: download-sylvan
 	cd sylvan;			\
@@ -85,10 +98,10 @@ clean: clean-artifacts
 clean-all: clean-artifacts clean-deps clean-benchmark
 
 clean-artifacts:
-	rm -f $(OUTPUT_BINARY) *.dot $(F_OUT_NAME).$(OF_TYPE)
+	rm -rf $(BIN_DIR)/$(EXEC) $(F_OUT_NAME).dot $(F_OUT_NAME).$(OF_TYPE) $(OBJ_DIR)
 
 clean-deps:
-	rm -rf sylvan lace
+	rm -rf $(LIB_DIR)
 
 clean-benchmark:
 	cd .. && rm -rf benchmarks SliQSim

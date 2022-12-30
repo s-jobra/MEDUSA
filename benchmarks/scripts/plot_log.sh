@@ -1,12 +1,14 @@
 #!/bin.bash
 
-IN_FILE=test_new.out
-OUT_FILE=test_res.svg
+IN_FILE=../results/test_gmp.out
+OUT_FILE=../test_res_gmp_log.svg
 
 RED=$(tput setaf 1)
 GREEN=$(tput setaf 2)
 YELLOW=$(tput setaf 3)
 NC=$(tput sgr0)
+
+# FIXME: change timeouts to 0.0001 or sth
 
 awk \
         '/^BernsteinVazirani/ { if (match($2, /[0-9]*\.[0-9]*/)) { $2=substr($2, RSTART, RLENGTH); my_fail=0;} else { $2=0; my_fail=1;}; \
@@ -58,33 +60,26 @@ gnuplot -persist <<-EOFMarker
 
     set origin 0,0
     set size 1,1
-    set xlabel "SliQSim Time (s)"
-    set ylabel "MySim Time (s)"
+    set xlabel "SliQSim Time (s)" font ",20"
+    set ylabel "MySim Time (s)" font ",20"
+    set logscale
     set grid
-    set xrange [0:0.7]
-    set yrange [0:0.7]
-    set xtics 0.05
-    set ytics 0.05
-    plot "bv-temp.out" title "BV" lt 4 lc 2,\
-         "feynman-temp.out" title "Feynman" lt 4 lc 3,\
-         "grover-temp.out" title "Grover" lt 4 lc 4,\
-         "mctoffoli-temp.out" title "MCToffoli" lt 4 lc 5,\
-         "mogrover-temp.out" title "MOGrover" lt 4 lc 6,\
-         "random-temp.out" title "Random" lt 4 lc 8,\
-         "revlib-temp.out" title "RevLib" lt 4 lc 9,\
-         x lc 7 title ""
 
-    set origin 0.5,0.05
-    set size 0.49,0.49
-    set xrange [0:0.07]
-    set yrange [0:0.07]
-    set xtics 0.01
-    set ytics 0.01
-    set xlabel ""
-    set ylabel ""
-    unset key
-    unset grid
-    replot
+    set xrange [0.0001:180]
+    set yrange [0.0001:180]
+    set size square
+
+    set xtics font ",20"
+    set ytics font ",20"
+    set key left top font ",20" box
+    plot "bv-temp.out" title "BV" pt 6 lc 9 ps 1.5,\
+         "feynman-temp.out" title "Feynman" pt 7 lc 4 ps 1.5,\
+         "grover-temp.out" title "Grover" pt 5 lc 3 ps 1.5,\
+         "mctoffoli-temp.out" title "MCToffoli" pt 4 lc 8 ps 1.5,\
+         "mogrover-temp.out" title "MOGrover" pt 3 lc 9 ps 1.5,\
+         "random-temp.out" title "Random" pt 2 lc 2 ps 1.5,\
+         "revlib-temp.out" title "RevLib" pt 10 lc 6 ps 1.5,\
+         x lc 7 title ""
 EOFMarker
 
 rm -f *-temp.out
