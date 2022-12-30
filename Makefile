@@ -47,6 +47,8 @@ test-init:
 	./configure --enable-dddmp --enable-obj --enable-shared --enable-static &&\
 	cd .. &&\
 	make
+	cd .. && git clone https://github.com/alan23273850/AutoQ.git || true &&\
+	mv AutoQ/benchmarks . && rm -rf AutoQ
 
 # INIT:
 install: make-sylvan make-lace
