@@ -122,6 +122,7 @@ void sim_file(FILE *in, MTBDD *circ)
         else if (strcmp(cmd, "qreg") == 0) {
             uint32_t n = get_q_num(in);
             circuit_init(circ, n);
+            mtbdd_protect(circ);
             init = true;
         }
         else if (init) {
@@ -129,57 +130,57 @@ void sim_file(FILE *in, MTBDD *circ)
             }
             else if (strcmp(cmd, "x") == 0) {
                 uint32_t qt = get_q_num(in);
-                *circ = gate_x(circ, qt);
+                gate_x(circ, qt);
             }
             else if (strcmp(cmd, "y") == 0) {
                 uint32_t qt = get_q_num(in);
-                *circ = gate_y(circ, qt);
+                gate_y(circ, qt);
             }
             else if (strcmp(cmd, "z") == 0) {
                 uint32_t qt = get_q_num(in);
-                *circ = gate_z(circ, qt);
+                gate_z(circ, qt);
             }
             else if (strcmp(cmd, "h") == 0) {
                 uint32_t qt = get_q_num(in);
-                *circ = gate_h(circ, qt);
+                gate_h(circ, qt);
             }
             else if (strcmp(cmd, "s") == 0) {
                 uint32_t qt = get_q_num(in);
-                *circ = gate_s(circ, qt);
+                gate_s(circ, qt);
             }
             else if (strcmp(cmd, "t") == 0) {
                 uint32_t qt = get_q_num(in);
-                *circ = gate_t(circ, qt);
+                gate_t(circ, qt);
             }
             else if (strcmp(cmd, "rx(pi/2)") == 0) {
                 uint32_t qt = get_q_num(in);
-                *circ = gate_rx_pihalf(circ, qt);
+                gate_rx_pihalf(circ, qt);
             }
             else if (strcmp(cmd, "ry(pi/2)") == 0) {
                 uint32_t qt = get_q_num(in);
-                *circ = gate_ry_pihalf(circ, qt);
+                gate_ry_pihalf(circ, qt);
             }
             else if (strcmp(cmd, "cx") == 0) {
                 uint32_t qc = get_q_num(in);
                 uint32_t qt = get_q_num(in);
-                *circ = gate_cnot(circ, qt, qc);
+                gate_cnot(circ, qt, qc);
             }
             else if (strcmp(cmd, "cz") == 0) {
                 uint32_t qc = get_q_num(in);
                 uint32_t qt = get_q_num(in);
-                *circ = gate_cz(circ, qt, qc);
+                gate_cz(circ, qt, qc);
             }
             else if (strcmp(cmd, "ccx") == 0) {
                 uint32_t qc1 = get_q_num(in);
                 uint32_t qc2 = get_q_num(in);
                 uint32_t qt = get_q_num(in);
-                *circ = gate_toffoli(circ, qt, qc1, qc2);
+                gate_toffoli(circ, qt, qc1, qc2);
             }
             else if (strcmp(cmd, "cswap") == 0) {
                 uint32_t qc = get_q_num(in);
                 uint32_t qt1 = get_q_num(in);
                 uint32_t qt2 = get_q_num(in);
-                *circ = gate_fredkin(circ, qt1, qt2, qc);
+                gate_fredkin(circ, qt1, qt2, qc);
             }
             else {
                 error_exit("Invalid command.");
