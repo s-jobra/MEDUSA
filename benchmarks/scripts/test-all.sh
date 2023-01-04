@@ -6,7 +6,7 @@ EXEC="sim"
 
 # measurement settings
 REPS=10
-TIMEOUT="timeout 2m" # for no timeout: ""
+TIMEOUT="timeout 10m" # for no timeout: ""
 
 # output color settings
 RED=$(tput setaf 1)
