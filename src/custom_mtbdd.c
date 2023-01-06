@@ -41,7 +41,7 @@ static void* my_malloc(size_t size) {
 
 /* SETUP */
 void init_sylvan() {
-    lace_start(1, 0); // 1 thread, default task queue size
+    lace_start(2, 0); // 1 thread, default task queue size
     sylvan_set_limits(500LL*1024*1024, 3, 5); // Allocate 500MB
     sylvan_init_package();
     sylvan_init_mtbdd();

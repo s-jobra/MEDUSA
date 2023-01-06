@@ -57,11 +57,13 @@ int main(int argc, char *argv[])
     }
     MTBDD circ;
 
-    clock_t t_start = clock(); // Start the timer
+    struct timespec t_start, t_finish;
+    double t_el;
+    clock_gettime(CLOCK_MONOTONIC, &t_start); // Start the timer
 
     sim_file(input, &circ);
 
-    clock_t t_end = clock(); // End the timer
+    clock_gettime(CLOCK_MONOTONIC, &t_finish); // End the timer
 
     mtbdd_fprintdot(out, circ);
 
@@ -72,8 +74,10 @@ int main(int argc, char *argv[])
     sylvan_quit();
     lace_stop();
 
+    t_el = t_finish.tv_sec - t_start.tv_sec + (t_finish.tv_nsec - t_start.tv_nsec) * 1.0e-9;
+
     if (time) {
-        printf("Time=%.3gs\n", (double)(t_end - t_start)/CLOCKS_PER_SEC);
+        printf("Time=%.3gs\n", t_el);
     }
 
     return 0;
