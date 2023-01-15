@@ -13,7 +13,7 @@ uint32_t ltype_id;
  * 
  * Taken from: http://www.boost.org/doc/libs/1_64_0/boost/functional/hash/hash.hpp
  */
-#define MY_HASH_COMB(val, data) ( (val) ^ (my_hash((uint64_t)(data)) + 0x9e3779b9 + ((val)<<6) + ((val)>>2)) )
+#define MY_HASH_COMB(val, data) ( (val) ^ (my_hash(mpz_get_ui(data)) + 0x9e3779b9 + ((val)<<6) + ((val)>>2)) )
 
 /**
  * Hash function for 64bit integers.
@@ -42,7 +42,7 @@ static void* my_malloc(size_t size) {
 /* SETUP */
 void init_sylvan() {
     lace_start(1, 0); // 1 thread, default task queue size
-    sylvan_set_limits(500LL*1024*1024, 3, 5); // Allocate 500MB
+    sylvan_set_limits(2000LL*1024*1024, 3, 5); // Allocate 2GB - FIXME: orig. 500MB
     sylvan_init_package();
     sylvan_init_mtbdd();
 }
