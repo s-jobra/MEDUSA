@@ -1,7 +1,7 @@
 #!/bin.bash
 
-IN_FILE=../results/benchmark2.out
-OUT_FILE=../benchmark2_log.svg
+IN_FILE=../results/benchmark3.out
+OUT_FILE=../benchmark3_log.svg
 
 RED=$(tput setaf 1)
 GREEN=$(tput setaf 2)
@@ -50,6 +50,12 @@ awk \
                                 if (my_fail||sliq_fail) {t = $2; $2 = $3; $3 = t;}; \
                                 print $3, $2}' $IN_FILE > revlib-temp.out
 
+awk \
+        '/^SymbolicGrover/ { if (match($2, /[0-9]*\.[0-9]*/)) { $2=substr($2, RSTART, RLENGTH); my_fail=0;} else { $2="0.0001"; my_fail=1;}; \
+                                if (match($3, /[0-9]*\.[0-9]*/)) { $3=substr($3, RSTART, RLENGTH); sliq_fail=0;} else { $3="0.0001"; sliq_fail=1; }; \
+                                if (my_fail||sliq_fail) {t = $2; $2 = $3; $3 = t;}; \
+                                print $3, $2}' $IN_FILE > symgrover-temp.out
+
 gnuplot -persist <<-EOFMarker
     set terminal svg size 1920,1080 enhanced background rgb 'white'
     set output "$OUT_FILE"
@@ -77,6 +83,7 @@ gnuplot -persist <<-EOFMarker
          "mogrover-temp.out" title "MOGrover" pt 3 lc 9 ps 1.5,\
          "random-temp.out" title "Random" pt 2 lc 2 ps 1.5,\
          "revlib-temp.out" title "RevLib" pt 10 lc 6 ps 1.5,\
+         "symgrover-temp.out" title "SymbolicGrover" pt 11 lc 2 ps 1.5,\
          x lc 7 title ""
 EOFMarker
 
