@@ -1,7 +1,7 @@
 #!/bin.bash
 
-IN_FILE=../results/benchmark3.out
-OUT_FILE=../benchmark3_log.svg
+IN_FILE=../results/benchmark-fin.out
+OUT_FILE=../benchmark_f_log.svg
 
 RED=$(tput setaf 1)
 GREEN=$(tput setaf 2)
@@ -9,51 +9,43 @@ YELLOW=$(tput setaf 3)
 NC=$(tput sgr0)
 
 awk \
-        '/^BernsteinVazirani/ { if (match($2, /[0-9]*\.[0-9]*/)) { $2=substr($2, RSTART, RLENGTH); my_fail=0;} else { $2="0.0001"; my_fail=1;}; \
-                                if (match($3, /[0-9]*\.[0-9]*/)) { $3=substr($3, RSTART, RLENGTH); sliq_fail=0;} else { $3="0.0001"; sliq_fail=1; }; \
-                                if (my_fail||sliq_fail) {t = $2; $2 = $3; $3 = t;}; \
+        '/^BernsteinVazirani/ { if (match($2, /[0-9]*\.[0-9]*/)) { $2=substr($2, RSTART, RLENGTH); my_fail=0;} else { $2="1000"; my_fail=1;}; \
+                                if (match($3, /[0-9]*\.[0-9]*/)) { $3=substr($3, RSTART, RLENGTH); sliq_fail=0;} else { $3="1000"; sliq_fail=1; }; \
                                 print $3, $2}' $IN_FILE > bv-temp.out
 
 awk \
-        '/^Feynman/ { if (match($2, /[0-9]*\.[0-9]*/)) { $2=substr($2, RSTART, RLENGTH); my_fail=0;} else { $2="0.0001"; my_fail=1;}; \
-                                if (match($3, /[0-9]*\.[0-9]*/)) { $3=substr($3, RSTART, RLENGTH); sliq_fail=0;} else { $3="0.0001"; sliq_fail=1; }; \
-                                if (my_fail||sliq_fail) {t = $2; $2 = $3; $3 = t;}; \
+        '/^Feynman/ { if (match($2, /[0-9]*\.[0-9]*/)) { $2=substr($2, RSTART, RLENGTH); my_fail=0;} else { $2="1000"; my_fail=1;}; \
+                                if (match($3, /[0-9]*\.[0-9]*/)) { $3=substr($3, RSTART, RLENGTH); sliq_fail=0;} else { $3="1000"; sliq_fail=1; }; \
                                 print $3, $2}' $IN_FILE > feynman-temp.out
 
 awk \
-        '/^Grover/ { if (match($2, /[0-9]*\.[0-9]*/)) { $2=substr($2, RSTART, RLENGTH); my_fail=0;} else { $2="0.0001"; my_fail=1;}; \
-                                if (match($3, /[0-9]*\.[0-9]*/)) { $3=substr($3, RSTART, RLENGTH); sliq_fail=0;} else { $3="0.0001"; sliq_fail=1; }; \
-                                if (my_fail||sliq_fail) {t = $2; $2 = $3; $3 = t;}; \
+        '/^Grover/ { if (match($2, /[0-9]*\.[0-9]*/)) { $2=substr($2, RSTART, RLENGTH); my_fail=0;} else { $2="1000"; my_fail=1;}; \
+                                if (match($3, /[0-9]*\.[0-9]*/)) { $3=substr($3, RSTART, RLENGTH); sliq_fail=0;} else { $3="1000"; sliq_fail=1; }; \
                                 print $3, $2}' $IN_FILE > grover-temp.out
 
 awk \
-        '/^MCToffoli/ { if (match($2, /[0-9]*\.[0-9]*/)) { $2=substr($2, RSTART, RLENGTH); my_fail=0;} else { $2="0.0001"; my_fail=1;}; \
-                                if (match($3, /[0-9]*\.[0-9]*/)) { $3=substr($3, RSTART, RLENGTH); sliq_fail=0;} else { $3="0.0001"; sliq_fail=1; }; \
-                                if (my_fail||sliq_fail) {t = $2; $2 = $3; $3 = t;}; \
+        '/^MCToffoli/ { if (match($2, /[0-9]*\.[0-9]*/)) { $2=substr($2, RSTART, RLENGTH); my_fail=0;} else { $2="1000"; my_fail=1;}; \
+                                if (match($3, /[0-9]*\.[0-9]*/)) { $3=substr($3, RSTART, RLENGTH); sliq_fail=0;} else { $3="1000"; sliq_fail=1; }; \
                                 print $3, $2}' $IN_FILE > mctoffoli-temp.out
 
 awk \
-        '/^MOGrover/ { if (match($2, /[0-9]*\.[0-9]*/)) { $2=substr($2, RSTART, RLENGTH); my_fail=0;} else { $2="0.0001"; my_fail=1;}; \
-                                if (match($3, /[0-9]*\.[0-9]*/)) { $3=substr($3, RSTART, RLENGTH); sliq_fail=0;} else { $3="0.0001"; sliq_fail=1; }; \
-                                if (my_fail||sliq_fail) {t = $2; $2 = $3; $3 = t;}; \
+        '/^MOGrover/ { if (match($2, /[0-9]*\.[0-9]*/)) { $2=substr($2, RSTART, RLENGTH); my_fail=0;} else { $2="1000"; my_fail=1;}; \
+                                if (match($3, /[0-9]*\.[0-9]*/)) { $3=substr($3, RSTART, RLENGTH); sliq_fail=0;} else { $3="1000"; sliq_fail=1; }; \
                                 print $3, $2}' $IN_FILE > mogrover-temp.out
 
 awk \
-        '/^Random/ { if (match($2, /[0-9]*\.[0-9]*/)) { $2=substr($2, RSTART, RLENGTH); my_fail=0;} else { $2="0.0001"; my_fail=1;}; \
-                                if (match($3, /[0-9]*\.[0-9]*/)) { $3=substr($3, RSTART, RLENGTH); sliq_fail=0;} else { $3="0.0001"; sliq_fail=1; }; \
-                                if (my_fail||sliq_fail) {t = $2; $2 = $3; $3 = t;}; \
+        '/^Random/ { if (match($2, /[0-9]*\.[0-9]*/)) { $2=substr($2, RSTART, RLENGTH); my_fail=0;} else { $2="1000"; my_fail=1;}; \
+                                if (match($3, /[0-9]*\.[0-9]*/)) { $3=substr($3, RSTART, RLENGTH); sliq_fail=0;} else { $3="1000"; sliq_fail=1; }; \
                                 print $3, $2}' $IN_FILE > random-temp.out
 
 awk \
-        '/^RevLib/ { if (match($2, /[0-9]*\.[0-9]*/)) { $2=substr($2, RSTART, RLENGTH); my_fail=0;} else { $2="0.0001"; my_fail=1;}; \
-                                if (match($3, /[0-9]*\.[0-9]*/)) { $3=substr($3, RSTART, RLENGTH); sliq_fail=0;} else { $3="0.0001"; sliq_fail=1; }; \
-                                if (my_fail||sliq_fail) {t = $2; $2 = $3; $3 = t;}; \
+        '/^RevLib/ { if (match($2, /[0-9]*\.[0-9]*/)) { $2=substr($2, RSTART, RLENGTH); my_fail=0;} else { $2="1000"; my_fail=1;}; \
+                                if (match($3, /[0-9]*\.[0-9]*/)) { $3=substr($3, RSTART, RLENGTH); sliq_fail=0;} else { $3="1000"; sliq_fail=1; }; \
                                 print $3, $2}' $IN_FILE > revlib-temp.out
 
 awk \
-        '/^SymbolicGrover/ { if (match($2, /[0-9]*\.[0-9]*/)) { $2=substr($2, RSTART, RLENGTH); my_fail=0;} else { $2="0.0001"; my_fail=1;}; \
-                                if (match($3, /[0-9]*\.[0-9]*/)) { $3=substr($3, RSTART, RLENGTH); sliq_fail=0;} else { $3="0.0001"; sliq_fail=1; }; \
-                                if (my_fail||sliq_fail) {t = $2; $2 = $3; $3 = t;}; \
+        '/^SymbolicGrover/ { if (match($2, /[0-9]*\.[0-9]*/)) { $2=substr($2, RSTART, RLENGTH); my_fail=0;} else { $2="1000"; my_fail=1;}; \
+                                if (match($3, /[0-9]*\.[0-9]*/)) { $3=substr($3, RSTART, RLENGTH); sliq_fail=0;} else { $3="1000"; sliq_fail=1; }; \
                                 print $3, $2}' $IN_FILE > symgrover-temp.out
 
 gnuplot -persist <<-EOFMarker
@@ -69,8 +61,8 @@ gnuplot -persist <<-EOFMarker
     set logscale
     set grid
 
-    set xrange [0.0001:1000]
-    set yrange [0.0001:1000]
+    set xrange [0.002:1000]
+    set yrange [0.002:1000]
     set size square
 
     set xtics font ",20"
