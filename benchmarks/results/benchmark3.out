@@ -111,7 +111,7 @@ Feynman/cycle_17_3                  [32m.4576s(B[m                    [31mFa
 Feynman/gf2^10_mult                 [33m.0678s(B[m                    [32m.0259s(B[m
 Feynman/gf2^128_mult                [32m57.5900s(B[m                  [33m267.5177s(B[m
 Feynman/gf2^16_mult                 [33m.1508s(B[m                    [32m.1065s(B[m
-Feynman/gf2^256_mult                [31mFailed(B[m                    [31mFailed(B[m
+Feynman/gf2^256_mult                [32m419.6000s(B[m                 [31mFailed(B[m
 Feynman/gf2^32_mult                 [32m.7396s(B[m                    [33m1.2751s(B[m
 Feynman/gf2^4_mult                  [33m.0227s(B[m                    [32m.0073s(B[m
 Feynman/gf2^5_mult                  [33m.0257s(B[m                    [32m.0073s(B[m
