@@ -1,8 +1,8 @@
 #!/bin.bash
 
 IN_FILE=../results/benchmark4.out
-OUT_FILE=../benchmark4_log.pdf
-OUT_FILE_ZOOM=../benchmark4_z_log.pdf
+OUT_FILE=../benchmark.pdf
+OUT_FILE_ZOOM=../benchmark_z.pdf
 
 MAX_TIME=100000
 
@@ -52,15 +52,15 @@ awk -v maxt="$MAX_TIME" \
                                 print $3, $2}' $IN_FILE > symgrover-temp.out
 
 gnuplot -persist <<-EOFMarker
-    set terminal pdf size 40cm,20cm enhanced background rgb 'white'
+    set terminal pdf size 30cm,20cm enhanced background rgb 'white'
     set output "$OUT_FILE"
     
     set multiplot
 
     set origin 0,0
     set size 1,1
-    set xlabel "SliQSim Time (s)" font ",20"
-    set ylabel "MySim Time (s)" font ",20"
+    set xlabel "SliQSim Runtime (s)" font ",20"
+    set ylabel "MEDUSA Runtime (s)" font ",20"
     set logscale
     set grid
 
@@ -83,15 +83,15 @@ gnuplot -persist <<-EOFMarker
 EOFMarker
 
 gnuplot -persist <<-EOFMarker
-    set terminal pdf size 40cm,20cm enhanced background rgb 'white'
+    set terminal pdf size 30cm,20cm enhanced background rgb 'white'
     set output "$OUT_FILE_ZOOM"
     
     set multiplot
 
     set origin 0,0
     set size 1,1
-    set xlabel "SliQSim Time (s)" font ",20"
-    set ylabel "MySim Time (s)" font ",20"
+    set xlabel "SliQSim Runtime (s)" font ",20"
+    set ylabel "MEDUSA Runtime (s)" font ",20"
     set logscale
     set grid
 
