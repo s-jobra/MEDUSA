@@ -52,11 +52,8 @@ test:
 test-all:
 	@bash ./$(BSCRIPT_PATH)/test-all.sh
 
-plot-log:
-	@cd ./$(BSCRIPT_PATH)/ && bash ./plot_log.sh
-
 plot:
-	@cd ./$(BSCRIPT_PATH)/ && bash ./plot.sh
+	@cd ./$(BSCRIPT_PATH)/ && bash ./plot_log.sh
 
 test-init:
 	cd .. &&\
