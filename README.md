@@ -1,5 +1,5 @@
 # MEDUSA: An MTBDD-based quantum circuit simulator
-MEDUSA (**M**ulti-Terminal Binary D**E**cision **D**iagram-based Q**U**antum **S**imul**A**tor) is an MTBDD-based quantum circuit simulator supporting `OpenQASM` circuits.
+**MEDUSA** (**M**ulti-Terminal Binary D**E**cision **D**iagram-based Q**U**antum **S**imul**A**tor) is an MTBDD-based quantum circuit simulator supporting `OpenQASM` circuits.
 It is written in C and utilizes the [Sylvan](https://trolando.github.io/sylvan/) library for custom MTBDDs and MTBDD operations.
 
 ## Build
@@ -27,9 +27,13 @@ The simulator accepts path to the circuit file with `OpenQASM` format either as 
 ```
 You can also run the simulator with the flag `--time` to print runtime (wall-clock time) to the standard output.
 
+</br>
+
 The result of the simulation can be found in file `res.dot`. Beware that as these files can be quite large, it can take a while to convert them into a graph with a tool such as [`Graphviz`](https://graphviz.org/).
 
-You can also download benchmark files with:
+</br>
+
+You can also download additional test circuit files from [`AutoQ`](https://github.com/alan23273850/AutoQ)'s repository with:
 ```
 make get-benchmarks
 ```
