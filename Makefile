@@ -23,7 +23,7 @@ TEST_OUT=benchmark.out
 
 .DEFAULT := all
 .PHONY := clean clean-all clean-artifacts clean-deps clean-benchmark run install test benchmark plot plot-log \
-          test-init install make-sylvan make-lace download-sylvan download-lace
+          test-init install make-sylvan make-lace download-sylvan download-lace make-sliqsim get-benchmarks
 
 all: $(OBJS) $(LIB_DIR)/sylvan/build/src/libsylvan.a $(LIB_DIR)/lace/build/liblace.a | $(BIN_DIR)
 	$(CC) $(INC_DIRS) $(CFLAGS) -o $(EXEC) $^ $(CLIBS)
@@ -52,13 +52,17 @@ test:
 plot:
 	@cd ./$(BSCRIPT_PATH)/ && bash ./plot_log.sh
 
-test-init:
+test-init: make-sliqsim get-benchmarks
+
+make-sliqsim:
 	cd .. &&\
 	git clone https://github.com/NTU-ALComLab/SliQSim.git || true &&\
 	cd SliQSim/cudd &&\
 	./configure --enable-dddmp --enable-obj --enable-shared --enable-static &&\
 	cd .. &&\
 	make
+
+get-benchmarks:
 	cd .. && git clone https://github.com/alan23273850/AutoQ.git || true &&\
 	mv AutoQ/benchmarks . && rm -rf AutoQ
 
