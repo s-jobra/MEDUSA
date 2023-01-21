@@ -2,6 +2,7 @@ sim
 *.svg
 *.pdf
 *.dot
+gmon.out
 /lib
 /obj
 /.vscode
