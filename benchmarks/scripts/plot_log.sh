@@ -1,6 +1,6 @@
 #!/bin.bash
 
-IN_FILE=../results/benchmark4.out
+IN_FILE=../results/benchmarkF.out
 OUT_FILE=../benchmark.pdf
 OUT_FILE_ZOOM=../benchmark_z.pdf
 
