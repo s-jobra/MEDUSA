@@ -14,7 +14,7 @@ INC_DIRS:=-I $(LIB_DIR)/sylvan/src/ -I $(LIB_DIR)/lace/src/ -I $(LIB_DIR)/lace/b
 
 N_JOBS=4
 
-F=bell-state
+F=bell
 OF_TYPE=svg
 F_OUT_NAME=res
 T=BernsteinVazirani/01
@@ -47,9 +47,6 @@ run-b:
 	@rm $(F_OUT_NAME).dot
 
 test:
-	@bash ./$(BSCRIPT_PATH)/test-my.sh
-
-test-all:
 	@bash ./$(BSCRIPT_PATH)/test-all.sh
 
 plot:
