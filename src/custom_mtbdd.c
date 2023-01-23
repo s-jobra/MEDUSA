@@ -1,5 +1,9 @@
 #include "custom_mtbdd.h"
 
+/*
+ * Custom leaf implementation is taken from: https://github.com/MichalHe/sylvan-custom-leaf-example
+ */
+
 /**
  * Max. size of string written as leaf value in output file.
  */

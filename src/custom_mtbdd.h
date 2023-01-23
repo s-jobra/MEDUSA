@@ -5,6 +5,10 @@
 #ifndef CUSTOM_MTBDD_H
 #define CUSTOM_MTBDD_H
 
+/*
+ * Custom leaf implementation is taken from: https://github.com/MichalHe/sylvan-custom-leaf-example
+ */
+
 /**
  * Global variable for my custom leaf type id
  */
