@@ -22,7 +22,7 @@ uint32_t ltype_id;
 /**
  * Hash function for 64bit integers.
  * 
- * Taken from: https://stackoverflow.com/a/12996028, author: Thomas Mueller
+ * Taken from: https://stackoverflow.com/a/12996028, author: Thomas Mueller (https://stackoverflow.com/users/382763/thomas-mueller)
  */
 static inline uint64_t my_hash(uint64_t x) {
     x = (x ^ (x >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
