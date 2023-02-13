@@ -400,7 +400,7 @@ TASK_IMPL_2(MTBDD, t_xt_create, MTBDD, a, uint64_t, xt)
     }
     // Else copy if mtbdd is leaf
     else if (mtbdd_isleaf(a)) {
-        cnum* a_data = (cnum*) mtbdd_getvalue(a);
+        cnum* a_data = (cnum*) mtbdd_getvalue(a); //FIXME: why not just return a
 
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) a_data);
         return res;
@@ -443,7 +443,7 @@ MTBDD b_xt_create(uint32_t xt)
     mpz_init_set_ui(num.d, 1);
     mpz_init(num.k);
 
-    uint8_t num_symbol[] = {1}; // symbol seq. 0/1/2 means where will leaf be (low/high/both)
+    uint8_t num_symbol[] = {1}; // symbol seq. 0/1/2 denotes where the leaf will be (low/high/both)
     MTBDD leaf1  = mtbdd_makeleaf(ltype_id, (uint64_t) &num);
     MTBDD b_xt = mtbdd_cube(variables, num_symbol, leaf1); // creates mtbdd with leaves based on variables and symbol. seq.
     mpz_clears(num.a, num.b, num.c, num.d, num.k, NULL);
@@ -462,7 +462,7 @@ MTBDD b_xt_comp_create(uint32_t xt)
     mpz_init_set_ui(num.d, 1);
     mpz_init(num.k);
 
-    uint8_t num_symbol_comp[] = {0}; // symbol seq. 0/1/2 means where will leaf be (low/high/both)
+    uint8_t num_symbol_comp[] = {0}; // symbol seq. 0/1/2 denotes where the leaf will be (low/high/both)
     MTBDD leaf  = mtbdd_makeleaf(ltype_id, (uint64_t) &num);
     MTBDD b_xt_comp = mtbdd_cube(variables, num_symbol_comp, leaf); // creates mtbdd with leaves based on variables and symbol. seq.
     mpz_clears(num.a, num.b, num.c, num.d, num.k, NULL);
