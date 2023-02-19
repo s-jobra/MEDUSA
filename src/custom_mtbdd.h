@@ -134,6 +134,12 @@ MTBDD b_xt_create(uint32_t xt);
  */
 MTBDD b_xt_comp_create(uint32_t xt);
 
+// Gates:
+/**
+ * Permutation based implementation of X gate on the given MTBDD.
+ */
+TASK_DECL_2(MTBDD, m_gate_x, MTBDD, uint64_t);
+
 // Macros for applying operations:
 /**
  * Compute a + b with my custom MTBDDs
@@ -232,6 +238,17 @@ MTBDD b_xt_comp_create(uint32_t xt);
  * 
  */
 #define create_b_xt_comp(xt) b_xt_comp_create(xt)
+
+// Gates:
+/**
+ * Apply X gate on the state vector.
+ * 
+ * @param a pointer to an MTBDD
+ * 
+ * @param xt target qubit
+ * 
+ */
+#define gate_x(a, xt) mtbdd_uapply(a, TASK(m_gate_x), xt)
 
 #endif
 /* end of "custom_mtbdd.h" */

@@ -3,6 +3,7 @@
 #ifndef GATES_H
 #define GATES_H
 
+
 /**
  * Function implementing quantum gate X for a given MTBDD.
  * 
@@ -10,7 +11,7 @@
  * 
  * @param xt target qubit index
  */
-void gate_x(MTBDD* p_t, uint32_t xt);
+//void gate_x(MTBDD* p_t, uint32_t xt); FIXME:
 
 /**
  * Function implementing quantum gate Y for a given MTBDD.

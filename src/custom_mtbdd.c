@@ -469,4 +469,21 @@ MTBDD b_xt_comp_create(uint32_t xt)
     return b_xt_comp;
 }
 
+// Gates:
+TASK_IMPL_2(MTBDD, m_gate_x, MTBDD, a, uint64_t, xt)
+{
+    // Partial function check
+    if (a == mtbdd_false) return mtbdd_false;
+
+    // Skip and return high edge if node variable is target qubit
+    if (mtbdd_isnode(a)) {
+        xt = (uint32_t)xt; // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
+        if (mtbdd_getvar(a) == xt) { 
+            return mtbdd_makenode(xt, mtbdd_gethigh(a), mtbdd_getlow(a));
+        }
+    }
+
+    return mtbdd_invalid; // Recurse deeper
+}
+
 /* end of "custom_mtbdd.c" */

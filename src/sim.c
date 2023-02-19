@@ -130,7 +130,7 @@ void sim_file(FILE *in, MTBDD *circ)
             }
             else if (strcmp(cmd, "x") == 0) {
                 uint32_t qt = get_q_num(in);
-                gate_x(circ, qt);
+                gate_x(*circ, qt);
             }
             else if (strcmp(cmd, "y") == 0) {
                 uint32_t qt = get_q_num(in);
