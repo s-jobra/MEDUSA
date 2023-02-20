@@ -31,38 +31,38 @@
 //     mtbdd_unprotect(&res);
 // } FIXME:
 
-void gate_y(MTBDD* p_t, uint32_t xt)
-{
-    MTBDD t = *p_t;
-    mtbdd_protect(&t);
-    MTBDD res;
+// void gate_y(MTBDD* p_t, uint32_t xt)
+// {
+//     MTBDD t = *p_t;
+//     mtbdd_protect(&t);
+//     MTBDD res;
 
-    MTBDD b_xt = create_b_xt(xt);
-    mtbdd_protect(&b_xt);
-    MTBDD t_xt_comp = create_t_xt_comp(t, xt);
-    mtbdd_protect(&t_xt_comp);
-    res = my_mtbdd_times(b_xt, t_xt_comp);  // Bxt * Txt_c
-    mtbdd_protect(&res);
-    mtbdd_unprotect(&b_xt);
-    mtbdd_unprotect(&t_xt_comp);
+//     MTBDD b_xt = create_b_xt(xt);
+//     mtbdd_protect(&b_xt);
+//     MTBDD t_xt_comp = create_t_xt_comp(t, xt);
+//     mtbdd_protect(&t_xt_comp);
+//     res = my_mtbdd_times(b_xt, t_xt_comp);  // Bxt * Txt_c
+//     mtbdd_protect(&res);
+//     mtbdd_unprotect(&b_xt);
+//     mtbdd_unprotect(&t_xt_comp);
 
-    MTBDD b_xt_comp = create_b_xt_comp(xt);
-    mtbdd_protect(&b_xt_comp);
-    MTBDD t_xt = create_t_xt(t, xt);
-    mtbdd_protect(&t_xt);
-    mtbdd_unprotect(&t);
-    MTBDD inter_res = my_mtbdd_times(b_xt_comp, t_xt);   // Bxt_c * Txt
-    mtbdd_protect(&inter_res);
-    mtbdd_unprotect(&b_xt_comp);
-    mtbdd_unprotect(&t_xt);
-    res = my_mtbdd_minus(res, inter_res); // (Bxt * Txt_c) - (Bxt_c * Txt)
-    mtbdd_unprotect(&inter_res);
+//     MTBDD b_xt_comp = create_b_xt_comp(xt);
+//     mtbdd_protect(&b_xt_comp);
+//     MTBDD t_xt = create_t_xt(t, xt);
+//     mtbdd_protect(&t_xt);
+//     mtbdd_unprotect(&t);
+//     MTBDD inter_res = my_mtbdd_times(b_xt_comp, t_xt);   // Bxt_c * Txt
+//     mtbdd_protect(&inter_res);
+//     mtbdd_unprotect(&b_xt_comp);
+//     mtbdd_unprotect(&t_xt);
+//     res = my_mtbdd_minus(res, inter_res); // (Bxt * Txt_c) - (Bxt_c * Txt)
+//     mtbdd_unprotect(&inter_res);
 
-    res = my_mtbdd_coef_rot2(res); // ω² * (Bxt * Txt_c - Bxt_c * Txt) 
+//     res = my_mtbdd_coef_rot2(res); // ω² * (Bxt * Txt_c - Bxt_c * Txt) 
 
-    *p_t = res;
-    mtbdd_unprotect(&res);
-}
+//     *p_t = res;
+//     mtbdd_unprotect(&res);
+// } FIXME:
 
 void gate_z(MTBDD* p_t, uint32_t xt)
 {

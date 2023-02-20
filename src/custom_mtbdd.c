@@ -421,7 +421,7 @@ TASK_IMPL_2(MTBDD, t_xt_comp_create, MTBDD, a, uint64_t, xt)
         }
     }
     // Else copy if mtbdd is leaf
-    else if (mtbdd_isleaf(a)) {
+    else if (mtbdd_isleaf(a)) { // TODO: just else ??
         cnum* a_data = (cnum*) mtbdd_getvalue(a);
 
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) a_data);
@@ -475,12 +475,59 @@ TASK_IMPL_2(MTBDD, m_gate_x, MTBDD, a, uint64_t, xt)
     // Partial function check
     if (a == mtbdd_false) return mtbdd_false;
 
-    // Skip and return high edge if node variable is target qubit
+    // Change high and low successors if node variable is the target qubit
     if (mtbdd_isnode(a)) {
         xt = (uint32_t)xt; // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
         if (mtbdd_getvar(a) == xt) { 
             return mtbdd_makenode(xt, mtbdd_gethigh(a), mtbdd_getlow(a));
         }
+    }
+    else { // is a leaf
+        return a;
+    }
+
+    return mtbdd_invalid; // Recurse deeper
+}
+
+TASK_IMPL_2(MTBDD, m_gate_y, MTBDD, a, uint64_t, xt)
+{
+    // Partial function check
+    if (a == mtbdd_false) return mtbdd_false;
+
+    // TODO: refactor
+    if (mtbdd_isnode(a)) {
+        xt = (uint32_t)xt; // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
+        MTBDD high = mtbdd_gethigh(a);
+        MTBDD low = mtbdd_getlow(a);
+
+        if (mtbdd_getvar(a) == xt) { 
+            // Change high and low successors and negate the low successor
+            MTBDD updated = mtbdd_makenode(xt, high, my_mtbdd_neg(low));
+            // Perform the rotations
+            return my_mtbdd_coef_rot2(updated);
+        }
+        
+        MTBDD new_high, new_low = mtbdd_false;
+        // If child's variable is > xt or it is a leaf, the target node has to be generated manually
+        if (mtbdd_getvar(a) < xt) {  // TODO: do i need to check whether a < xt ?
+            if (mtbdd_isleaf(high) || (mtbdd_getvar(high) > xt)) {
+                new_high = _mtbdd_makenode(xt, high, my_mtbdd_neg(high)); // must use this function version to really create the node (children are the same)
+                new_high = my_mtbdd_coef_rot2(new_high);
+                high = new_high;
+            }
+            if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
+                new_low = _mtbdd_makenode(xt, low, my_mtbdd_neg(low));
+                new_low = my_mtbdd_coef_rot2(new_low);
+                low = new_low;
+            }
+
+            if ((new_high != mtbdd_false) || (new_low != mtbdd_false)) {
+                return mtbdd_makenode(a, low, high);
+            }
+        }
+    }
+    else { // is a leaf
+        return a;
     }
 
     return mtbdd_invalid; // Recurse deeper

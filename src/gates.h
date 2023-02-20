@@ -20,7 +20,7 @@
  * 
  * @param xt target qubit index
  */
-void gate_y(MTBDD* p_t, uint32_t xt);
+//void gate_y(MTBDD* p_t, uint32_t xt); FIXME:
 
 /**
  * Function implementing quantum gate Z for a given MTBDD.
