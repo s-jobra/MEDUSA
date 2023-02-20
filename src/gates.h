@@ -3,33 +3,80 @@
 #ifndef GATES_H
 #define GATES_H
 
+/**
+ * Permutation based implementation of the X gate on the given MTBDD.
+ */
+TASK_DECL_2(MTBDD, m_gate_x, MTBDD, uint64_t);
 
 /**
- * Function implementing quantum gate X for a given MTBDD.
- * 
- * @param p_t custom MTBDD
- * 
- * @param xt target qubit index
+ * Permutation based implementation of the Y gate on the given MTBDD.
  */
-//void gate_x(MTBDD* p_t, uint32_t xt); FIXME:
+TASK_DECL_2(MTBDD, m_gate_y, MTBDD, uint64_t);
 
 /**
- * Function implementing quantum gate Y for a given MTBDD.
- * 
- * @param p_t custom MTBDD
- * 
- * @param xt target qubit index
+ * Permutation based implementation of the Z gate on the given MTBDD.
  */
-//void gate_y(MTBDD* p_t, uint32_t xt); FIXME:
+TASK_DECL_2(MTBDD, m_gate_z, MTBDD, uint64_t);
 
 /**
- * Function implementing quantum gate Z for a given MTBDD.
+ * Permutation based implementation of the S gate on the given MTBDD.
+ */
+TASK_DECL_2(MTBDD, m_gate_s, MTBDD, uint64_t);
+
+/**
+ * Permutation based implementation of the T gate on the given MTBDD.
+ */
+TASK_DECL_2(MTBDD, m_gate_t, MTBDD, uint64_t);
+
+/**
+ * Apply quantum gate X on the state vector.
  * 
- * @param p_t custom MTBDD
+ * @param a pointer to an MTBDD
  * 
  * @param xt target qubit index
+ * 
  */
-void gate_z(MTBDD* p_t, uint32_t xt);
+#define gate_x(a, xt) *a = mtbdd_uapply(*a, TASK(m_gate_x), xt)
+
+/**
+ * Apply quantum gate Y on the state vector.
+ * 
+ * @param a pointer to an MTBDD
+ * 
+ * @param xt target qubit index
+ * 
+ */
+#define gate_y(a, xt) *a = mtbdd_uapply(*a, TASK(m_gate_y), xt)
+
+/**
+ * Apply quantum gate Z on the state vector.
+ * 
+ * @param a pointer to an MTBDD
+ * 
+ * @param xt target qubit index
+ * 
+ */
+#define gate_z(a, xt) *a = mtbdd_uapply(*a, TASK(m_gate_z), xt)
+
+/**
+ * Apply quantum gate S on the state vector.
+ * 
+ * @param a pointer to an MTBDD
+ * 
+ * @param xt target qubit index
+ * 
+ */
+#define gate_s(a, xt) *a = mtbdd_uapply(*a, TASK(m_gate_s), xt)
+
+/**
+ * Apply quantum gate T on the state vector.
+ * 
+ * @param a pointer to an MTBDD
+ * 
+ * @param xt target qubit index
+ * 
+ */
+#define gate_t(a, xt) *a = mtbdd_uapply(*a, TASK(m_gate_t), xt)
 
 /**
  * Function implementing quantum Hadamard gate for a given MTBDD.
@@ -39,24 +86,6 @@ void gate_z(MTBDD* p_t, uint32_t xt);
  * @param xt target qubit index
  */
 void gate_h(MTBDD* p_t, uint32_t xt);
-
-/**
- * Function implementing quantum S gate for a given MTBDD.
- * 
- * @param p_t custom MTBDD
- * 
- * @param xt target qubit index
- */
-void gate_s(MTBDD* p_t, uint32_t xt);
-
-/**
- * Function implementing quantum T gate for a given MTBDD.
- * 
- * @param p_t custom MTBDD
- * 
- * @param xt target qubit index
- */
-void gate_t(MTBDD* p_t, uint32_t xt);
 
 /**
  * Function implementing quantum Rx(π/2) gate for a given MTBDD.

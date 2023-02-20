@@ -1,92 +1,225 @@
 #include "gates.h"
 
-// void gate_x(MTBDD* p_t, uint32_t xt)
-// {
-//     MTBDD t = *p_t;
-//     mtbdd_protect(&t);
-//     MTBDD res;
-
-//     MTBDD b_xt = create_b_xt(xt);
-//     mtbdd_protect(&b_xt);
-//     MTBDD t_xt_comp = create_t_xt_comp(t, xt);
-//     mtbdd_protect(&t_xt_comp);
-//     res = my_mtbdd_times(b_xt, t_xt_comp);  // Bxt * Txt_c 
-//     mtbdd_protect(&res);
-//     mtbdd_unprotect(&b_xt);
-//     mtbdd_unprotect(&t_xt_comp);
-
-//     MTBDD b_xt_comp = create_b_xt_comp(xt);
-//     mtbdd_protect(&b_xt_comp);
-//     MTBDD t_xt = create_t_xt(t, xt);
-//     mtbdd_protect(&t_xt);
-//     mtbdd_unprotect(&t);
-//     MTBDD inter_res = my_mtbdd_times(b_xt_comp, t_xt);   // Bxt_c * Txt
-//     mtbdd_protect(&inter_res);
-//     mtbdd_unprotect(&b_xt_comp);
-//     mtbdd_unprotect(&t_xt);
-//     res = my_mtbdd_plus(res, inter_res); // (Bxt * Txt_c) + (Bxt_c * Txt)
-//     mtbdd_unprotect(&inter_res);
-    
-//     *p_t = res;
-//     mtbdd_unprotect(&res);
-// } FIXME:
-
-// void gate_y(MTBDD* p_t, uint32_t xt)
-// {
-//     MTBDD t = *p_t;
-//     mtbdd_protect(&t);
-//     MTBDD res;
-
-//     MTBDD b_xt = create_b_xt(xt);
-//     mtbdd_protect(&b_xt);
-//     MTBDD t_xt_comp = create_t_xt_comp(t, xt);
-//     mtbdd_protect(&t_xt_comp);
-//     res = my_mtbdd_times(b_xt, t_xt_comp);  // Bxt * Txt_c
-//     mtbdd_protect(&res);
-//     mtbdd_unprotect(&b_xt);
-//     mtbdd_unprotect(&t_xt_comp);
-
-//     MTBDD b_xt_comp = create_b_xt_comp(xt);
-//     mtbdd_protect(&b_xt_comp);
-//     MTBDD t_xt = create_t_xt(t, xt);
-//     mtbdd_protect(&t_xt);
-//     mtbdd_unprotect(&t);
-//     MTBDD inter_res = my_mtbdd_times(b_xt_comp, t_xt);   // Bxt_c * Txt
-//     mtbdd_protect(&inter_res);
-//     mtbdd_unprotect(&b_xt_comp);
-//     mtbdd_unprotect(&t_xt);
-//     res = my_mtbdd_minus(res, inter_res); // (Bxt * Txt_c) - (Bxt_c * Txt)
-//     mtbdd_unprotect(&inter_res);
-
-//     res = my_mtbdd_coef_rot2(res); // ω² * (Bxt * Txt_c - Bxt_c * Txt) 
-
-//     *p_t = res;
-//     mtbdd_unprotect(&res);
-// } FIXME:
-
-void gate_z(MTBDD* p_t, uint32_t xt)
+TASK_IMPL_2(MTBDD, m_gate_x, MTBDD, a, uint64_t, xt)
 {
-    MTBDD t = *p_t;
-    mtbdd_protect(&t);
-    MTBDD res;
+    // Partial function check
+    if (a == mtbdd_false) return mtbdd_false;
 
-    MTBDD b_xt_comp = create_b_xt_comp(xt);
-    mtbdd_protect(&b_xt_comp);
-    res = my_mtbdd_times(b_xt_comp, t); // Bxt_c * T
-    mtbdd_protect(&res);
-    mtbdd_unprotect(&b_xt_comp);
+    // Change high and low successors if node variable is the target qubit
+    if (mtbdd_isnode(a)) {
+        xt = (uint32_t)xt; // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
+        if (mtbdd_getvar(a) == xt) { 
+            return mtbdd_makenode(xt, mtbdd_gethigh(a), mtbdd_getlow(a));
+        }
+    }
+    else { // is a leaf
+        return a;
+    }
 
-    MTBDD b_xt = create_b_xt(xt);
-    mtbdd_protect(&b_xt);
-    MTBDD inter_res = my_mtbdd_times(b_xt, t); // Bxt * T
-    mtbdd_protect(&inter_res);
-    mtbdd_unprotect(&t);
-    mtbdd_unprotect(&b_xt);
-    res = my_mtbdd_minus(res, inter_res); // (Bxt_c * T) - (Bxt * T)
-    mtbdd_unprotect(&inter_res);
+    return mtbdd_invalid; // Recurse deeper
+}
 
-    *p_t = res;
-    mtbdd_unprotect(&res);
+TASK_IMPL_2(MTBDD, m_gate_y, MTBDD, a, uint64_t, xt)
+{
+    // Partial function check
+    if (a == mtbdd_false) return mtbdd_false;
+
+    if (mtbdd_isnode(a)) {
+        xt = (uint32_t)xt; // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
+        MTBDD high = mtbdd_gethigh(a);
+        MTBDD low = mtbdd_getlow(a);
+
+        if (mtbdd_getvar(a) == xt) { 
+            // Change high and low successors and negate the low successor
+            MTBDD updated = mtbdd_makenode(xt, high, my_mtbdd_neg(low));
+            // Perform the rotations
+            return my_mtbdd_coef_rot2(updated);
+        }
+        
+        //If child's variable is > xt or it is a leaf, the target node has to be generated manually
+        if (mtbdd_getvar(a) < xt) {  // TODO: do i need to check whether a < xt ?
+            MTBDD new_high, new_low = mtbdd_false;
+            if (mtbdd_isleaf(high) || (mtbdd_getvar(high) > xt)) {
+                if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
+                    new_high = _mtbdd_makenode(xt, high, my_mtbdd_neg(high)); // must use this function version to really create the node (children are the same)
+                    new_high = my_mtbdd_coef_rot2(new_high);
+                    new_low = _mtbdd_makenode(xt, low, my_mtbdd_neg(low));
+                    new_low = my_mtbdd_coef_rot2(new_low);
+                    return mtbdd_makenode(a, new_low, new_high);
+                }
+                else {
+                    new_high = _mtbdd_makenode(xt, high, my_mtbdd_neg(high));
+                    new_high = my_mtbdd_coef_rot2(new_high);
+                    return mtbdd_makenode(a, low, new_high);
+                }
+            }
+            else if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
+                new_low = _mtbdd_makenode(xt, low, my_mtbdd_neg(low));
+                new_low = my_mtbdd_coef_rot2(new_low);
+                return mtbdd_makenode(a, new_low, high);
+            }
+        }
+        // TODO: refactor
+        // if (mtbdd_getvar(a) < xt) {  // TODO: do i need to check whether a < xt ?
+        //     MTBDD new_high, new_low;
+        //     bool set_high, set_low = false;
+        //     if (mtbdd_isleaf(high) || (mtbdd_getvar(high) > xt)) {
+        //         set_high = true;
+        //         new_high = _mtbdd_makenode(xt, high, my_mtbdd_neg(high)); // must use this function version to really create the node (children are the same)
+        //         printf("new high node %d\n", xt);
+        //         new_high = my_mtbdd_coef_rot2(new_high);
+        //     }
+
+        //     if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
+        //         set_low = true;
+        //         new_low = _mtbdd_makenode(xt, low, my_mtbdd_neg(low));
+        //         printf("new low node %d\n", xt);
+        //         new_low = my_mtbdd_coef_rot2(new_low);
+        //     }
+
+        //     if (set_high && set_low) {
+        //         return mtbdd_makenode(a, new_low, new_high);
+        //     }
+        //     else if (set_high) {
+        //         return mtbdd_makenode(a, low, new_high);
+        //     }
+        //     else if (set_low) {
+        //         return mtbdd_makenode(a, new_low, high);
+        //     }
+        // }
+    }
+    else { // is a leaf
+        return a;
+    }
+
+    return mtbdd_invalid; // Recurse deeper
+}
+
+TASK_IMPL_2(MTBDD, m_gate_z, MTBDD, a, uint64_t, xt)
+{
+    // Partial function check
+    if (a == mtbdd_false) return mtbdd_false;
+
+    if (mtbdd_isnode(a)) {
+        xt = (uint32_t)xt; // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
+        MTBDD high = mtbdd_gethigh(a);
+        MTBDD low = mtbdd_getlow(a);
+
+        if (mtbdd_getvar(a) == xt) { 
+            // Negate the high successor
+            return mtbdd_makenode(xt, low, my_mtbdd_neg(high));
+        }
+        
+        //If child's variable is > xt or it is a leaf, the target node has to be generated manually
+        if (mtbdd_getvar(a) < xt) {  // TODO: do i need to check whether a < xt ?
+            MTBDD new_high, new_low = mtbdd_false;
+            if (mtbdd_isleaf(high) || (mtbdd_getvar(high) > xt)) {
+                if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
+                    new_high = _mtbdd_makenode(xt, high, my_mtbdd_neg(high)); // must use this function version to really create the node (children are the same)
+                    new_low = _mtbdd_makenode(xt, low, my_mtbdd_neg(low));
+                    return mtbdd_makenode(a, new_low, new_high);
+                }
+                else {
+                    new_high = _mtbdd_makenode(xt, high, my_mtbdd_neg(high));
+                    return mtbdd_makenode(a, low, new_high);
+                }
+            }
+            else if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
+                new_low = _mtbdd_makenode(xt, low, my_mtbdd_neg(low));
+                return mtbdd_makenode(a, new_low, high);
+            }
+        } //TODO: refactor
+    }
+    else { // is a leaf
+        return a;
+    }
+
+    return mtbdd_invalid; // Recurse deeper
+}
+
+TASK_IMPL_2(MTBDD, m_gate_s, MTBDD, a, uint64_t, xt)
+{
+    // Partial function check
+    if (a == mtbdd_false) return mtbdd_false;
+
+    if (mtbdd_isnode(a)) {
+        xt = (uint32_t)xt; // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
+        MTBDD high = mtbdd_gethigh(a);
+        MTBDD low = mtbdd_getlow(a);
+
+        if (mtbdd_getvar(a) == xt) { 
+            // Negate the high successor
+            return mtbdd_makenode(xt, low, my_mtbdd_coef_rot2(high));
+        }
+        
+        //If child's variable is > xt or it is a leaf, the target node has to be generated manually
+        if (mtbdd_getvar(a) < xt) {  // TODO: do i need to check whether a < xt ?
+            MTBDD new_high, new_low = mtbdd_false;
+            if (mtbdd_isleaf(high) || (mtbdd_getvar(high) > xt)) {
+                if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
+                    new_high = _mtbdd_makenode(xt, high, my_mtbdd_coef_rot2(high)); // must use this function version to really create the node (children are the same)
+                    new_low = _mtbdd_makenode(xt, low, my_mtbdd_coef_rot2(low));
+                    return mtbdd_makenode(a, new_low, new_high);
+                }
+                else {
+                    new_high = _mtbdd_makenode(xt, high, my_mtbdd_coef_rot2(high));
+                    return mtbdd_makenode(a, low, new_high);
+                }
+            }
+            else if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
+                new_low = _mtbdd_makenode(xt, low, my_mtbdd_coef_rot2(low));
+                return mtbdd_makenode(a, new_low, high);
+            }
+        } //TODO: refactor
+    }
+    else { // is a leaf
+        return a;
+    }
+
+    return mtbdd_invalid; // Recurse deeper
+}
+
+TASK_IMPL_2(MTBDD, m_gate_t, MTBDD, a, uint64_t, xt)
+{
+    // Partial function check
+    if (a == mtbdd_false) return mtbdd_false;
+
+    if (mtbdd_isnode(a)) {
+        xt = (uint32_t)xt; // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
+        MTBDD high = mtbdd_gethigh(a);
+        MTBDD low = mtbdd_getlow(a);
+
+        if (mtbdd_getvar(a) == xt) { 
+            // Negate the high successor
+            return mtbdd_makenode(xt, low, my_mtbdd_coef_rot1(high));
+        }
+        
+        //If child's variable is > xt or it is a leaf, the target node has to be generated manually
+        if (mtbdd_getvar(a) < xt) {  // TODO: do i need to check whether a < xt ?
+            MTBDD new_high, new_low = mtbdd_false;
+            if (mtbdd_isleaf(high) || (mtbdd_getvar(high) > xt)) {
+                if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
+                    new_high = _mtbdd_makenode(xt, high, my_mtbdd_coef_rot1(high)); // must use this function version to really create the node (children are the same)
+                    new_low = _mtbdd_makenode(xt, low, my_mtbdd_coef_rot1(low));
+                    return mtbdd_makenode(a, new_low, new_high);
+                }
+                else {
+                    new_high = _mtbdd_makenode(xt, high, my_mtbdd_coef_rot1(high));
+                    return mtbdd_makenode(a, low, new_high);
+                }
+            }
+            else if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
+                new_low = _mtbdd_makenode(xt, low, my_mtbdd_coef_rot1(low));
+                
+                return mtbdd_makenode(a, new_low, high);
+            }
+        } //TODO: refactor
+    }
+    else { // is a leaf
+        return a;
+    }
+
+    return mtbdd_invalid; // Recurse deeper
 }
 
 void gate_h(MTBDD* p_t, uint32_t xt)
@@ -119,58 +252,6 @@ void gate_h(MTBDD* p_t, uint32_t xt)
     mtbdd_unprotect(&inter_res);
 
     res = my_mtbdd_coef_k_incr(res); // (1/√2) * (Txt_c + Bxt_c * Txt - Bxt * T)
-
-    *p_t = res;
-    mtbdd_unprotect(&res);
-}
-
-void gate_s(MTBDD* p_t, uint32_t xt)
-{
-    MTBDD t = *p_t;
-    mtbdd_protect(&t);
-    MTBDD res;
-
-    MTBDD b_xt_comp = create_b_xt_comp(xt);
-    mtbdd_protect(&b_xt_comp);
-    res = my_mtbdd_times(b_xt_comp, t); // Bxt_c * T
-    mtbdd_protect(&res);
-    mtbdd_unprotect(&b_xt_comp);
-
-    MTBDD b_xt = create_b_xt(xt);
-    mtbdd_protect(&b_xt);
-    MTBDD inter_res = my_mtbdd_times(b_xt, t); // Bxt * T
-    mtbdd_protect(&inter_res);
-    mtbdd_unprotect(&b_xt);
-    mtbdd_unprotect(&t);
-    inter_res = my_mtbdd_coef_rot2(inter_res); // ω² * (Bxt * T)
-    res = my_mtbdd_plus(res, inter_res); // (Bxt_c * T) + (ω² * Bxt * T)
-    mtbdd_unprotect(&inter_res);
-
-    *p_t = res;
-    mtbdd_unprotect(&res);
-}
-
-void gate_t(MTBDD* p_t, uint32_t xt)
-{
-    MTBDD t = *p_t;
-    mtbdd_protect(&t);
-    MTBDD res;
-
-    MTBDD b_xt_comp = create_b_xt_comp(xt);
-    mtbdd_protect(&b_xt_comp);
-    res = my_mtbdd_times(b_xt_comp, t); // Bxt_c * T
-    mtbdd_protect(&res);
-    mtbdd_unprotect(&b_xt_comp);
-
-    MTBDD b_xt = create_b_xt(xt);
-    mtbdd_protect(&b_xt);
-    MTBDD inter_res = my_mtbdd_times(b_xt, t); // Bxt * T
-    mtbdd_protect(&inter_res);
-    mtbdd_unprotect(&b_xt);
-    mtbdd_unprotect(&t);
-    inter_res = my_mtbdd_coef_rot1(inter_res); // ω * (Bxt * T)
-    res = my_mtbdd_plus(res, inter_res); // (Bxt_c * T) + (ω * Bxt * T)
-    mtbdd_unprotect(&inter_res);
 
     *p_t = res;
     mtbdd_unprotect(&res);
