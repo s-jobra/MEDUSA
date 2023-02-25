@@ -26,67 +26,36 @@ TASK_IMPL_2(MTBDD, m_gate_y, MTBDD, a, uint64_t, xt)
 
     if (mtbdd_isnode(a)) {
         xt = (uint32_t)xt; // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
+        uint32_t var_a = mtbdd_getvar(a);
         MTBDD high = mtbdd_gethigh(a);
         MTBDD low = mtbdd_getlow(a);
 
-        if (mtbdd_getvar(a) == xt) { 
+        if (var_a == xt) { 
             // Change high and low successors and negate the low successor
-            MTBDD updated = mtbdd_makenode(xt, high, my_mtbdd_neg(low));
+            MTBDD updated = mtbdd_makenode(xt, my_mtbdd_neg(high), low);
             // Perform the rotations
             return my_mtbdd_coef_rot2(updated);
         }
         
         //If child's variable is > xt or it is a leaf, the target node has to be generated manually
-        if (mtbdd_getvar(a) < xt) {  // TODO: do i need to check whether a < xt ?
+        //if (var_a < xt) {  // TODO: do i need to check whether a < xt ?
             MTBDD new_high, new_low = mtbdd_false;
             if (mtbdd_isleaf(high) || (mtbdd_getvar(high) > xt)) {
-                if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
-                    new_high = _mtbdd_makenode(xt, high, my_mtbdd_neg(high)); // must use this function version to really create the node (children are the same)
-                    new_high = my_mtbdd_coef_rot2(new_high);
-                    new_low = _mtbdd_makenode(xt, low, my_mtbdd_neg(low));
-                    new_low = my_mtbdd_coef_rot2(new_low);
-                    return mtbdd_makenode(a, new_low, new_high);
-                }
-                else {
-                    new_high = _mtbdd_makenode(xt, high, my_mtbdd_neg(high));
-                    new_high = my_mtbdd_coef_rot2(new_high);
-                    return mtbdd_makenode(a, low, new_high);
-                }
+                new_high = mtbdd_makenode(xt, my_mtbdd_neg(high), high);
+                new_high = my_mtbdd_coef_rot2(new_high);
+                high = new_high;
             }
-            else if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
-                new_low = _mtbdd_makenode(xt, low, my_mtbdd_neg(low));
+
+            if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
+                new_low = mtbdd_makenode(xt, my_mtbdd_neg(low), low);
                 new_low = my_mtbdd_coef_rot2(new_low);
-                return mtbdd_makenode(a, new_low, high);
+                low = new_low;
             }
-        }
-        // TODO: refactor
-        // if (mtbdd_getvar(a) < xt) {  // TODO: do i need to check whether a < xt ?
-        //     MTBDD new_high, new_low;
-        //     bool set_high, set_low = false;
-        //     if (mtbdd_isleaf(high) || (mtbdd_getvar(high) > xt)) {
-        //         set_high = true;
-        //         new_high = _mtbdd_makenode(xt, high, my_mtbdd_neg(high)); // must use this function version to really create the node (children are the same)
-        //         printf("new high node %d\n", xt);
-        //         new_high = my_mtbdd_coef_rot2(new_high);
-        //     }
 
-        //     if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
-        //         set_low = true;
-        //         new_low = _mtbdd_makenode(xt, low, my_mtbdd_neg(low));
-        //         printf("new low node %d\n", xt);
-        //         new_low = my_mtbdd_coef_rot2(new_low);
-        //     }
-
-        //     if (set_high && set_low) {
-        //         return mtbdd_makenode(a, new_low, new_high);
-        //     }
-        //     else if (set_high) {
-        //         return mtbdd_makenode(a, low, new_high);
-        //     }
-        //     else if (set_low) {
-        //         return mtbdd_makenode(a, new_low, high);
-        //     }
-        // }
+            if (new_high != mtbdd_false || new_low != mtbdd_false) {
+                return mtbdd_makenode(var_a, low, high);
+            }
+        //}
     }
     else { // is a leaf
         return a;
@@ -102,33 +71,31 @@ TASK_IMPL_2(MTBDD, m_gate_z, MTBDD, a, uint64_t, xt)
 
     if (mtbdd_isnode(a)) {
         xt = (uint32_t)xt; // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
+        uint32_t var_a = mtbdd_getvar(a);
         MTBDD high = mtbdd_gethigh(a);
         MTBDD low = mtbdd_getlow(a);
 
-        if (mtbdd_getvar(a) == xt) { 
+        if (var_a == xt) { 
             // Negate the high successor
             return mtbdd_makenode(xt, low, my_mtbdd_neg(high));
         }
-        
-        //If child's variable is > xt or it is a leaf, the target node has to be generated manually
-        if (mtbdd_getvar(a) < xt) {  // TODO: do i need to check whether a < xt ?
+
+        //if (var_a < xt) {  // TODO: do i need to check whether a < xt ?
             MTBDD new_high, new_low = mtbdd_false;
             if (mtbdd_isleaf(high) || (mtbdd_getvar(high) > xt)) {
-                if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
-                    new_high = _mtbdd_makenode(xt, high, my_mtbdd_neg(high)); // must use this function version to really create the node (children are the same)
-                    new_low = _mtbdd_makenode(xt, low, my_mtbdd_neg(low));
-                    return mtbdd_makenode(a, new_low, new_high);
-                }
-                else {
-                    new_high = _mtbdd_makenode(xt, high, my_mtbdd_neg(high));
-                    return mtbdd_makenode(a, low, new_high);
-                }
+                new_high = mtbdd_makenode(xt, high, my_mtbdd_neg(high));
+                high = new_high;
             }
-            else if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
-                new_low = _mtbdd_makenode(xt, low, my_mtbdd_neg(low));
-                return mtbdd_makenode(a, new_low, high);
+
+            if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
+                new_low = mtbdd_makenode(xt, low, my_mtbdd_neg(low));
+                low = new_low;
             }
-        } //TODO: refactor
+
+            if (new_high != mtbdd_false || new_low != mtbdd_false) {
+                return mtbdd_makenode(var_a, low, high);
+            }
+        //}
     }
     else { // is a leaf
         return a;
@@ -144,33 +111,31 @@ TASK_IMPL_2(MTBDD, m_gate_s, MTBDD, a, uint64_t, xt)
 
     if (mtbdd_isnode(a)) {
         xt = (uint32_t)xt; // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
+        uint32_t var_a = mtbdd_getvar(a);
         MTBDD high = mtbdd_gethigh(a);
         MTBDD low = mtbdd_getlow(a);
 
-        if (mtbdd_getvar(a) == xt) { 
-            // Negate the high successor
+        if (var_a == xt) { 
+            // Multiply the high successor by i
             return mtbdd_makenode(xt, low, my_mtbdd_coef_rot2(high));
         }
         
-        //If child's variable is > xt or it is a leaf, the target node has to be generated manually
-        if (mtbdd_getvar(a) < xt) {  // TODO: do i need to check whether a < xt ?
+        //if (var_a < xt) {  // TODO: do i need to check whether a < xt ?
             MTBDD new_high, new_low = mtbdd_false;
             if (mtbdd_isleaf(high) || (mtbdd_getvar(high) > xt)) {
-                if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
-                    new_high = _mtbdd_makenode(xt, high, my_mtbdd_coef_rot2(high)); // must use this function version to really create the node (children are the same)
-                    new_low = _mtbdd_makenode(xt, low, my_mtbdd_coef_rot2(low));
-                    return mtbdd_makenode(a, new_low, new_high);
-                }
-                else {
-                    new_high = _mtbdd_makenode(xt, high, my_mtbdd_coef_rot2(high));
-                    return mtbdd_makenode(a, low, new_high);
-                }
+                new_high = mtbdd_makenode(xt, high, my_mtbdd_coef_rot2(high));
+                high = new_high;
             }
-            else if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
-                new_low = _mtbdd_makenode(xt, low, my_mtbdd_coef_rot2(low));
-                return mtbdd_makenode(a, new_low, high);
+
+            if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
+                new_low = mtbdd_makenode(xt, low, my_mtbdd_coef_rot2(low));
+                low = new_low;
             }
-        } //TODO: refactor
+
+            if (new_high != mtbdd_false || new_low != mtbdd_false) {
+                return mtbdd_makenode(var_a, low, high);
+            }
+        //}
     }
     else { // is a leaf
         return a;
@@ -186,34 +151,31 @@ TASK_IMPL_2(MTBDD, m_gate_t, MTBDD, a, uint64_t, xt)
 
     if (mtbdd_isnode(a)) {
         xt = (uint32_t)xt; // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
+        uint32_t var_a = mtbdd_getvar(a);
         MTBDD high = mtbdd_gethigh(a);
         MTBDD low = mtbdd_getlow(a);
 
-        if (mtbdd_getvar(a) == xt) { 
-            // Negate the high successor
+        if (var_a == xt) { 
+            // Multiply the high successor by e^(i*pi/4)
             return mtbdd_makenode(xt, low, my_mtbdd_coef_rot1(high));
         }
-        
-        //If child's variable is > xt or it is a leaf, the target node has to be generated manually
-        if (mtbdd_getvar(a) < xt) {  // TODO: do i need to check whether a < xt ?
+
+        //if (var_a < xt) {  // TODO: do i need to check whether a < xt ?
             MTBDD new_high, new_low = mtbdd_false;
             if (mtbdd_isleaf(high) || (mtbdd_getvar(high) > xt)) {
-                if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
-                    new_high = _mtbdd_makenode(xt, high, my_mtbdd_coef_rot1(high)); // must use this function version to really create the node (children are the same)
-                    new_low = _mtbdd_makenode(xt, low, my_mtbdd_coef_rot1(low));
-                    return mtbdd_makenode(a, new_low, new_high);
-                }
-                else {
-                    new_high = _mtbdd_makenode(xt, high, my_mtbdd_coef_rot1(high));
-                    return mtbdd_makenode(a, low, new_high);
-                }
+                new_high = mtbdd_makenode(xt, high, my_mtbdd_coef_rot1(high));
+                high = new_high;
             }
-            else if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
-                new_low = _mtbdd_makenode(xt, low, my_mtbdd_coef_rot1(low));
-                
-                return mtbdd_makenode(a, new_low, high);
+
+            if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
+                new_low = mtbdd_makenode(xt, low, my_mtbdd_coef_rot1(low));
+                low = new_low;
             }
-        } //TODO: refactor
+
+            if (new_high != mtbdd_false || new_low != mtbdd_false) {
+                return mtbdd_makenode(var_a, low, high);
+            }
+        //}
     }
     else { // is a leaf
         return a;
