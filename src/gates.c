@@ -38,8 +38,8 @@ TASK_IMPL_2(MTBDD, m_gate_y, MTBDD, a, uint64_t, xt)
         }
         
         //If child's variable is > xt or it is a leaf, the target node has to be generated manually
-        //if (var_a < xt) {  // TODO: do i need to check whether a < xt ?
-            MTBDD new_high, new_low = mtbdd_false;
+        if (var_a < xt) {
+            MTBDD new_high = mtbdd_false, new_low = mtbdd_false;
             if (mtbdd_isleaf(high) || (mtbdd_getvar(high) > xt)) {
                 new_high = mtbdd_makenode(xt, my_mtbdd_neg(high), high);
                 new_high = my_mtbdd_coef_rot2(new_high);
@@ -55,7 +55,7 @@ TASK_IMPL_2(MTBDD, m_gate_y, MTBDD, a, uint64_t, xt)
             if (new_high != mtbdd_false || new_low != mtbdd_false) {
                 return mtbdd_makenode(var_a, low, high);
             }
-        //}
+        }
     }
     else { // is a leaf
         return a;
@@ -80,8 +80,8 @@ TASK_IMPL_2(MTBDD, m_gate_z, MTBDD, a, uint64_t, xt)
             return mtbdd_makenode(xt, low, my_mtbdd_neg(high));
         }
 
-        //if (var_a < xt) {  // TODO: do i need to check whether a < xt ?
-            MTBDD new_high, new_low = mtbdd_false;
+        if (var_a < xt) {
+            MTBDD new_high = mtbdd_false, new_low = mtbdd_false;
             if (mtbdd_isleaf(high) || (mtbdd_getvar(high) > xt)) {
                 new_high = mtbdd_makenode(xt, high, my_mtbdd_neg(high));
                 high = new_high;
@@ -95,7 +95,7 @@ TASK_IMPL_2(MTBDD, m_gate_z, MTBDD, a, uint64_t, xt)
             if (new_high != mtbdd_false || new_low != mtbdd_false) {
                 return mtbdd_makenode(var_a, low, high);
             }
-        //}
+        }
     }
     else { // is a leaf
         return a;
@@ -120,8 +120,8 @@ TASK_IMPL_2(MTBDD, m_gate_s, MTBDD, a, uint64_t, xt)
             return mtbdd_makenode(xt, low, my_mtbdd_coef_rot2(high));
         }
         
-        //if (var_a < xt) {  // TODO: do i need to check whether a < xt ?
-            MTBDD new_high, new_low = mtbdd_false;
+        if (var_a < xt) {
+            MTBDD new_high = mtbdd_false, new_low = mtbdd_false;
             if (mtbdd_isleaf(high) || (mtbdd_getvar(high) > xt)) {
                 new_high = mtbdd_makenode(xt, high, my_mtbdd_coef_rot2(high));
                 high = new_high;
@@ -135,7 +135,7 @@ TASK_IMPL_2(MTBDD, m_gate_s, MTBDD, a, uint64_t, xt)
             if (new_high != mtbdd_false || new_low != mtbdd_false) {
                 return mtbdd_makenode(var_a, low, high);
             }
-        //}
+        }
     }
     else { // is a leaf
         return a;
@@ -160,8 +160,8 @@ TASK_IMPL_2(MTBDD, m_gate_t, MTBDD, a, uint64_t, xt)
             return mtbdd_makenode(xt, low, my_mtbdd_coef_rot1(high));
         }
 
-        //if (var_a < xt) {  // TODO: do i need to check whether a < xt ?
-            MTBDD new_high, new_low = mtbdd_false;
+        if (var_a < xt) {
+            MTBDD new_high = mtbdd_false, new_low = mtbdd_false;
             if (mtbdd_isleaf(high) || (mtbdd_getvar(high) > xt)) {
                 new_high = mtbdd_makenode(xt, high, my_mtbdd_coef_rot1(high));
                 high = new_high;
@@ -175,13 +175,58 @@ TASK_IMPL_2(MTBDD, m_gate_t, MTBDD, a, uint64_t, xt)
             if (new_high != mtbdd_false || new_low != mtbdd_false) {
                 return mtbdd_makenode(var_a, low, high);
             }
-        //}
+        }
     }
     else { // is a leaf
         return a;
     }
 
     return mtbdd_invalid; // Recurse deeper
+}
+
+void gate_x(MTBDD* a, uint32_t xt)
+{
+    *a = mtbdd_uapply(*a, TASK(m_gate_x), xt);
+}
+
+void gate_y(MTBDD* a, uint32_t xt)
+{
+    if (*a != mtbdd_false) { // check if xt shouldnt' be root
+        if (xt < mtbdd_getvar(*a)) {
+            *a = _mtbdd_makenode(xt, *a, *a);
+        }
+    }
+    *a = mtbdd_uapply(*a, TASK(m_gate_y), xt);
+}
+
+void gate_z(MTBDD* a, uint32_t xt)
+{
+    if (*a != mtbdd_false) {  // check if xt shouldnt' be root
+        if (xt < mtbdd_getvar(*a)) {
+            *a = _mtbdd_makenode(xt, *a, *a);
+        }
+    }
+    *a = mtbdd_uapply(*a, TASK(m_gate_z), xt);
+}
+
+void gate_s(MTBDD* a, uint32_t xt)
+{
+    if (*a != mtbdd_false) {  // check if xt shouldnt' be root
+        if (xt < mtbdd_getvar(*a)) {
+            *a = _mtbdd_makenode(xt, *a, *a);
+        }
+    }
+    *a = mtbdd_uapply(*a, TASK(m_gate_s), xt);
+}
+
+void gate_t(MTBDD* a, uint32_t xt)
+{
+    if (*a != mtbdd_false) { // check if xt shouldnt' be root
+        if (xt < mtbdd_getvar(*a)) {
+            *a = _mtbdd_makenode(xt, *a, *a);
+        }
+    }
+    *a = mtbdd_uapply(*a, TASK(m_gate_t), xt);
 }
 
 void gate_h(MTBDD* p_t, uint32_t xt)

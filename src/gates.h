@@ -36,7 +36,7 @@ TASK_DECL_2(MTBDD, m_gate_t, MTBDD, uint64_t);
  * @param xt target qubit index
  * 
  */
-#define gate_x(a, xt) *a = mtbdd_uapply(*a, TASK(m_gate_x), xt)
+void gate_x(MTBDD* a, uint32_t xt);
 
 /**
  * Apply quantum gate Y on the state vector.
@@ -46,7 +46,7 @@ TASK_DECL_2(MTBDD, m_gate_t, MTBDD, uint64_t);
  * @param xt target qubit index
  * 
  */
-#define gate_y(a, xt) *a = mtbdd_uapply(*a, TASK(m_gate_y), xt)
+void gate_y(MTBDD* a, uint32_t xt);
 
 /**
  * Apply quantum gate Z on the state vector.
@@ -56,7 +56,7 @@ TASK_DECL_2(MTBDD, m_gate_t, MTBDD, uint64_t);
  * @param xt target qubit index
  * 
  */
-#define gate_z(a, xt) *a = mtbdd_uapply(*a, TASK(m_gate_z), xt)
+void gate_z(MTBDD* a, uint32_t xt);
 
 /**
  * Apply quantum gate S on the state vector.
@@ -66,7 +66,7 @@ TASK_DECL_2(MTBDD, m_gate_t, MTBDD, uint64_t);
  * @param xt target qubit index
  * 
  */
-#define gate_s(a, xt) *a = mtbdd_uapply(*a, TASK(m_gate_s), xt)
+void gate_s(MTBDD* a, uint32_t xt);
 
 /**
  * Apply quantum gate T on the state vector.
@@ -76,7 +76,7 @@ TASK_DECL_2(MTBDD, m_gate_t, MTBDD, uint64_t);
  * @param xt target qubit index
  * 
  */
-#define gate_t(a, xt) *a = mtbdd_uapply(*a, TASK(m_gate_t), xt)
+void gate_t(MTBDD* a, uint32_t xt);
 
 /**
  * Function implementing quantum Hadamard gate for a given MTBDD.
