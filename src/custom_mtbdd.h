@@ -27,8 +27,12 @@ typedef struct cnum {
     coef_t b;
     coef_t c;
     coef_t d;
-    coef_t k;
 }cnum;
+
+/**
+ * Complex number coefficient k
+ */
+extern coef_t c_k;
 
 /* SETUP */
 /**
@@ -89,11 +93,6 @@ TASK_DECL_2(MTBDD, my_op_times, MTBDD*, MTBDD*);
  * Operation times with constant -1 for my custom MTBDD.
  */
 TASK_DECL_2(MTBDD, my_op_negate, MTBDD, size_t);
-
-/**
- * Operation times with constant 1/√2 (increment coefficient k) for my custom MTBDD.
- */
-TASK_DECL_2(MTBDD, my_op_coef_k_incr, MTBDD, size_t);
 
 /**
  * Operation times with constant ω (right rotate coefficients) for my custom MTBDD.
@@ -172,14 +171,6 @@ MTBDD b_xt_comp_create(uint32_t xt);
  * 
  */
 #define my_mtbdd_neg(a) mtbdd_uapply(a, TASK(my_op_negate), 0)
-
-/**
- * Compute a * (1/√2) for my custom MTBDD (increments coefficient k)
- * 
- * @param a pointer to an MTBDD
- * 
- */
-#define my_mtbdd_coef_k_incr(a) mtbdd_uapply(a, TASK(my_op_coef_k_incr), 0)
 
 /**
  * Compute a * ω for my custom MTBDD (rotate coefficients)

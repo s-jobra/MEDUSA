@@ -66,6 +66,7 @@ int main(int argc, char *argv[])
     clock_gettime(CLOCK_MONOTONIC, &t_finish); // End the timer
 
     mtbdd_fprintdot(out, circ);
+    mpz_clear(c_k);
 
     fclose(out);
     if (argc == 2){

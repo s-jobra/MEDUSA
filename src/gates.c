@@ -258,10 +258,10 @@ void gate_h(MTBDD* p_t, uint32_t xt)
     res = my_mtbdd_minus(res, inter_res); // (Txt_c + Bxt_c * Txt) - Bxt * T
     mtbdd_unprotect(&inter_res);
 
-    res = my_mtbdd_coef_k_incr(res); // (1/√2) * (Txt_c + Bxt_c * Txt - Bxt * T)
-
     *p_t = res;
     mtbdd_unprotect(&res);
+
+    mpz_add_ui(c_k, c_k, 1); // (1/√2) * (Txt_c + Bxt_c * Txt - Bxt * T)
 }
 
 void gate_rx_pihalf(MTBDD* p_t, uint32_t xt)
@@ -293,10 +293,11 @@ void gate_rx_pihalf(MTBDD* p_t, uint32_t xt)
     res = my_mtbdd_coef_rot2(res); // ω² * (Bxt * Txt_c + Bxt_c * Txt)
     res = my_mtbdd_minus(t, res); // T - (ω² * (Bxt * Txt_c + Bxt_c * Txt))
     mtbdd_unprotect(&t);
-    res = my_mtbdd_coef_k_incr(res); // (1/√2) * (T - ω² * (Bxt * Txt_c + Bxt_c * Txt))
 
     *p_t = res;
     mtbdd_unprotect(&res);
+
+    mpz_add_ui(c_k, c_k, 1); // (1/√2) * (T - ω² * (Bxt * Txt_c + Bxt_c * Txt))
 }
 
 void gate_ry_pihalf(MTBDD* p_t, uint32_t xt)
@@ -326,10 +327,10 @@ void gate_ry_pihalf(MTBDD* p_t, uint32_t xt)
     res = my_mtbdd_minus(res, inter_res); // (Txt_c + Bxt * T) - (Bxt_c * Txt)
     mtbdd_unprotect(&inter_res);
 
-    res = my_mtbdd_coef_k_incr(res); // (1/√2) * (Txt_c + Bxt * T - Bxt_c * Txt)
-
     *p_t = res;
     mtbdd_unprotect(&res);
+
+    mpz_add_ui(c_k, c_k, 1); // (1/√2) * (Txt_c + Bxt * T - Bxt_c * Txt)
 }
 
 void gate_cnot(MTBDD* p_t, uint32_t xt, uint32_t xc)

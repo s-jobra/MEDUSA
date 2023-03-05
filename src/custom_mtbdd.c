@@ -74,7 +74,6 @@ void my_leaf_create(uint64_t* ldata_p_raw)
     mpz_init_set(new_ldata->b, orig_ldata->b);
     mpz_init_set(new_ldata->c, orig_ldata->c);
     mpz_init_set(new_ldata->d, orig_ldata->d);
-    mpz_init_set(new_ldata->k, orig_ldata->k);
 
     *ldata_p = new_ldata;
 }
@@ -82,7 +81,7 @@ void my_leaf_create(uint64_t* ldata_p_raw)
 void my_leaf_destroy(uint64_t ldata)
 {
     cnum* data_p = (cnum*) ldata; // Data in leaf = pointer to my data
-    mpz_clears(data_p->a, data_p->b, data_p->c, data_p->d, data_p->k, NULL);
+    mpz_clears(data_p->a, data_p->b, data_p->c, data_p->d, NULL);
     free(data_p);
 }
 
@@ -92,7 +91,7 @@ int my_leaf_equals(const uint64_t ldata_a_raw, const uint64_t ldata_b_raw)
     cnum* ldata_b = (cnum*) ldata_b_raw;
 
     return !mpz_cmp(ldata_a->a, ldata_b->a) && !mpz_cmp(ldata_a->b, ldata_b->b) && !mpz_cmp(ldata_a->c, ldata_b->c) \
-           && !mpz_cmp(ldata_a->d, ldata_b->d) && !mpz_cmp(ldata_a->k, ldata_b->k);
+           && !mpz_cmp(ldata_a->d, ldata_b->d);
 }
 
 char* my_leaf_to_str(int complemented, uint64_t ldata_raw, char* sylvan_buf, size_t sylvan_bufsize)
@@ -102,7 +101,7 @@ char* my_leaf_to_str(int complemented, uint64_t ldata_raw, char* sylvan_buf, siz
 
     char ldata_string[MAX_LEAF_STR_LEN] = {0};
     
-    int chars_written = gmp_snprintf(ldata_string, MAX_LEAF_STR_LEN, "(1/√2)^(%Zd) * (%Zd%+Zdω%+Zdω²%+Zdω³)", ldata->k, ldata->a, ldata->b, ldata->c, ldata->d);
+    int chars_written = gmp_snprintf(ldata_string, MAX_LEAF_STR_LEN, "(1/√2)^(%Zd) * (%Zd%+Zdω%+Zdω²%+Zdω³)", c_k, ldata->a, ldata->b, ldata->c, ldata->d);
     // Was string truncated?
     if (chars_written >= MAX_LEAF_STR_LEN) {
         error_exit("Allocated string length for leaf value output has not been sufficient.\n");
@@ -135,7 +134,6 @@ uint64_t my_leaf_hash(const uint64_t ldata_raw, const uint64_t seed)
     val = MY_HASH_COMB(val, ldata->b);
     val = MY_HASH_COMB(val, ldata->c);
     val = MY_HASH_COMB(val, ldata->d);
-    val = MY_HASH_COMB(val, ldata->k);
 
     return val;
 }
@@ -161,20 +159,18 @@ TASK_IMPL_2(MTBDD, my_op_plus, MTBDD*, p_a, MTBDD*, p_b)
         mpz_init(res_data.b);
         mpz_init(res_data.c);
         mpz_init(res_data.d);
-        mpz_init(res_data.k);
         mpz_add(res_data.a, a_data->a, b_data->a);
         mpz_add(res_data.b, a_data->b, b_data->b);
         mpz_add(res_data.c, a_data->c, b_data->c);
         mpz_add(res_data.d, a_data->d, b_data->d);
-        mpz_set(res_data.k, a_data->k);
         
         if (!mpz_cmp_si(res_data.a, 0) && !mpz_cmp_si(res_data.b, 0) && !mpz_cmp_si(res_data.c, 0) && !mpz_cmp_si(res_data.d, 0)) {
-            mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, res_data.k, NULL);
+            mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, NULL);
             return (MTBDD)NULL;
         }
         
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
-        mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, res_data.k, NULL);
+        mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, NULL);
         return res;
     }
 
@@ -209,20 +205,18 @@ TASK_IMPL_2(MTBDD, my_op_minus, MTBDD*, p_a, MTBDD*, p_b)
         mpz_init(res_data.b);
         mpz_init(res_data.c);
         mpz_init(res_data.d);
-        mpz_init(res_data.k);
         mpz_sub(res_data.a, a_data->a, b_data->a);
         mpz_sub(res_data.b, a_data->b, b_data->b);
         mpz_sub(res_data.c, a_data->c, b_data->c);
         mpz_sub(res_data.d, a_data->d, b_data->d);
-        mpz_set(res_data.k, a_data->k);
         
         if (!mpz_cmp_si(res_data.a, 0) && !mpz_cmp_si(res_data.b, 0) && !mpz_cmp_si(res_data.c, 0) && !mpz_cmp_si(res_data.d, 0)) {
-            mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, res_data.k, NULL);
+            mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, NULL);
             return (MTBDD)NULL;
         }
         
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
-        mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, res_data.k, NULL);
+        mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, NULL);
         return res;
     }
 
@@ -247,20 +241,18 @@ TASK_IMPL_2(MTBDD, my_op_times, MTBDD*, p_a, MTBDD*, p_b)
         mpz_init(res_data.b);
         mpz_init(res_data.c);
         mpz_init(res_data.d);
-        mpz_init(res_data.k);
         mpz_mul(res_data.a, a_data->a, b_data->a);
         mpz_mul(res_data.b, a_data->b, b_data->b);
         mpz_mul(res_data.c, a_data->c, b_data->c);
         mpz_mul(res_data.d, a_data->d, b_data->d);
-        mpz_add(res_data.k, a_data->k, b_data->k);
 
         if (!mpz_cmp_si(res_data.a, 0) && !mpz_cmp_si(res_data.b, 0) && !mpz_cmp_si(res_data.c, 0) && !mpz_cmp_si(res_data.d, 0)) {
-            mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, res_data.k, NULL);
+            mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, NULL);
             return (MTBDD)NULL;
         }
 
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
-        mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, res_data.k, NULL);
+        mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, NULL);
         return res;
     }
 
@@ -289,42 +281,13 @@ TASK_IMPL_2(MTBDD, my_op_negate, MTBDD, a, size_t, x)
         mpz_init(res_data.b);
         mpz_init(res_data.c);
         mpz_init(res_data.d);
-        mpz_init(res_data.k);
         mpz_neg(res_data.a, a_data->a);
         mpz_neg(res_data.b, a_data->b);
         mpz_neg(res_data.c, a_data->c);
         mpz_neg(res_data.d, a_data->d);
-        mpz_set(res_data.k, a_data->k);
         
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
-        mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, res_data.k, NULL);
-        return res;
-    }
-
-    return mtbdd_invalid; // Recurse deeper
-}
-
-TASK_IMPL_2(MTBDD, my_op_coef_k_incr, MTBDD, a, size_t, x)
-{
-    (void)x; // extra parameter needed for task - not needed
-
-    // Partial function check
-    if (a == mtbdd_false) return mtbdd_false;
-
-    // Compute -a if mtbdd is a leaf
-    if (mtbdd_isleaf(a)) {
-        cnum* a_data = (cnum*) mtbdd_getvalue(a);
-
-        cnum res_data;
-        mpz_init_set(res_data.a, a_data->a);
-        mpz_init_set(res_data.b, a_data->b);
-        mpz_init_set(res_data.c, a_data->c);
-        mpz_init_set(res_data.d, a_data->d);
-        mpz_init(res_data.k);
-        mpz_add_ui(res_data.k, a_data->k, 1);
-
-        MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
-        mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, res_data.k, NULL);
+        mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, NULL);
         return res;
     }
 
@@ -348,10 +311,9 @@ TASK_IMPL_2(MTBDD, my_op_coef_rot1, MTBDD, a, size_t, x)
         mpz_init_set(res_data.b, a_data->a);
         mpz_init_set(res_data.c, a_data->b);
         mpz_init_set(res_data.d, a_data->c);
-        mpz_init_set(res_data.k, a_data->k);
 
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
-        mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, res_data.k, NULL);
+        mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, NULL);
         return res;
     }
 
@@ -376,10 +338,9 @@ TASK_IMPL_2(MTBDD, my_op_coef_rot2, MTBDD, a, size_t, x)
         mpz_neg(res_data.b, a_data->d);
         mpz_init_set(res_data.c, a_data->a);
         mpz_init_set(res_data.d, a_data->b);
-        mpz_init_set(res_data.k, a_data->k);
 
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
-        mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, res_data.k, NULL);
+        mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, NULL);
         return res;
     }
 
@@ -441,12 +402,11 @@ MTBDD b_xt_create(uint32_t xt)
     mpz_init_set_ui(num.b, 1);
     mpz_init_set_ui(num.c, 1);
     mpz_init_set_ui(num.d, 1);
-    mpz_init(num.k);
 
     uint8_t num_symbol[] = {1}; // symbol seq. 0/1/2 denotes where the leaf will be (low/high/both)
     MTBDD leaf1  = mtbdd_makeleaf(ltype_id, (uint64_t) &num);
     MTBDD b_xt = mtbdd_cube(variables, num_symbol, leaf1); // creates mtbdd with leaves based on variables and symbol. seq.
-    mpz_clears(num.a, num.b, num.c, num.d, num.k, NULL);
+    mpz_clears(num.a, num.b, num.c, num.d, NULL);
     return b_xt;
 }
 
@@ -460,12 +420,11 @@ MTBDD b_xt_comp_create(uint32_t xt)
     mpz_init_set_ui(num.b, 1);
     mpz_init_set_ui(num.c, 1);
     mpz_init_set_ui(num.d, 1);
-    mpz_init(num.k);
 
     uint8_t num_symbol_comp[] = {0}; // symbol seq. 0/1/2 denotes where the leaf will be (low/high/both)
     MTBDD leaf  = mtbdd_makeleaf(ltype_id, (uint64_t) &num);
     MTBDD b_xt_comp = mtbdd_cube(variables, num_symbol_comp, leaf); // creates mtbdd with leaves based on variables and symbol. seq.
-    mpz_clears(num.a, num.b, num.c, num.d, num.k, NULL);
+    mpz_clears(num.a, num.b, num.c, num.d, NULL);
     return b_xt_comp;
 }
 
