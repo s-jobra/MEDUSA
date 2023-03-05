@@ -1,4 +1,4 @@
-#!/bin.bash
+#!/bin/bash
 
 IN_FILE=../results/benchmarkF.out
 OUT_FILE=../benchmark.pdf

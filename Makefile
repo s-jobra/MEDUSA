@@ -65,6 +65,7 @@ make-sliqsim:
 get-benchmarks:
 	cd .. && git clone https://github.com/alan23273850/AutoQ.git || true &&\
 	mv AutoQ/benchmarks . && rm -rf AutoQ
+	@bash ./$(BSCRIPT_PATH)/add-measure.sh
 
 # INIT:
 install-deps: make-sylvan make-lace

@@ -1,4 +1,4 @@
-#!/bin.bash
+#!/bin/bash
 export LC_ALL=C.UTF-8
 
 # exec settings
