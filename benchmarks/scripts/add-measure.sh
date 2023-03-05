@@ -12,9 +12,9 @@ for file in ../benchmarks/*/*/*.qasm; do
         fi
     done < $file
 
-    sed -i "/qreg/acreg qubits[$q_cnt]" $file
+    sed -i "/qreg/acreg c[$q_cnt];" $file
 
     for i in $(seq 0 $(($q_cnt-1)) ); do
-        echo "measure q[$i] -> c[$i];" >> $file
+        echo "measure qubits[$i] -> c[$i];" >> $file
     done
 done
