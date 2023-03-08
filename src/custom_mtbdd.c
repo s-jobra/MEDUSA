@@ -134,6 +134,7 @@ uint64_t my_leaf_hash(const uint64_t ldata_raw, const uint64_t seed)
     val = MY_HASH_COMB(val, ldata->b);
     val = MY_HASH_COMB(val, ldata->c);
     val = MY_HASH_COMB(val, ldata->d);
+    val = MY_HASH_COMB(val, c_k);
 
     return val;
 }
