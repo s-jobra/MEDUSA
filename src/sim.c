@@ -66,7 +66,7 @@ static uint32_t get_q_num(FILE *in)
     return ((uint32_t)n);
 }
 
-void sim_file(FILE *in, MTBDD *circ)
+void sim_file(FILE *in, MTBDD *circ, int *measured_bits)
 {
     
     int c;
@@ -123,12 +123,15 @@ void sim_file(FILE *in, MTBDD *circ)
         else if (strcmp(cmd, "creg") == 0) {}
         else if (strcmp(cmd, "qreg") == 0) {
             uint32_t n = get_q_num(in);
+            measured_bits = calloc(n,sizeof(int));
             circuit_init(circ, n);
             mtbdd_protect(circ);
             init = true;
         }
         else if (init) {
             if (strcmp(cmd, "measure") == 0) {
+                uint32_t qt = get_q_num(in);
+                measured_bits[qt] = measure(circ, qt);
             }
             else if (strcmp(cmd, "x") == 0) {
                 uint32_t qt = get_q_num(in);

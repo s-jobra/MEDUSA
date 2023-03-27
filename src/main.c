@@ -56,12 +56,13 @@ int main(int argc, char *argv[])
         error_exit("Cannot open output file.");
     }
     MTBDD circ;
+    int* measured_bits; // TODO: smaller type?
 
     struct timespec t_start, t_finish;
     double t_el;
     clock_gettime(CLOCK_MONOTONIC, &t_start); // Start the timer
 
-    sim_file(input, &circ);
+    sim_file(input, &circ, measured_bits);
 
     clock_gettime(CLOCK_MONOTONIC, &t_finish); // End the timer
 

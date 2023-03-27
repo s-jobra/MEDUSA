@@ -17,8 +17,10 @@
  * @param in input QASM file
  * 
  * @param circ custom MTBDD that will represent end circuit state
+ * 
+ * @param measured_bits array in which the measure results will be stored
  */
-void sim_file(FILE *in, MTBDD *circ);
+void sim_file(FILE *in, MTBDD *circ, int *measured_bits);
 
 #endif
 /* end of "sim.h" */

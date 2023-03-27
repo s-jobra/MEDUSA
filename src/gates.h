@@ -29,6 +29,16 @@ TASK_DECL_2(MTBDD, m_gate_s, MTBDD, uint64_t);
 TASK_DECL_2(MTBDD, m_gate_t, MTBDD, uint64_t);
 
 /**
+ * Returns the qubits state with the correct probability.
+ * 
+ * @param a pointer to an MTBDD
+ * 
+ * @param xt target qubit index
+ * 
+ */
+int measure(MTBDD* a, uint32_t xt);
+
+/**
  * Apply quantum gate X on the state vector.
  * 
  * @param a pointer to an MTBDD

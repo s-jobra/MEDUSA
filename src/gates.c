@@ -1,5 +1,20 @@
 #include "gates.h"
 
+int measure(MTBDD* a, uint32_t xt)
+{
+    int bit_val = 0;
+    MTBDD t_xt = create_t_xt(*a, xt);
+    mtbdd_protect(&t_xt);
+    //TODO: gmp prob count init
+    
+    // 1 create Txt
+    // 2 call sum all nodes on Txt (one argument will be num_ptr to sum)
+    // 3 calculate the probability of |1>
+    // 4 generate rand num and return the result with the given probability
+    mtbdd_unprotect(&t_xt);
+    return bit_val;
+}
+
 TASK_IMPL_2(MTBDD, m_gate_x, MTBDD, a, uint64_t, xt)
 {
     // Partial function check
