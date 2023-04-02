@@ -5,12 +5,55 @@ int measure(MTBDD* a, uint32_t xt)
     int bit_val = 0;
     MTBDD t_xt = create_t_xt(*a, xt);
     mtbdd_protect(&t_xt);
-    //TODO: gmp prob count init
-    
-    // 1 create Txt
-    // 2 call sum all nodes on Txt (one argument will be num_ptr to sum)
-    // 3 calculate the probability of |1>
-    // 4 generate rand num and return the result with the given probability
+
+    cnum prob_sum;
+    mpz_inits(prob_sum.a, prob_sum.b, prob_sum.c, prob_sum.d, NULL);
+    double prob_re, prob_im;   //TODO: data type
+    double c_a, c_b, c_c, c_d; //TODO: data type
+    mp_bitcnt_t shift_cnt = mpz_get_ui(c_k);
+
+    my_mtbdd_leaf_sum(t_xt, (size_t)&prob_sum);
+
+    // k even, k+1 odd
+    if (mpz_even_p(c_k) != 0) {
+        shift_cnt = shift_cnt >> 1;
+        
+        mpz_fdiv_q_2exp(prob_sum.a, prob_sum.a, shift_cnt); // k/2 right shifts
+        mpz_fdiv_q_2exp(prob_sum.b, prob_sum.b, shift_cnt);
+        mpz_fdiv_q_2exp(prob_sum.c, prob_sum.c, shift_cnt);
+        mpz_fdiv_q_2exp(prob_sum.d, prob_sum.d, shift_cnt);
+        c_a = mpz_get_d(prob_sum.a);
+        c_b = mpz_get_d(prob_sum.b);
+        c_c = mpz_get_d(prob_sum.c);
+        c_d = mpz_get_d(prob_sum.d);
+
+        prob_re = pow(c_a + c_b * M_SQRT1_2 - c_d * M_SQRT1_2, 2);
+        prob_im = pow(c_c + c_b * M_SQRT1_2 + c_d * M_SQRT1_2, 2);
+
+    }
+    // k odd, k+1 even
+    else {
+        shift_cnt = mpz_get_ui(c_k);
+        shift_cnt = (shift_cnt - 1) >> 1;
+        
+        mpz_fdiv_q_2exp(prob_sum.a, prob_sum.a, shift_cnt); // k-1/2 right shifts
+        mpz_fdiv_q_2exp(prob_sum.b, prob_sum.b, shift_cnt + 1); // k+1/2 right shifts
+        mpz_fdiv_q_2exp(prob_sum.c, prob_sum.c, shift_cnt);
+        mpz_fdiv_q_2exp(prob_sum.d, prob_sum.d, shift_cnt + 1);
+        c_a = mpz_get_d(prob_sum.a);
+        c_b = mpz_get_d(prob_sum.b);
+        c_c = mpz_get_d(prob_sum.c);
+        c_d = mpz_get_d(prob_sum.d);
+
+        prob_re = pow(c_a * M_SQRT1_2 + c_b - c_d, 2);
+        prob_im = pow(c_c * M_SQRT1_2 + c_b + c_d, 2);
+    }
+    double random = (double)rand() / RAND_MAX;
+    if (random > prob_re + prob_im) {
+        bit_val = 1;
+    }
+
+    mpz_clears(prob_sum.a, prob_sum.b, prob_sum.c, prob_sum.d, NULL);
     mtbdd_unprotect(&t_xt);
     return bit_val;
 }

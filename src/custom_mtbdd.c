@@ -429,4 +429,22 @@ MTBDD b_xt_comp_create(uint32_t xt)
     return b_xt_comp;
 }
 
+TASK_IMPL_2(MTBDD, my_op_leaf_sum, MTBDD, a, size_t, sum)
+{
+    // Partial function check
+    if (a == mtbdd_false) return mtbdd_false;
+
+    if (mtbdd_isleaf(a)) {
+        cnum* sum_p = (cnum*) sum;
+        cnum* a_data = (cnum*) mtbdd_getvalue(a);
+        mpz_add (sum_p->a, sum_p->a, a_data->a);
+        mpz_add (sum_p->b, sum_p->b, a_data->b);
+        mpz_add (sum_p->c, sum_p->c, a_data->c);
+        mpz_add (sum_p->d, sum_p->d, a_data->d);
+        return a;
+    }
+
+    return mtbdd_invalid; // Recurse deeper
+}
+
 /* end of "custom_mtbdd.c" */

@@ -1,3 +1,4 @@
+#include <math.h>
 #include "custom_mtbdd.h"
 
 #ifndef GATES_H

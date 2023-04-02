@@ -116,6 +116,11 @@ TASK_DECL_2(MTBDD, t_xt_create, MTBDD, uint64_t);
 TASK_DECL_2(MTBDD, t_xt_comp_create, MTBDD, uint64_t);
 
 /**
+ * Function for calculating the sum of all leaf values in a given MTBDD.
+ */
+TASK_DECL_2(MTBDD, my_op_leaf_sum, MTBDD, size_t);
+
+/**
  * Function for creating auxiliary MTBDD for a target qubit.
  * (low -> 0, high -> 1)
  * 
@@ -223,6 +228,16 @@ MTBDD b_xt_comp_create(uint32_t xt);
  * 
  */
 #define create_b_xt_comp(xt) b_xt_comp_create(xt)
+
+/**
+ * Computes sum of all leaf values in the MTBDD.
+ * 
+ * @param a pointer an MTBDD
+ * 
+ * @param sum a pointer to complex number where the result will be stored
+ * 
+ */
+#define my_mtbdd_leaf_sum(a, sum) mtbdd_uapply(a, TASK(my_op_leaf_sum), sum)
 
 #endif
 /* end of "custom_mtbdd.h" */
