@@ -20,7 +20,7 @@
  * 
  * @param measured_bits array in which the measure results will be stored
  */
-void sim_file(FILE *in, MTBDD *circ, int *measured_bits);
+void sim_file(FILE *in, MTBDD *circ, prob_t **bits_prob_is_one, int* n_qubits);
 
 #endif
 /* end of "sim.h" */

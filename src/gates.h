@@ -5,6 +5,11 @@
 #define GATES_H
 
 /**
+ * Type for probability, that a given qubit is 1
+ */
+typedef double prob_t; //TODO: data type?
+
+/**
  * Permutation based implementation of the X gate on the given MTBDD.
  */
 TASK_DECL_2(MTBDD, m_gate_x, MTBDD, uint64_t);
@@ -30,14 +35,15 @@ TASK_DECL_2(MTBDD, m_gate_s, MTBDD, uint64_t);
 TASK_DECL_2(MTBDD, m_gate_t, MTBDD, uint64_t);
 
 /**
- * Returns the qubits state with the correct probability.
+ * Returns the probability the given qubit's state will be 1.
+ * This implementation supports only a measurement of all the qubits at the end of the circuit.
  * 
  * @param a pointer to an MTBDD
  * 
  * @param xt target qubit index
  * 
  */
-int measure(MTBDD* a, uint32_t xt);
+prob_t measure(MTBDD* a, uint32_t xt);
 
 /**
  * Apply quantum gate X on the state vector.

@@ -66,7 +66,7 @@ static uint32_t get_q_num(FILE *in)
     return ((uint32_t)n);
 }
 
-void sim_file(FILE *in, MTBDD *circ, int *measured_bits)
+void sim_file(FILE *in, MTBDD *circ, prob_t **bits_prob_is_one, int* n_qubits)
 {
     
     int c;
@@ -123,7 +123,11 @@ void sim_file(FILE *in, MTBDD *circ, int *measured_bits)
         else if (strcmp(cmd, "creg") == 0) {}
         else if (strcmp(cmd, "qreg") == 0) {
             uint32_t n = get_q_num(in);
-            measured_bits = calloc(n,sizeof(int));
+            *n_qubits = (int)n;
+            *bits_prob_is_one = calloc(n,sizeof(prob_t));
+            if (*bits_prob_is_one == NULL) {
+                error_exit("Memory allocation error.");
+            }
             circuit_init(circ, n);
             mtbdd_protect(circ);
             init = true;
@@ -131,7 +135,7 @@ void sim_file(FILE *in, MTBDD *circ, int *measured_bits)
         else if (init) {
             if (strcmp(cmd, "measure") == 0) {
                 uint32_t qt = get_q_num(in);
-                measured_bits[qt] = measure(circ, qt);
+                (*bits_prob_is_one)[qt] = measure(circ, qt);
             }
             else if (strcmp(cmd, "x") == 0) {
                 uint32_t qt = get_q_num(in);

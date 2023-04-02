@@ -56,13 +56,14 @@ int main(int argc, char *argv[])
         error_exit("Cannot open output file.");
     }
     MTBDD circ;
-    int* measured_bits; // TODO: smaller type?
+    prob_t* bits_prob_is_one;
+    int n_qubits;
 
     struct timespec t_start, t_finish;
     double t_el;
     clock_gettime(CLOCK_MONOTONIC, &t_start); // Start the timer
 
-    sim_file(input, &circ, measured_bits);
+    sim_file(input, &circ, &bits_prob_is_one, &n_qubits);
 
     clock_gettime(CLOCK_MONOTONIC, &t_finish); // End the timer
 
@@ -73,6 +74,24 @@ int main(int argc, char *argv[])
     if (argc == 2){
         fclose(input);
     }
+
+    int samples=10; //FIXME:
+    printf("Sampled results:\n");
+    prob_t random;
+    for(int i=0; i < samples; i++) {
+        random = (prob_t)rand() / RAND_MAX;
+        for(int j=0; j < n_qubits; j++) {
+            if (random <= bits_prob_is_one[j]) {
+                printf("1");
+            }
+            else {
+                printf("0");
+            }
+        }
+        printf("\n");
+    }
+    
+
     sylvan_quit();
     lace_stop();
 

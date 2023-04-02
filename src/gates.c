@@ -1,15 +1,14 @@
 #include "gates.h"
 
-int measure(MTBDD* a, uint32_t xt)
+prob_t measure(MTBDD* a, uint32_t xt)
 {
-    int bit_val = 0;
     MTBDD t_xt = create_t_xt(*a, xt);
     mtbdd_protect(&t_xt);
 
     cnum prob_sum;
     mpz_inits(prob_sum.a, prob_sum.b, prob_sum.c, prob_sum.d, NULL);
-    double prob_re, prob_im;   //TODO: data type
-    double c_a, c_b, c_c, c_d; //TODO: data type
+    prob_t prob_re, prob_im;
+    prob_t c_a, c_b, c_c, c_d;
     mp_bitcnt_t shift_cnt = mpz_get_ui(c_k);
 
     my_mtbdd_leaf_sum(t_xt, (size_t)&prob_sum);
@@ -17,7 +16,7 @@ int measure(MTBDD* a, uint32_t xt)
     // k even, k+1 odd
     if (mpz_even_p(c_k) != 0) {
         shift_cnt = shift_cnt >> 1;
-        
+
         mpz_fdiv_q_2exp(prob_sum.a, prob_sum.a, shift_cnt); // k/2 right shifts
         mpz_fdiv_q_2exp(prob_sum.b, prob_sum.b, shift_cnt);
         mpz_fdiv_q_2exp(prob_sum.c, prob_sum.c, shift_cnt);
@@ -48,14 +47,10 @@ int measure(MTBDD* a, uint32_t xt)
         prob_re = pow(c_a * M_SQRT1_2 + c_b - c_d, 2);
         prob_im = pow(c_c * M_SQRT1_2 + c_b + c_d, 2);
     }
-    double random = (double)rand() / RAND_MAX;
-    if (random > prob_re + prob_im) {
-        bit_val = 1;
-    }
 
     mpz_clears(prob_sum.a, prob_sum.b, prob_sum.c, prob_sum.d, NULL);
     mtbdd_unprotect(&t_xt);
-    return bit_val;
+    return prob_re+prob_im;
 }
 
 TASK_IMPL_2(MTBDD, m_gate_x, MTBDD, a, uint64_t, xt)
