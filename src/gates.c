@@ -1,9 +1,9 @@
 #include "gates.h"
 
-prob_t measure(MTBDD* a, uint32_t xt)
+prob_t measure(MTBDD* a, uint32_t xt, char *curr_state, int n)
 {
-    MTBDD t_xt = create_t_xt(*a, xt);
-    mtbdd_protect(&t_xt);
+    MTBDD t = create_t_xt(*a, xt);
+    mtbdd_protect(&t);
 
     cnum prob_sum;
     mpz_inits(prob_sum.a, prob_sum.b, prob_sum.c, prob_sum.d, NULL);
@@ -11,7 +11,7 @@ prob_t measure(MTBDD* a, uint32_t xt)
     prob_t c_a, c_b, c_c, c_d;
     mp_bitcnt_t shift_cnt = mpz_get_ui(c_k);
 
-    my_mtbdd_leaf_sum(t_xt, (size_t)&prob_sum);
+    my_mtbdd_leaf_sum_wrapper(t, &prob_sum, xt, curr_state, n);
 
     // k even, k+1 odd
     if (mpz_even_p(c_k) != 0) {
@@ -49,7 +49,7 @@ prob_t measure(MTBDD* a, uint32_t xt)
     }
 
     mpz_clears(prob_sum.a, prob_sum.b, prob_sum.c, prob_sum.d, NULL);
-    mtbdd_unprotect(&t_xt);
+    mtbdd_unprotect(&t);
     return prob_re+prob_im;
 }
 

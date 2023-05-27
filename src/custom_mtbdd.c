@@ -429,22 +429,110 @@ MTBDD b_xt_comp_create(uint32_t xt)
     return b_xt_comp;
 }
 
-TASK_IMPL_2(MTBDD, my_op_leaf_sum, MTBDD, a, size_t, sum)
-{
-    // Partial function check
-    if (a == mtbdd_false) return mtbdd_false;
+// TODO: comment + placement?
+#define get_coef(start, end, target) \
+        (end > target && start < target)? 1 << end - start - 2 : 1 << end - start -1;
 
+TASK_IMPL_4(MTBDD, mtbdd_apply_sum, MTBDD, a, uint32_t, xt, char*, curr_state, int, n)
+{
+    cnum res;
+    mpz_inits(res.a, res.b, res.c, res.d, NULL);
+    MTBDD res_leaf;
+
+    // terminal case
     if (mtbdd_isleaf(a)) {
-        cnum* sum_p = (cnum*) sum;
         cnum* a_data = (cnum*) mtbdd_getvalue(a);
-        mpz_add (sum_p->a, sum_p->a, a_data->a);
-        mpz_add (sum_p->b, sum_p->b, a_data->b);
-        mpz_add (sum_p->c, sum_p->c, a_data->c);
-        mpz_add (sum_p->d, sum_p->d, a_data->d);
-        return a;
+        mpz_set(res.a, a_data->a);
+        mpz_set(res.b, a_data->b);
+        mpz_set(res.c, a_data->c);
+        mpz_set(res.d, a_data->d);
+        res_leaf = mtbdd_makeleaf(ltype_id, (uint64_t) &res);
+        return res_leaf;
     }
 
-    return mtbdd_invalid; // Recurse deeper
+    uint32_t var_a = mtbdd_getvar(a);
+
+    //FIXME: should calculate everything here????
+    MTBDD high = mtbdd_gethigh(a); //FIXME: node_gethigh??? eg mtbddnode_getvariable
+    uint32_t var_high;
+    if (mtbdd_isleaf(a)) {
+        var_high = n;
+    }
+    else {
+        var_high = mtbdd_getvar(high); //TODO: check behaviour for mtbdd_false
+    }
+    long skip_high = get_coef(var_a, var_high, xt);
+
+    MTBDD low = mtbdd_getlow(a); //FIXME: node_gethigh???
+    uint32_t var_low;
+    if (mtbdd_isleaf(a)) {
+        var_low = n;
+    }
+    else {
+        var_low = mtbdd_getvar(low); //TODO: check behaviour for mtbdd_false
+    }
+    long skip_low = get_coef(var_a, var_low, xt);
+
+    // TODO: use SPAWN, CALL, SYNC, etc !!!!!!!!
+    if (var_a == xt || curr_state[var_a] == '1') {
+        MTBDD res_high = mtbdd_apply_sum(high, xt, curr_state, n);
+        cnum* high_data = (cnum*) mtbdd_getvalue(res_high);
+        mpz_mul_si(res.a, high_data->a, skip_high); //FIXME: is valid calculation????
+        mpz_set(res.b, high_data->b);
+        mpz_set(res.c, high_data->c);
+        mpz_set(res.d, high_data->d);
+    }
+    else if (curr_state[var_a] == '0') {
+        MTBDD res_low = mtbdd_apply_sum(low, xt, curr_state, n);
+        cnum* low_data = (cnum*) mtbdd_getvalue(res_low);
+        mpz_mul_si(res.a, low_data->a, skip_low); //FIXME: is valid calculation????
+        mpz_set(res.b, low_data->b);
+        mpz_set(res.c, low_data->c);
+        mpz_set(res.d, low_data->d);
+    }
+    else {
+        MTBDD res_high = mtbdd_apply_sum_(high, xt, curr_state, n);
+        cnum* high_data = (cnum*) mtbdd_getvalue(res_high);
+        mpz_mul_si(res.a, high_data->a, skip_high); //FIXME: is valid calculation????
+        mpz_set(res.b, high_data->b);
+        mpz_set(res.c, high_data->c);
+        mpz_set(res.d, high_data->d);
+
+        MTBDD res_low = mtbdd_apply_sum(low, xt, curr_state, n);
+        cnum* low_data = (cnum*) mtbdd_getvalue(res_low);
+        mpz_mul_si(low_data->a, low_data->a, skip_low); //FIXME: is valid calculation????
+        
+        mpz_add(res.a, res.a, low_data->a);
+        mpz_add(res.b, res.b, low_data->b);
+        mpz_add(res.c, res.c, low_data->c);
+        mpz_add(res.d, res.d, low_data->d);
+    }
+
+    // /* Recursive */
+    // mtbdd_refs_spawn(SPAWN(mtbdd_apply_sum, high, sum, coef));
+    // cnum res_low = SPAWN(mtbdd_apply_sum, low, sum, coef);
+    // mtbdd_refs_push(CALL(mtbdd_apply_sum, low, sum, coef));
+    // cnum res_high = SPAWN(mtbdd_apply_sum, high, sum, coef);
+    // mtbdd_refs_sync(SYNC(mtbdd_apply_sum));
+    // mtbdd_refs_pop(1);
+    // mpz_add(res.a, res_low.a, res_high.a);
+    // mpz_add(res.b, res_low.b, res_high.b);
+    // mpz_add(res.c, res_low.c, res_high.c);
+    // mpz_add(res.d, res_low.d, res_high.d);
+
+    res_leaf = mtbdd_makeleaf(ltype_id, (uint64_t) &res);
+    return res_leaf;
+}
+
+void my_mtbdd_leaf_sum_wrapper(MTBDD a, cnum *prob_sum, uint32_t xt, char *curr_state, int n)
+{
+    int skip_coef = 2 * get_coef(0, mtbdd_getvar(a), xt);
+    MTBDD sum = mtbdd_apply_sum(a, xt, curr_state, n); //FIXME: is proper function call??
+    cnum* sum_data = (cnum*) mtbdd_getvalue(a);
+    mpz_set(prob_sum->a, sum_data->a);
+    mpz_set(prob_sum->b, sum_data->b);
+    mpz_set(prob_sum->c, sum_data->c);
+    mpz_set(prob_sum->d, sum_data->d);
 }
 
 /* end of "custom_mtbdd.c" */

@@ -42,8 +42,12 @@ TASK_DECL_2(MTBDD, m_gate_t, MTBDD, uint64_t);
  * 
  * @param xt target qubit index
  * 
+ * @param curr_state current state vector (determined by previous measurements)
+ * 
+ * @param n number of qubits in the circuit
+ * 
  */
-prob_t measure(MTBDD* a, uint32_t xt);
+prob_t measure(MTBDD* a, uint32_t xt, char *curr_state, int n);
 
 /**
  * Apply quantum gate X on the state vector.

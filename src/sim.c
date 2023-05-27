@@ -66,7 +66,7 @@ static uint32_t get_q_num(FILE *in)
     return ((uint32_t)n);
 }
 
-void sim_file(FILE *in, MTBDD *circ, prob_t **bits_prob_is_one, int* n_qubits)
+void sim_file(FILE *in, MTBDD *circ, int* n_qubits, int **bits_to_measure, bool *is_measure)
 {
     
     int c;
@@ -120,13 +120,16 @@ void sim_file(FILE *in, MTBDD *circ, prob_t **bits_prob_is_one, int* n_qubits)
         // Identify the command
         if (strcmp(cmd, "OPENQASM") == 0) {}
         else if (strcmp(cmd, "include") == 0) {}
-        else if (strcmp(cmd, "creg") == 0) {}
+        else if (strcmp(cmd, "creg") == 0) {} //TODO: is valid?
         else if (strcmp(cmd, "qreg") == 0) {
             uint32_t n = get_q_num(in);
             *n_qubits = (int)n;
-            *bits_prob_is_one = calloc(n,sizeof(prob_t));
-            if (*bits_prob_is_one == NULL) {
+            *bits_to_measure = malloc(n * sizeof(int));
+            if (*bits_to_measure == NULL) {
                 error_exit("Memory allocation error.");
+            }
+            for (int i=0; i < n; i++) {
+                (*bits_to_measure)[i] = -1;
             }
             circuit_init(circ, n);
             mtbdd_protect(circ);
@@ -135,7 +138,9 @@ void sim_file(FILE *in, MTBDD *circ, prob_t **bits_prob_is_one, int* n_qubits)
         else if (init) {
             if (strcmp(cmd, "measure") == 0) {
                 uint32_t qt = get_q_num(in);
-                (*bits_prob_is_one)[qt] = measure(circ, qt);
+                uint32_t ct = get_q_num(in);
+                *is_measure = true;
+                (*bits_to_measure)[qt] = ct;
             }
             else if (strcmp(cmd, "x") == 0) {
                 uint32_t qt = get_q_num(in);

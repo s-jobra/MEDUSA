@@ -116,9 +116,26 @@ TASK_DECL_2(MTBDD, t_xt_create, MTBDD, uint64_t);
 TASK_DECL_2(MTBDD, t_xt_comp_create, MTBDD, uint64_t);
 
 /**
- * Function for calculating the sum of all leaf values in a given MTBDD.
+ * Function for calculating the sum of all leafs in a given MTBDD where the target qubit is 1 
+ * (with respect to all currently measured qubits).
  */
-TASK_DECL_2(MTBDD, my_op_leaf_sum, MTBDD, size_t);
+TASK_DECL_4(MTBDD, mtbdd_apply_sum, MTBDD, uint32_t, char*, int);
+
+/**
+ * Function for properly setting the result probability and checking for root skips.
+ * 
+ * @param a pointer to an MTBDD
+ * 
+ * @param prob_sum for storing the result probability
+ * 
+ * @param xt target qubit index
+ * 
+ * @param curr_state current state vector (determined by previous measurements)
+ * 
+ * @param n number of qubits in the circuit
+ * 
+ */
+void my_mtbdd_leaf_sum_wrapper(MTBDD a, cnum *prob_sum, uint32_t xt, char *curr_state, int n);
 
 /**
  * Function for creating auxiliary MTBDD for a target qubit.
@@ -236,8 +253,10 @@ MTBDD b_xt_comp_create(uint32_t xt);
  * 
  * @param sum a pointer to complex number where the result will be stored
  * 
+ * @param coef coefficient determinating how many times should the leaf value be added to sum
+ * 
  */
-#define my_mtbdd_leaf_sum(a, sum) mtbdd_uapply(a, TASK(my_op_leaf_sum), sum)
+#define my_mtbdd_leaf_sum(a, sum, coef) RUN(my_op_leaf_sum, a, sum, coef)
 
 #endif
 /* end of "custom_mtbdd.h" */

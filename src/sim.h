@@ -18,9 +18,13 @@
  * 
  * @param circ custom MTBDD that will represent end circuit state
  * 
- * @param measured_bits array in which the measure results will be stored
+ * @param n_qubits number of qubits in the circuit
+ * 
+ * @param bits_to_measure array in which the measure results will be stored
+ * 
+ * @param is_measure true if some measure operation is present
  */
-void sim_file(FILE *in, MTBDD *circ, prob_t **bits_prob_is_one, int* n_qubits);
+void sim_file(FILE *in, MTBDD *circ, int* n_qubits, int **bits_to_measure, bool *is_measure);
 
 #endif
 /* end of "sim.h" */
