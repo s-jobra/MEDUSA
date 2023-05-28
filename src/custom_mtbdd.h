@@ -119,7 +119,7 @@ TASK_DECL_2(MTBDD, t_xt_comp_create, MTBDD, uint64_t);
  * Function for calculating the sum of all leafs in a given MTBDD where the target qubit is 1 
  * (with respect to all currently measured qubits).
  */
-TASK_DECL_4(MTBDD, mtbdd_apply_sum, MTBDD, uint32_t, char*, int);
+TASK_DECL_4(cnum*, mtbdd_apply_sum, MTBDD, uint32_t, char*, int);
 
 /**
  * Function for properly setting the result probability and checking for root skips.

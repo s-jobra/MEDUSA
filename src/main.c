@@ -91,6 +91,7 @@ int main(int argc, char *argv[])
                 }
 
                 p_qt_is_one = measure(&circ, j, curr_state, n_qubits) * norm_coef;
+printf("prob = %f ", p_qt_is_one); //FIXME:
                 random = (prob_t)rand() / RAND_MAX;
                 if (random <= p_qt_is_one) {
                     curr_state[curr_ct] = '1';
@@ -101,10 +102,11 @@ int main(int argc, char *argv[])
                     norm_coef *= sqrt(1/(1-p_qt_is_one));
                 }
             }
+printf("\n"); //FIXME:
             
             //FIXME: temporary output
             for (int i=0; i < n_qubits; i++) {
-                printf(curr_state[i]);
+                printf("%c", curr_state[i]);
             }
             printf("\n");
         }

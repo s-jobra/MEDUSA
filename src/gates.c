@@ -13,6 +13,8 @@ prob_t measure(MTBDD* a, uint32_t xt, char *curr_state, int n)
 
     my_mtbdd_leaf_sum_wrapper(t, &prob_sum, xt, curr_state, n);
 
+    gmp_printf("\n%Zd %Zd %Zd %Zd   ", prob_sum.a, prob_sum.b, prob_sum.c, prob_sum.d); //FIXME:
+
     // k even, k+1 odd
     if (mpz_even_p(c_k) != 0) {
         shift_cnt = shift_cnt >> 1;
@@ -47,6 +49,7 @@ prob_t measure(MTBDD* a, uint32_t xt, char *curr_state, int n)
         prob_re = pow(c_a * M_SQRT1_2 + c_b - c_d, 2);
         prob_im = pow(c_c * M_SQRT1_2 + c_b + c_d, 2);
     }
+    //printf("real = %f, im = %f\n", prob_re, prob_im);//FIXME:
 
     mpz_clears(prob_sum.a, prob_sum.b, prob_sum.c, prob_sum.d, NULL);
     mtbdd_unprotect(&t);
