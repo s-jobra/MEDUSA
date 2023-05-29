@@ -5,55 +5,25 @@ prob_t measure(MTBDD* a, uint32_t xt, char *curr_state, int n)
     MTBDD t = create_t_xt(*a, xt);
     mtbdd_protect(&t);
 
-    cnum prob_sum;
-    mpz_inits(prob_sum.a, prob_sum.b, prob_sum.c, prob_sum.d, NULL);
-    prob_t prob_re, prob_im;
-    prob_t c_a, c_b, c_c, c_d;
-    mp_bitcnt_t shift_cnt = mpz_get_ui(c_k);
-
-    my_mtbdd_leaf_sum_wrapper(t, &prob_sum, xt, curr_state, n);
-
-    gmp_printf("\n%Zd %Zd %Zd %Zd   ", prob_sum.a, prob_sum.b, prob_sum.c, prob_sum.d); //FIXME:
-
-    // k even, k+1 odd
-    if (mpz_even_p(c_k) != 0) {
-        shift_cnt = shift_cnt >> 1;
-
-        mpz_fdiv_q_2exp(prob_sum.a, prob_sum.a, shift_cnt); // k/2 right shifts
-        mpz_fdiv_q_2exp(prob_sum.b, prob_sum.b, shift_cnt);
-        mpz_fdiv_q_2exp(prob_sum.c, prob_sum.c, shift_cnt);
-        mpz_fdiv_q_2exp(prob_sum.d, prob_sum.d, shift_cnt);
-        c_a = mpz_get_d(prob_sum.a);
-        c_b = mpz_get_d(prob_sum.b);
-        c_c = mpz_get_d(prob_sum.c);
-        c_d = mpz_get_d(prob_sum.d);
-
-        prob_re = pow(c_a + c_b * M_SQRT1_2 - c_d * M_SQRT1_2, 2);
-        prob_im = pow(c_c + c_b * M_SQRT1_2 + c_d * M_SQRT1_2, 2);
-
+    uint32_t var_t;
+    if (mtbdd_isleaf(*a)) {
+        var_t = n;
     }
-    // k odd, k+1 even
     else {
-        shift_cnt = mpz_get_ui(c_k);
-        shift_cnt = (shift_cnt - 1) >> 1;
-        
-        mpz_fdiv_q_2exp(prob_sum.a, prob_sum.a, shift_cnt); // k-1/2 right shifts
-        mpz_fdiv_q_2exp(prob_sum.b, prob_sum.b, shift_cnt + 1); // k+1/2 right shifts
-        mpz_fdiv_q_2exp(prob_sum.c, prob_sum.c, shift_cnt);
-        mpz_fdiv_q_2exp(prob_sum.d, prob_sum.d, shift_cnt + 1);
-        c_a = mpz_get_d(prob_sum.a);
-        c_b = mpz_get_d(prob_sum.b);
-        c_c = mpz_get_d(prob_sum.c);
-        c_d = mpz_get_d(prob_sum.d);
-
-        prob_re = pow(c_a * M_SQRT1_2 + c_b - c_d, 2);
-        prob_im = pow(c_c * M_SQRT1_2 + c_b + c_d, 2);
+        var_t = mtbdd_getvar(*a);
     }
-    //printf("real = %f, im = %f\n", prob_re, prob_im);//FIXME:
+    long skip_coef;
+    if (var_t == 0) {
+        skip_coef = 1;
+    }
+    else {
+        skip_coef = 2 * get_coef(0, var_t, xt);
+    }
+    prob_t prob = my_mtbdd_prob_sum(*a, xt, curr_state, n);
+    prob *= skip_coef;
 
-    mpz_clears(prob_sum.a, prob_sum.b, prob_sum.c, prob_sum.d, NULL);
     mtbdd_unprotect(&t);
-    return prob_re+prob_im;
+    return prob;
 }
 
 TASK_IMPL_2(MTBDD, m_gate_x, MTBDD, a, uint64_t, xt)

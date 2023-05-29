@@ -1,5 +1,6 @@
 #include <sylvan.h>
 #include <gmp.h>
+#include <math.h>
 #include "error.h"
 
 #ifndef CUSTOM_MTBDD_H
@@ -28,6 +29,11 @@ typedef struct cnum {
     coef_t c;
     coef_t d;
 }cnum;
+
+/**
+ * Type for the probability that a given qubit is 1
+ */
+typedef double prob_t;
 
 /**
  * Complex number coefficient k
@@ -119,23 +125,15 @@ TASK_DECL_2(MTBDD, t_xt_comp_create, MTBDD, uint64_t);
  * Function for calculating the sum of all leafs in a given MTBDD where the target qubit is 1 
  * (with respect to all currently measured qubits).
  */
-TASK_DECL_4(cnum*, mtbdd_apply_sum, MTBDD, uint32_t, char*, int);
+TASK_DECL_4(prob_t, mtbdd_prob_sum, MTBDD, uint32_t, char*, int);
 
 /**
- * Function for properly setting the result probability and checking for root skips.
+ * Function for calculating the probability from a given complex number
  * 
- * @param a pointer to an MTBDD
- * 
- * @param prob_sum for storing the result probability
- * 
- * @param xt target qubit index
- * 
- * @param curr_state current state vector (determined by previous measurements)
- * 
- * @param n number of qubits in the circuit
+ * @param p pointer to a complex number
  * 
  */
-void my_mtbdd_leaf_sum_wrapper(MTBDD a, cnum *prob_sum, uint32_t xt, char *curr_state, int n);
+static inline prob_t calculate_prob(cnum* prob);
 
 /**
  * Function for creating auxiliary MTBDD for a target qubit.
@@ -247,16 +245,31 @@ MTBDD b_xt_comp_create(uint32_t xt);
 #define create_b_xt_comp(xt) b_xt_comp_create(xt)
 
 /**
- * Computes sum of all leaf values in the MTBDD.
+ * Computes the sum probability that the target qubit will be 1 in the MTBDD.
  * 
  * @param a pointer an MTBDD
  * 
- * @param sum a pointer to complex number where the result will be stored
+ * @param xt target qubit index
  * 
- * @param coef coefficient determinating how many times should the leaf value be added to sum
+ * @param curr_state current state vector (determined by previous measurements)
+ * 
+ * @param n number of qubits in the circuit
  * 
  */
-#define my_mtbdd_leaf_sum(a, sum, coef) RUN(my_op_leaf_sum, a, sum, coef)
+#define my_mtbdd_prob_sum(a, xt, curr_state, n) RUN(mtbdd_prob_sum, a, xt, curr_state, n)
+
+/**
+ * Computes the skip coefficient value for measure
+ * 
+ * @param start index of the current node
+ * 
+ * @param end index of next node present
+ * 
+ * @param target target qubit index
+ * 
+ */
+#define get_coef(start, end, target) \
+        (end > target && start < target)? (1 << (end - start - 2)) : (1 << (end - start -1))
 
 #endif
 /* end of "custom_mtbdd.h" */

@@ -68,48 +68,9 @@ int main(int argc, char *argv[])
 
     clock_gettime(CLOCK_MONOTONIC, &t_finish); // End the timer
 
-    if (is_measure) { //TODO: separate function
+    if (is_measure) {
         int samples=10; //TODO: proper input
-        printf("Sampled results:\n");
-
-        prob_t random;
-        prob_t p_qt_is_one;
-        prob_t norm_coef;
-        char curr_state[n_qubits];
-        int curr_ct;
-        
-        for (int i=0; i < samples; i++) {
-            norm_coef = 1;
-            for (int i=0; i < n_qubits; i++) {
-                curr_state[i] = 'x';
-            }
-
-            for (int j=0; j < n_qubits; j++) {
-                curr_ct = bits_to_measure[j];
-                if (curr_ct == -1) {
-                    continue;
-                }
-
-                p_qt_is_one = measure(&circ, j, curr_state, n_qubits) * norm_coef;
-printf("prob = %f ", p_qt_is_one); //FIXME:
-                random = (prob_t)rand() / RAND_MAX;
-                if (random <= p_qt_is_one) {
-                    curr_state[curr_ct] = '1';
-                    norm_coef *= sqrt(1/p_qt_is_one);
-                }
-                else {
-                    curr_state[curr_ct] = '0';
-                    norm_coef *= sqrt(1/(1-p_qt_is_one));
-                }
-            }
-printf("\n"); //FIXME:
-            
-            //FIXME: temporary output
-            for (int i=0; i < n_qubits; i++) {
-                printf("%c", curr_state[i]);
-            }
-            printf("\n");
-        }
+        measure_all(samples, circ, n_qubits, bits_to_measure);
     }
     
     mtbdd_fprintdot(out, circ);

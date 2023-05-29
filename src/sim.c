@@ -213,4 +213,46 @@ void sim_file(FILE *in, MTBDD *circ, int* n_qubits, int **bits_to_measure, bool 
     }
 }
 
+void measure_all(int samples, MTBDD circ, int n, int* bits_to_measure)
+{
+    printf("Sampled results:\n");
+
+    prob_t random;
+    prob_t p_qt_is_one;
+    prob_t norm_coef;
+    char curr_state[n];
+    int curr_ct;
+    
+    for (int i=0; i < samples; i++) {
+        norm_coef = 1;
+        for (int i=0; i < n; i++) {
+            curr_state[i] = 'x';
+        }
+
+        for (int j=0; j < n; j++) {
+            curr_ct = bits_to_measure[j];
+            if (curr_ct == -1) {
+                continue;
+            }
+
+            p_qt_is_one = measure(&circ, j, curr_state, n) * norm_coef * norm_coef;
+            random = (prob_t)rand() / RAND_MAX;
+            if (random <= p_qt_is_one) {
+                curr_state[curr_ct] = '1';
+                norm_coef *= sqrt(1/p_qt_is_one);
+            }
+            else {
+                curr_state[curr_ct] = '0';
+                norm_coef *= sqrt(1/(1-p_qt_is_one));
+            }
+        }
+        
+        //FIXME: temporary output
+        for (int i=0; i < n; i++) {
+            printf("%c", curr_state[i]);
+        }
+        printf("\n");
+    }
+}
+
 /* end of "sim.c" */

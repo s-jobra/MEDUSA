@@ -1,13 +1,7 @@
-#include <math.h>
 #include "custom_mtbdd.h"
 
 #ifndef GATES_H
 #define GATES_H
-
-/**
- * Type for probability, that a given qubit is 1
- */
-typedef double prob_t; //TODO: data type?
 
 /**
  * Permutation based implementation of the X gate on the given MTBDD.

@@ -429,45 +429,89 @@ MTBDD b_xt_comp_create(uint32_t xt)
     return b_xt_comp;
 }
 
-// TODO: comment + placement?
-#define get_coef(start, end, target) \
-        (end > target && start < target)? (1 << (end - start - 2)) : (1 << (end - start -1));
-
-TASK_IMPL_4(cnum*, mtbdd_apply_sum, MTBDD, a, uint32_t, xt, char*, curr_state, int, n)
+//TODO: change to makro?
+static inline prob_t calculate_prob(cnum* prob)
 {
-    cnum* res = malloc(sizeof(cnum));
-    mpz_inits(res->a, res->b, res->c, res->d, NULL);
+
+    mpf_t a, b, c, d;
+    mpf_inits(a, b, c, d, NULL);
+    mpf_set_z(a, prob->a);
+    mpf_set_z(b, prob->b);
+    mpf_set_z(c, prob->c);
+    mpf_set_z(d, prob->d);
+
+    prob_t prob_re, prob_im;
+    prob_t c_a, c_b, c_c, c_d;
+
+    mp_bitcnt_t shift_cnt = mpz_get_ui(c_k);
+
+    // k even, k+1 odd
+    if (mpz_even_p(c_k) != 0) {
+        shift_cnt = shift_cnt >> 1;
+
+        mpf_div_2exp(a, a, shift_cnt); // k/2 right shifts
+        mpf_div_2exp(b, b, shift_cnt);
+        mpf_div_2exp(c, c, shift_cnt);
+        mpf_div_2exp(d, d, shift_cnt);
+
+        c_a = mpf_get_d(a);
+        c_b = mpf_get_d(b);
+        c_c = mpf_get_d(c);
+        c_d = mpf_get_d(d);
+
+        prob_re = pow(c_a + c_b * M_SQRT1_2 - c_d * M_SQRT1_2, 2);
+        prob_im = pow(c_c + c_b * M_SQRT1_2 + c_d * M_SQRT1_2, 2);
+
+    }
+    // k odd, k+1 even
+    else {
+        shift_cnt = (shift_cnt - 1) >> 1;
+
+        mpf_div_2exp(a, a, shift_cnt); // k-1/2 right shifts
+        mpf_div_2exp(b, b, shift_cnt + 1); // k+1/2 right shifts
+        mpf_div_2exp(c, c, shift_cnt);
+        mpf_div_2exp(d, d, shift_cnt + 1);
+
+        c_a = mpf_get_d(a);
+        c_b = mpf_get_d(b);
+        c_c = mpf_get_d(c);
+        c_d = mpf_get_d(d);
+
+        prob_re = pow(c_a * M_SQRT1_2 + c_b - c_d, 2);
+        prob_im = pow(c_c * M_SQRT1_2 + c_b + c_d, 2);
+    }
+
+    mpf_clears(a, b, c, d, NULL);
+    return prob_re+prob_im;
+}
+
+TASK_IMPL_4(prob_t, mtbdd_prob_sum, MTBDD, a, uint32_t, xt, char*, curr_state, int, n)
+{
+    prob_t res = 0;
 
     //TODO: cache + gc ??
 
+    // terminal cases
     if (a == mtbdd_false) {
-        mpz_set_ui(res->a, 0);
-        mpz_set_ui(res->b, 0);
-        mpz_set_ui(res->c, 0);
-        mpz_set_ui(res->d, 0);
-        return res; //FIXME: sjednotit returny??
-    }
-
-    // terminal case
-    if (mtbdd_isleaf(a)) {
-        cnum* a_data = (cnum*) mtbdd_getvalue(a);
-        mpz_set(res->a, a_data->a);
-        mpz_set(res->b, a_data->b);
-        mpz_set(res->c, a_data->c);
-        mpz_set(res->d, a_data->d);
         return res;
     }
 
+    if (mtbdd_isleaf(a)) {
+        cnum* a_data = (cnum*) mtbdd_getvalue(a);
+        res = calculate_prob(a_data);
+        return res;
+    }
+
+    // else node
     uint32_t var_a = mtbdd_getvar(a);
 
-    //FIXME: should calculate everything here????
     MTBDD high = mtbdd_gethigh(a);
     uint32_t var_high;
     if (mtbdd_isleaf(high)) {
         var_high = n;
     }
     else {
-        var_high = mtbdd_getvar(high); //TODO: check behaviour for mtbdd_false
+        var_high = mtbdd_getvar(high);
     }
     long skip_high = get_coef(var_a, var_high, xt);
 
@@ -477,81 +521,31 @@ TASK_IMPL_4(cnum*, mtbdd_apply_sum, MTBDD, a, uint32_t, xt, char*, curr_state, i
         var_low = n;
     }
     else {
-        var_low = mtbdd_getvar(low); //TODO: check behaviour for mtbdd_false
+        var_low = mtbdd_getvar(low);
     }
     long skip_low = get_coef(var_a, var_low, xt);
 
+    // recursion
     if (var_a == xt || curr_state[var_a] == '1') {
-        cnum* res_high = CALL(mtbdd_apply_sum, high, xt, curr_state, n);
-        mpz_mul_si(res->a, res_high->a, skip_high); //TODO: rework as shifts - skip_high will be the number of shifts <<
-        mpz_mul_si(res->b, res_high->b, skip_high); //TODO: change to ui ??
-        mpz_mul_si(res->c, res_high->c, skip_high);
-        mpz_mul_si(res->d, res_high->d, skip_high);
-
-        // cleanup of the returned value
-        mpz_clears(res_high->a, res_high->b, res_high->c, res_high->d, NULL);
-        free(res_high);
+        res = CALL(mtbdd_prob_sum, high, xt, curr_state, n);
+        res *= skip_high;
     }
     else if (curr_state[var_a] == '0') {
-        cnum* res_low = CALL(mtbdd_apply_sum, low, xt, curr_state, n);
-        mpz_mul_si(res->a, res_low->a, skip_low);
-        mpz_mul_si(res->b, res_low->b, skip_low);
-        mpz_mul_si(res->c, res_low->c, skip_low);
-        mpz_mul_si(res->d, res_low->d, skip_low);
-
-        // cleanup of the returned value
-        mpz_clears(res_low->a, res_low->b, res_low->c, res_low->d, NULL);
-        free(res_low);
+        res = CALL(mtbdd_prob_sum, low, xt, curr_state, n);
+        res *= skip_low;
     }
     else {
-        SPAWN(mtbdd_apply_sum, high, xt, curr_state, n);
-        cnum* res_low = CALL(mtbdd_apply_sum, low, xt, curr_state, n);
-        mpz_mul_si(res_low->a, res_low->a, skip_low);
-        mpz_mul_si(res_low->b, res_low->b, skip_low);
-        mpz_mul_si(res_low->c, res_low->c, skip_low);
-        mpz_mul_si(res_low->d, res_low->d, skip_low);
+        SPAWN(mtbdd_prob_sum, high, xt, curr_state, n);
+        prob_t res_low = CALL(mtbdd_prob_sum, low, xt, curr_state, n);
+        res_low *= skip_low;
 
-        cnum* res_high = SYNC(mtbdd_apply_sum);
+        prob_t res_high = SYNC(mtbdd_prob_sum);
+        res_high *= skip_high;
 
-        mpz_mul_si(res_high->a, res_high->a, skip_high);
-        mpz_mul_si(res_high->b, res_high->b, skip_high);
-        mpz_mul_si(res_high->c, res_high->c, skip_high);
-        mpz_mul_si(res_high->d, res_high->d, skip_high);
-
-        mpz_add(res->a, res_high->a, res_low->a);
-        mpz_add(res->b, res_high->b, res_low->b);
-        mpz_add(res->c, res_high->c, res_low->c);
-        mpz_add(res->d, res_high->d, res_low->d);
-
-        // cleanup of returned values
-        mpz_clears(res_high->a, res_high->b, res_high->c, res_high->d, NULL);
-        free(res_high);
-        mpz_clears(res_low->a, res_low->b, res_low->c, res_low->d, NULL);
-        free(res_low);
+        res = res_low + res_high;
     }
 
     return res;
-}
-
-void my_mtbdd_leaf_sum_wrapper(MTBDD a, cnum *prob_sum, uint32_t xt, char *curr_state, int n)
-{
-    uint32_t var_a;
-    if (mtbdd_isleaf(a)) {
-        var_a = n;
-    }
-    else {
-        var_a = mtbdd_getvar(a); //TODO: check behaviour for mtbdd_false
-    }
-    long skip_coef = 1; //FIXME:2 * get_coef(0, var_a, xt);
-    cnum* sum = RUN(mtbdd_apply_sum, a, xt, curr_state, n);
-    mpz_mul_si(prob_sum->a, sum->a, skip_coef);
-    mpz_mul_si(prob_sum->b, sum->b, skip_coef);
-    mpz_mul_si(prob_sum->c, sum->c, skip_coef);
-    mpz_mul_si(prob_sum->d, sum->d, skip_coef);
-
-    // cleanup of the returned value
-    mpz_clears(sum->a, sum->b, sum->c, sum->d, NULL);
-    free(sum);
 }
 
 /* end of "custom_mtbdd.c" */
