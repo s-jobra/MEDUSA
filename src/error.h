@@ -15,5 +15,10 @@
 */
 void error_exit(const char *error);
 
+/**
+ * Custom malloc function including error handling.
+ */
+void* my_malloc(size_t size);
+
 #endif
 /* end of "error.h" */

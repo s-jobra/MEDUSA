@@ -215,13 +215,13 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
 
 void measure_all(int samples, MTBDD circ, int n, int *bits_to_measure)
 {
-    printf("Sampled results:\n");
-
     prob_t random;
     prob_t p_qt_is_one;
     prob_t norm_coef;
     char curr_state[n];
     int curr_ct;
+
+    htab_t *state_table = htab_init(n*n); //TODO: is optimal?
     
     for (int i=0; i < samples; i++) {
         norm_coef = 1;
@@ -246,13 +246,15 @@ void measure_all(int samples, MTBDD circ, int n, int *bits_to_measure)
                 norm_coef *= sqrt(1/(1-p_qt_is_one));
             }
         }
-        
-        //FIXME: temporary output
-        for (int i=0; i < n; i++) {
-            printf("%c", curr_state[i]);
-        }
-        printf("\n");
+        htab_lookup_add(state_table, curr_state);
+        // //FIXME: temporary output
+        // for (int i=0; i < n; i++) {
+        //     printf("%c", curr_state[i]);
+        // }
+        // printf("\n");
     }
+    htab_print_all(state_table);
+    htab_free(state_table);
 }
 
 /* end of "sim.c" */

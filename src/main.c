@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
     clock_gettime(CLOCK_MONOTONIC, &t_finish); // End the timer
 
     if (is_measure) {
-        int samples=10; //TODO: proper input
+        int samples=1024; //TODO: proper input
         measure_all(samples, circ, n_qubits, bits_to_measure);
     }
     

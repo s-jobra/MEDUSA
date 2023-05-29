@@ -31,18 +31,6 @@ static inline uint64_t my_hash(uint64_t x) {
     return x;
 }
 
-/**
- * Custom malloc function including error handling.
- */
-static void* my_malloc(size_t size) {
-    void* p = malloc(size);
-    if (p == NULL) {
-        error_exit("Bad memory allocation.");
-    }
-
-    return p;
-}
-
 /* SETUP */
 void init_sylvan() {
     lace_start(1, 0); // 1 thread, default task queue size
