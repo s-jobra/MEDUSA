@@ -1,6 +1,6 @@
 #include "gates.h"
 
-prob_t measure(MTBDD* a, uint32_t xt, char *curr_state, int n)
+prob_t measure(MTBDD *a, uint32_t xt, char *curr_state, int n)
 {
     MTBDD t = create_t_xt(*a, xt);
     mtbdd_protect(&t);
@@ -210,12 +210,12 @@ TASK_IMPL_2(MTBDD, m_gate_t, MTBDD, a, uint64_t, xt)
     return mtbdd_invalid; // Recurse deeper
 }
 
-void gate_x(MTBDD* a, uint32_t xt)
+void gate_x(MTBDD *a, uint32_t xt)
 {
     *a = mtbdd_uapply(*a, TASK(m_gate_x), xt);
 }
 
-void gate_y(MTBDD* a, uint32_t xt)
+void gate_y(MTBDD *a, uint32_t xt)
 {
     if (*a != mtbdd_false) { // check if xt shouldnt' be root
         if (xt < mtbdd_getvar(*a)) {
@@ -225,7 +225,7 @@ void gate_y(MTBDD* a, uint32_t xt)
     *a = mtbdd_uapply(*a, TASK(m_gate_y), xt);
 }
 
-void gate_z(MTBDD* a, uint32_t xt)
+void gate_z(MTBDD *a, uint32_t xt)
 {
     if (*a != mtbdd_false) {  // check if xt shouldnt' be root
         if (xt < mtbdd_getvar(*a)) {
@@ -235,7 +235,7 @@ void gate_z(MTBDD* a, uint32_t xt)
     *a = mtbdd_uapply(*a, TASK(m_gate_z), xt);
 }
 
-void gate_s(MTBDD* a, uint32_t xt)
+void gate_s(MTBDD *a, uint32_t xt)
 {
     if (*a != mtbdd_false) {  // check if xt shouldnt' be root
         if (xt < mtbdd_getvar(*a)) {
@@ -245,7 +245,7 @@ void gate_s(MTBDD* a, uint32_t xt)
     *a = mtbdd_uapply(*a, TASK(m_gate_s), xt);
 }
 
-void gate_t(MTBDD* a, uint32_t xt)
+void gate_t(MTBDD *a, uint32_t xt)
 {
     if (*a != mtbdd_false) { // check if xt shouldnt' be root
         if (xt < mtbdd_getvar(*a)) {
@@ -255,7 +255,7 @@ void gate_t(MTBDD* a, uint32_t xt)
     *a = mtbdd_uapply(*a, TASK(m_gate_t), xt);
 }
 
-void gate_h(MTBDD* p_t, uint32_t xt)
+void gate_h(MTBDD *p_t, uint32_t xt)
 {
     MTBDD t = *p_t;
     mtbdd_protect(&t);
@@ -290,7 +290,7 @@ void gate_h(MTBDD* p_t, uint32_t xt)
     mpz_add_ui(c_k, c_k, 1); // (1/√2) * (Txt_c + Bxt_c * Txt - Bxt * T)
 }
 
-void gate_rx_pihalf(MTBDD* p_t, uint32_t xt)
+void gate_rx_pihalf(MTBDD *p_t, uint32_t xt)
 {
     MTBDD t = *p_t;
     mtbdd_protect(&t);
@@ -359,7 +359,7 @@ void gate_ry_pihalf(MTBDD* p_t, uint32_t xt)
     mpz_add_ui(c_k, c_k, 1); // (1/√2) * (Txt_c + Bxt * T - Bxt_c * Txt)
 }
 
-void gate_cnot(MTBDD* p_t, uint32_t xt, uint32_t xc)
+void gate_cnot(MTBDD *p_t, uint32_t xt, uint32_t xc)
 {
     MTBDD t = *p_t;
     mtbdd_protect(&t);
@@ -401,7 +401,7 @@ void gate_cnot(MTBDD* p_t, uint32_t xt, uint32_t xc)
     mtbdd_unprotect(&res);
 }
 
-void gate_cz(MTBDD* p_t, uint32_t xt, uint32_t xc)
+void gate_cz(MTBDD *p_t, uint32_t xt, uint32_t xc)
 {
     MTBDD t = *p_t;
     mtbdd_protect(&t);
@@ -440,7 +440,7 @@ void gate_cz(MTBDD* p_t, uint32_t xt, uint32_t xc)
     mtbdd_unprotect(&res);
 }
 
-void gate_toffoli(MTBDD* p_t, uint32_t xt, uint32_t xc1, uint32_t xc2)
+void gate_toffoli(MTBDD *p_t, uint32_t xt, uint32_t xc1, uint32_t xc2)
 {
     MTBDD t = *p_t;
     mtbdd_protect(&t);
@@ -498,7 +498,7 @@ void gate_toffoli(MTBDD* p_t, uint32_t xt, uint32_t xc1, uint32_t xc2)
     mtbdd_unprotect(&res);
 }
 
-void gate_fredkin(MTBDD* p_t, uint32_t xt1, uint32_t xt2, uint32_t xc)
+void gate_fredkin(MTBDD *p_t, uint32_t xt1, uint32_t xt2, uint32_t xc)
 {
     MTBDD t = *p_t;
     mtbdd_protect(&t);

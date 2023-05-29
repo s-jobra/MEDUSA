@@ -63,7 +63,7 @@ void init_my_leaf()
 }
 
 /* CUSTOM HANDLES */
-void my_leaf_create(uint64_t* ldata_p_raw)
+void my_leaf_create(uint64_t *ldata_p_raw)
 {
     cnum** ldata_p = (cnum**)ldata_p_raw; // Leaf data type is uint64_t, we store there ptr to our actual data
     
@@ -80,24 +80,24 @@ void my_leaf_create(uint64_t* ldata_p_raw)
 
 void my_leaf_destroy(uint64_t ldata)
 {
-    cnum* data_p = (cnum*) ldata; // Data in leaf = pointer to my data
+    cnum *data_p = (cnum*) ldata; // Data in leaf = pointer to my data
     mpz_clears(data_p->a, data_p->b, data_p->c, data_p->d, NULL);
     free(data_p);
 }
 
 int my_leaf_equals(const uint64_t ldata_a_raw, const uint64_t ldata_b_raw)
 {
-    cnum* ldata_a = (cnum*) ldata_a_raw;
-    cnum* ldata_b = (cnum*) ldata_b_raw;
+    cnum *ldata_a = (cnum*) ldata_a_raw;
+    cnum *ldata_b = (cnum*) ldata_b_raw;
 
     return !mpz_cmp(ldata_a->a, ldata_b->a) && !mpz_cmp(ldata_a->b, ldata_b->b) && !mpz_cmp(ldata_a->c, ldata_b->c) \
            && !mpz_cmp(ldata_a->d, ldata_b->d);
 }
 
-char* my_leaf_to_str(int complemented, uint64_t ldata_raw, char* sylvan_buf, size_t sylvan_bufsize)
+char* my_leaf_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf, size_t sylvan_bufsize)
 {
     (void) complemented;
-    cnum* ldata = (cnum*) ldata_raw;
+    cnum *ldata = (cnum*) ldata_raw;
 
     char ldata_string[MAX_LEAF_STR_LEN] = {0};
     
@@ -118,7 +118,7 @@ char* my_leaf_to_str(int complemented, uint64_t ldata_raw, char* sylvan_buf, siz
     }
     
     // Else return newly allocated string
-    char* new_buf = (char*)my_malloc((chars_written + 1) * sizeof(char));
+    char *new_buf = (char*)my_malloc((chars_written + 1) * sizeof(char));
     memcpy(new_buf, ldata_string, chars_written * sizeof(char));
     new_buf[chars_written] = '\0';
     return new_buf;
@@ -127,7 +127,7 @@ char* my_leaf_to_str(int complemented, uint64_t ldata_raw, char* sylvan_buf, siz
 uint64_t my_leaf_hash(const uint64_t ldata_raw, const uint64_t seed)
 {
     (void)seed; // not needed when using leaves of a single type
-    cnum* ldata = (cnum*) ldata_raw;
+    cnum *ldata = (cnum*) ldata_raw;
 
     uint64_t val = 0;
     val = MY_HASH_COMB(val, ldata->a);
@@ -152,8 +152,8 @@ TASK_IMPL_2(MTBDD, my_op_plus, MTBDD*, p_a, MTBDD*, p_b)
 
     // Compute a + b if both mtbdds are leaves
     if (mtbdd_isleaf(a) && mtbdd_isleaf(b)) {
-        cnum* a_data = (cnum*) mtbdd_getvalue(a);
-        cnum* b_data = (cnum*) mtbdd_getvalue(b);
+        cnum *a_data = (cnum*) mtbdd_getvalue(a);
+        cnum *b_data = (cnum*) mtbdd_getvalue(b);
 
         cnum res_data;
         mpz_init(res_data.a);
@@ -198,8 +198,8 @@ TASK_IMPL_2(MTBDD, my_op_minus, MTBDD*, p_a, MTBDD*, p_b)
 
     // Compute a - b if both mtbdds are leaves
     if (mtbdd_isleaf(a) && mtbdd_isleaf(b)) {
-        cnum* a_data = (cnum*) mtbdd_getvalue(a);
-        cnum* b_data = (cnum*) mtbdd_getvalue(b);
+        cnum *a_data = (cnum*) mtbdd_getvalue(a);
+        cnum *b_data = (cnum*) mtbdd_getvalue(b);
 
         cnum res_data;
         mpz_init(res_data.a);
@@ -234,8 +234,8 @@ TASK_IMPL_2(MTBDD, my_op_times, MTBDD*, p_a, MTBDD*, p_b)
 
     // Compute a * b if both mtbdds are leaves
     if (mtbdd_isleaf(a) && mtbdd_isleaf(b)) {
-        cnum* a_data = (cnum*) mtbdd_getvalue(a);
-        cnum* b_data = (cnum*) mtbdd_getvalue(b);
+        cnum *a_data = (cnum*) mtbdd_getvalue(a);
+        cnum *b_data = (cnum*) mtbdd_getvalue(b);
 
         cnum res_data;
         mpz_init(res_data.a);
@@ -275,7 +275,7 @@ TASK_IMPL_2(MTBDD, my_op_negate, MTBDD, a, size_t, x)
 
     // Compute -a if mtbdd is a leaf
     if (mtbdd_isleaf(a)) {
-        cnum* a_data = (cnum*) mtbdd_getvalue(a);
+        cnum *a_data = (cnum*) mtbdd_getvalue(a);
 
         cnum res_data;
         mpz_init(res_data.a);
@@ -304,7 +304,7 @@ TASK_IMPL_2(MTBDD, my_op_coef_rot1, MTBDD, a, size_t, x)
 
     // Compute coeficient rotation if mtbdd is a leaf
     if (mtbdd_isleaf(a)) {
-        cnum* a_data = (cnum*) mtbdd_getvalue(a);
+        cnum *a_data = (cnum*) mtbdd_getvalue(a);
 
         cnum res_data;
         mpz_init(res_data.a);
@@ -330,7 +330,7 @@ TASK_IMPL_2(MTBDD, my_op_coef_rot2, MTBDD, a, size_t, x)
 
     // Compute coeficient rotation if mtbdd is a leaf
     if (mtbdd_isleaf(a)) {
-        cnum* a_data = (cnum*) mtbdd_getvalue(a);
+        cnum *a_data = (cnum*) mtbdd_getvalue(a);
 
         cnum res_data;
         mpz_init(res_data.a);
@@ -362,7 +362,7 @@ TASK_IMPL_2(MTBDD, t_xt_create, MTBDD, a, uint64_t, xt)
     }
     // Else copy if mtbdd is leaf
     else if (mtbdd_isleaf(a)) {
-        cnum* a_data = (cnum*) mtbdd_getvalue(a); //FIXME: why not just return a
+        cnum *a_data = (cnum*) mtbdd_getvalue(a); //FIXME: why not just return a
 
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) a_data);
         return res;
@@ -384,7 +384,7 @@ TASK_IMPL_2(MTBDD, t_xt_comp_create, MTBDD, a, uint64_t, xt)
     }
     // Else copy if mtbdd is leaf
     else if (mtbdd_isleaf(a)) { // TODO: just else ??
-        cnum* a_data = (cnum*) mtbdd_getvalue(a);
+        cnum *a_data = (cnum*) mtbdd_getvalue(a);
 
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) a_data);
         return res;
@@ -497,7 +497,7 @@ TASK_IMPL_4(prob_t, mtbdd_prob_sum, MTBDD, a, uint32_t, xt, char*, curr_state, i
     }
 
     if (mtbdd_isleaf(a)) {
-        cnum* a_data = (cnum*) mtbdd_getvalue(a);
+        cnum *a_data = (cnum*) mtbdd_getvalue(a);
         res = calculate_prob(a_data);
         return res;
     }

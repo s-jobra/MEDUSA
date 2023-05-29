@@ -4,6 +4,7 @@
 #include "custom_mtbdd.h"
 #include "gates.h"
 #include "error.h"
+#include "htab.h"
 
 #ifndef SIMULATOR_H
 #define SIMULATOR_H
@@ -24,7 +25,7 @@
  * 
  * @param is_measure true if some measure operation is present
  */
-void sim_file(FILE *in, MTBDD *circ, int* n_qubits, int **bits_to_measure, bool *is_measure);
+void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool *is_measure);
 
 /**
  * Function measures all bits in the given array (compatible only with measurement at the end of the circuit)
@@ -38,7 +39,7 @@ void sim_file(FILE *in, MTBDD *circ, int* n_qubits, int **bits_to_measure, bool 
  * @param bits_to_measure array for storing the qubits that are to be measured
  * 
  */
-void measure_all(int samples, MTBDD circ, int n, int* bits_to_measure);
+void measure_all(int samples, MTBDD circ, int n, int *bits_to_measure);
 
 #endif
 /* end of "sim.h" */

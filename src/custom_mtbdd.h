@@ -56,7 +56,7 @@ void init_my_leaf();
  * Handle called when my new custom leaf is created and is not found in the internal table.
  * It allocates and initializes custom leaf data from the given data pointer.
  */
-void my_leaf_create(uint64_t* ldata_p_raw);
+void my_leaf_create(uint64_t *ldata_p_raw);
 
 /**
  * Handle called when my custom leaf is destroyed during garbage collection.
@@ -71,7 +71,7 @@ int my_leaf_equals(const uint64_t ldata_a_raw, const uint64_t ldata_b_raw);
 /**
  * Handle for creating string representation of leaf.
  */
-char* my_leaf_to_str(int complemented, uint64_t ldata_raw, char* sylvan_buf, size_t sylvan_bufsize);
+char* my_leaf_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf, size_t sylvan_bufsize);
 
 /**
  * Hashing function for calculating leaf's hash.
@@ -133,7 +133,7 @@ TASK_DECL_4(prob_t, mtbdd_prob_sum, MTBDD, uint32_t, char*, int);
  * @param p pointer to a complex number
  * 
  */
-static inline prob_t calculate_prob(cnum* prob);
+static inline prob_t calculate_prob(cnum *prob);
 
 /**
  * Function for creating auxiliary MTBDD for a target qubit.

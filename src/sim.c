@@ -66,7 +66,7 @@ static uint32_t get_q_num(FILE *in)
     return ((uint32_t)n);
 }
 
-void sim_file(FILE *in, MTBDD *circ, int* n_qubits, int **bits_to_measure, bool *is_measure)
+void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool *is_measure)
 {
     
     int c;
@@ -120,7 +120,7 @@ void sim_file(FILE *in, MTBDD *circ, int* n_qubits, int **bits_to_measure, bool 
         // Identify the command
         if (strcmp(cmd, "OPENQASM") == 0) {}
         else if (strcmp(cmd, "include") == 0) {}
-        else if (strcmp(cmd, "creg") == 0) {} //TODO: is valid?
+        else if (strcmp(cmd, "creg") == 0) {} //TODO: check if is valid?
         else if (strcmp(cmd, "qreg") == 0) {
             uint32_t n = get_q_num(in);
             *n_qubits = (int)n;
@@ -213,7 +213,7 @@ void sim_file(FILE *in, MTBDD *circ, int* n_qubits, int **bits_to_measure, bool 
     }
 }
 
-void measure_all(int samples, MTBDD circ, int n, int* bits_to_measure)
+void measure_all(int samples, MTBDD circ, int n, int *bits_to_measure)
 {
     printf("Sampled results:\n");
 

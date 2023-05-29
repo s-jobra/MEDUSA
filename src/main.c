@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
     init_sylvan();
     init_my_leaf();
 
-    FILE* out = fopen(OUT_FILE".dot", "w");
+    FILE *out = fopen(OUT_FILE".dot", "w");
     if (out == NULL) {
         error_exit("Cannot open output file.");
     }
