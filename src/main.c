@@ -6,46 +6,41 @@
 
 int main(int argc, char *argv[])
 {
-    
     FILE *input = stdin;
+    FILE *measure_output = stdout;
     bool time = false;
+    int opt;
+    unsigned long samples=1024;
 
-    switch (argc) {
-        case 1:
-            break;
-        case 2:
-            if(strcmp(argv[1], "--time") == 0) {
+    //TODO: add help + long options
+
+    while((opt = getopt(argc, argv, "tf:s:m:")) != -1) {
+        switch(opt) {
+            case 't':
                 time = true;
-            }
-            else {
-                input = fopen(argv[1], "r");
+                break; 
+            case 'f':
+                input = fopen(optarg, "r");
                 if (input == NULL) {
                     error_exit("Invalid input file.");
                 }
-            }
-            break;
-        case 3:
-            if(strcmp(argv[1], "--time") == 0) {
-                time = true;
-                input = fopen(argv[2], "r");
-                if (input == NULL) {
+                break;
+            case 's':
+                char *endptr;
+                samples = strtoul(optarg, &endptr, 10);
+                if (*endptr != '\0') {
+                    error_exit("Invalid number of samples.");
+                }
+                break;
+            case 'm':
+                measure_output = fopen(optarg, "r");
+                if (measure_output == NULL) {
                     error_exit("Invalid input file.");
                 }
-            }
-            else if (strcmp(argv[2], "--time") == 0) {
-                time = true;
-                input = fopen(argv[1], "r");
-                if (input == NULL) {
-                    error_exit("Invalid input file.");
-                }
-            }
-            else {
+                break;
+            case '?':
                 error_exit("Unknown argument.");
-            }
-            break;
-        default:
-            error_exit("Invalid number of arguments.");
-            break;
+        }
     }
 
     init_sylvan();
@@ -69,8 +64,7 @@ int main(int argc, char *argv[])
     clock_gettime(CLOCK_MONOTONIC, &t_finish); // End the timer
 
     if (is_measure) {
-        int samples=1024; //TODO: proper input
-        measure_all(samples, circ, n_qubits, bits_to_measure);
+        measure_all(samples, measure_output, circ, n_qubits, bits_to_measure);
     }
     
     mtbdd_fprintdot(out, circ);

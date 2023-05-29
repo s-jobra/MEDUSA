@@ -39,7 +39,7 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
  * @param bits_to_measure array for storing the qubits that are to be measured
  * 
  */
-void measure_all(int samples, MTBDD circ, int n, int *bits_to_measure);
+void measure_all(unsigned long samples, FILE *output, MTBDD circ, int n, int *bits_to_measure);
 
 #endif
 /* end of "sim.h" */

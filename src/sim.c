@@ -213,7 +213,7 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
     }
 }
 
-void measure_all(int samples, MTBDD circ, int n, int *bits_to_measure)
+void measure_all(unsigned long samples, FILE *output, MTBDD circ, int n, int *bits_to_measure)
 {
     prob_t random;
     prob_t p_qt_is_one;
@@ -223,10 +223,10 @@ void measure_all(int samples, MTBDD circ, int n, int *bits_to_measure)
 
     htab_t *state_table = htab_init(n*n); //TODO: is optimal?
     
-    for (int i=0; i < samples; i++) {
+    for (unsigned long i=0; i < samples; i++) {
         norm_coef = 1;
-        for (int i=0; i < n; i++) {
-            curr_state[i] = 'x';
+        for (int j=0; j < n; j++) {
+            curr_state[j] = 'x';
         }
 
         for (int j=0; j < n; j++) {
@@ -247,13 +247,8 @@ void measure_all(int samples, MTBDD circ, int n, int *bits_to_measure)
             }
         }
         htab_lookup_add(state_table, curr_state);
-        // //FIXME: temporary output
-        // for (int i=0; i < n; i++) {
-        //     printf("%c", curr_state[i]);
-        // }
-        // printf("\n");
     }
-    htab_print_all(state_table);
+    htab_print_all(state_table, output);
     htab_free(state_table);
 }
 

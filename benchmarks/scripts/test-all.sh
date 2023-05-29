@@ -30,7 +30,7 @@ for i in ../benchmarks/*/*/*.qasm; do
     SLIQ_TIME_SUM=0.0
 
     for j in $(eval echo "{1..$REPS}"); do
-        MY_TIME_CUR=$( $TIMEOUT ./$EXEC --time <$i 2>/dev/null | awk '{gsub(/Time=/,""); printf "%.4f \n", $1}')
+        MY_TIME_CUR=$( $TIMEOUT ./$EXEC -t <$i -m /dev/null 2>/dev/null | awk '{gsub(/Time=/,""); printf "%.4f \n", $1}')
         if [[ -z $MY_TIME_CUR ]]; then
             MY_TIME_AVG="${RED}Failed$NC"
             MY_FAIL=true

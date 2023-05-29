@@ -130,21 +130,21 @@ void htab_lookup_add(htab_t *t, htab_key_t key)
     }
 }
 
-void htab_print_all(htab_t *t)
+void htab_print_all(htab_t *t, FILE *output)
 {
-    printf("Sampled results:\n");
+    fprintf(output, "Sampled results:\n");
 
     htab_item_t *curr;
     for (size_t i = 0; i < t->arr_size; i++) {
         curr = t->arr_ptr[i];
 
         while (curr != NULL) {
-            printf("    \'");
+            fprintf(output,"    \'");
             //key stored as LSBF
             for(int i=strlen(curr->data.key); i >= 0 ;i--) {
-                putc(curr->data.key[i], stdout);
+                putc(curr->data.key[i], output);
             }
-            printf("\'    %d\n", curr->data.value);
+            fprintf(output,"\'    %d\n", curr->data.value);
             curr = curr->next;
         }
     }

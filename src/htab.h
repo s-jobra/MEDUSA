@@ -40,9 +40,9 @@ htab_t* htab_init(size_t n);
 void htab_lookup_add(htab_t *t, htab_key_t key);
 
 /**
- * Prints all hash table items to STDOUT
+ * Prints all hash table items to the given output
  */
-void htab_print_all(htab_t *t);
+void htab_print_all(htab_t *t, FILE *output);
 
 /**
  * Delete and dealloc all table items
