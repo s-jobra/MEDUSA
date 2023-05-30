@@ -61,11 +61,11 @@ int main(int argc, char *argv[])
 
     sim_file(input, &circ, &n_qubits, &bits_to_measure, &is_measure);
 
-    clock_gettime(CLOCK_MONOTONIC, &t_finish); // End the timer
-
     if (is_measure) {
         measure_all(samples, measure_output, circ, n_qubits, bits_to_measure);
     }
+
+    clock_gettime(CLOCK_MONOTONIC, &t_finish); // End the timer
     
     mtbdd_fprintdot(out, circ);
     mpz_clear(c_k);
