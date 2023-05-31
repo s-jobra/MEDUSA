@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     unsigned long samples=1024;
 
     //TODO: add help + long options
-
+    char *endptr;
     while((opt = getopt(argc, argv, "tf:s:m:")) != -1) {
         switch(opt) {
             case 't':
@@ -26,7 +26,6 @@ int main(int argc, char *argv[])
                 }
                 break;
             case 's':
-                char *endptr;
                 samples = strtoul(optarg, &endptr, 10);
                 if (*endptr != '\0') {
                     error_exit("Invalid number of samples.");
