@@ -218,7 +218,8 @@ void measure_all(unsigned long samples, FILE *output, MTBDD circ, int n, int *bi
     prob_t random;
     prob_t p_qt_is_one;
     prob_t norm_coef;
-    char curr_state[n];
+    char curr_state[n+1];
+    curr_state[n] = '\0';
     int curr_ct;
 
     htab_t *state_table = htab_init(n*n); //TODO: is optimal?
