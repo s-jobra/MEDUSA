@@ -1,8 +1,8 @@
 #!/bin/bash
 
-IN_FILE=../results/benchmarkFnew.out
-OUT_FILE=../benchmarkNew.pdf
-OUT_FILE_ZOOM=../benchmarkNew_z.pdf
+IN_FILE=../results/measure-timeout.out
+OUT_FILE=../benchmarkMF.pdf
+OUT_FILE_ZOOM=../benchmarkMF_z.pdf
 
 MAX_TIME=100000
 
@@ -46,11 +46,6 @@ awk -v maxt="$MAX_TIME" \
                                 if (match($3, /[0-9]*\.[0-9]*/)) { $3=substr($3, RSTART, RLENGTH); sliq_fail=0;} else { $3=maxt; sliq_fail=1; }; \
                                 print $3, $2}' $IN_FILE > revlib-temp.out
 
-awk -v maxt="$MAX_TIME" \
-        '/^Symbolic/ { if (match($2, /[0-9]*\.[0-9]*/)) { $2=substr($2, RSTART, RLENGTH); my_fail=0;} else { $2=maxt; my_fail=1;}; \
-                                if (match($3, /[0-9]*\.[0-9]*/)) { $3=substr($3, RSTART, RLENGTH); sliq_fail=0;} else { $3=maxt; sliq_fail=1; }; \
-                                print $3, $2}' $IN_FILE > symbolic-temp.out
-
 gnuplot -persist <<-EOFMarker
     set terminal pdf size 30cm,20cm enhanced background rgb 'white'
     set output "$OUT_FILE"
@@ -78,7 +73,6 @@ gnuplot -persist <<-EOFMarker
          "mogrover-temp.out" title "MOGrover" pt 3 lc 9 ps 1.5,\
          "random-temp.out" title "Random" pt 2 lc 2 ps 1.5,\
          "revlib-temp.out" title "RevLib" pt 10 lc 6 ps 1.5,\
-         "symbolic-temp.out" title "Symbolic" pt 11 lc 5 ps 1.5,\
          x lc 7 title ""
 EOFMarker
 
@@ -109,7 +103,6 @@ gnuplot -persist <<-EOFMarker
          "mogrover-temp.out" title "MOGrover" pt 3 lc 9 ps 1.5,\
          "random-temp.out" title "Random" pt 2 lc 2 ps 1.5,\
          "revlib-temp.out" title "RevLib" pt 10 lc 6 ps 1.5,\
-         "symbolic-temp.out" title "Symbolic" pt 11 lc 5 ps 1.5,\
          x lc 7 title ""
 EOFMarker
 
