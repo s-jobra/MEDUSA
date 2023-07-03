@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
             case 'm':
                 measure_output = fopen(optarg, "r");
                 if (measure_output == NULL) {
-                    error_exit("Invalid input file.");
+                    error_exit("Invalid output file.");
                 }
                 break;
             case '?':
