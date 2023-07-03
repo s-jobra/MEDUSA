@@ -11,26 +11,6 @@
 
 uint32_t ltype_id;
 
-/* INTERNAL */
-/**
- * Hash value and combine it with an already existing hash
- * 
- * Taken from: http://www.boost.org/doc/libs/1_64_0/boost/functional/hash/hash.hpp
- */
-#define MY_HASH_COMB(val, data) ( (val) ^ (my_hash(mpz_get_ui(data)) + 0x9e3779b9 + ((val)<<6) + ((val)>>2)) )
-
-/**
- * Hash function for 64bit integers.
- * 
- * Taken from: https://stackoverflow.com/a/12996028, author: Thomas Mueller (https://stackoverflow.com/users/382763/thomas-mueller)
- */
-static inline uint64_t my_hash(uint64_t x) {
-    x = (x ^ (x >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
-    x = (x ^ (x >> 27)) * UINT64_C(0x94d049bb133111eb);
-    x = x ^ (x >> 31);
-    return x;
-}
-
 /* SETUP */
 void init_sylvan() {
     lace_start(1, 0); // 1 thread, default task queue size
@@ -114,10 +94,9 @@ char* my_leaf_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf, siz
 
 uint64_t my_leaf_hash(const uint64_t ldata_raw, const uint64_t seed)
 {
-    (void)seed; // not needed when using leaves of a single type
     cnum *ldata = (cnum*) ldata_raw;
 
-    uint64_t val = 0;
+    uint64_t val = seed;
     val = MY_HASH_COMB(val, ldata->a);
     val = MY_HASH_COMB(val, ldata->b);
     val = MY_HASH_COMB(val, ldata->c);

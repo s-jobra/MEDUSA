@@ -1,6 +1,7 @@
 #include <sylvan.h>
 #include <gmp.h>
 #include <math.h>
+#include "leaf_hash.h"
 #include "error.h"
 
 #ifndef CUSTOM_MTBDD_H
