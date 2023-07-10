@@ -14,7 +14,7 @@ void init_my_leaf_symb()
     sylvan_mt_set_create(ltype_s_id, my_leaf_symb_create);
     sylvan_mt_set_destroy(ltype_s_id, my_leaf_symb_destroy);
     sylvan_mt_set_equals(ltype_s_id, my_leaf_symb_equals);
-    sylvan_mt_set_hash(ltype_s_id, my_leaf_hash);
+    sylvan_mt_set_hash(ltype_s_id, my_leaf_symb_hash);
 }
 
 /* CUSTOM HANDLES */
@@ -52,17 +52,17 @@ int my_leaf_symb_equals(const uint64_t ldata_a_raw, const uint64_t ldata_b_raw)
            && !st_cmp(ldata_a->d, ldata_b->d);
 }
 
-uint64_t my_leaf_hash(const uint64_t ldata_raw, const uint64_t seed)
+uint64_t my_leaf_symb_hash(const uint64_t ldata_raw, const uint64_t seed)
 {
     (void)seed; // not needed when using leaves of a single type
     lsymb_t *ldata = (lsymb_t*) ldata_raw;
 
     uint64_t val = 0;
-    val = MY_HASH_COMB(val, ldata->a);
-    val = MY_HASH_COMB(val, ldata->b);
-    val = MY_HASH_COMB(val, ldata->c);
-    val = MY_HASH_COMB(val, ldata->d);
-    val = MY_HASH_COMB(val, cs_k);
+    val = MY_HASH_COMB_PTR(val, ldata->a);
+    val = MY_HASH_COMB_PTR(val, ldata->b);
+    val = MY_HASH_COMB_PTR(val, ldata->c);
+    val = MY_HASH_COMB_PTR(val, ldata->d);
+    val = MY_HASH_COMB_PTR(val, cs_k);
 
     return val;
 }

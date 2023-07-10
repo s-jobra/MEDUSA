@@ -1,10 +1,13 @@
 #include <stdint.h>
+#include <stdbool.h>
+#include <gmp.h>
+#include "error.h"
 
 #ifndef SYMBOLIC_TREE_H
 #define SYMBOLIC_TREE_H
 
-typedef uint64_t coefs_t; //FIXME: mpz or uint?
-typedef uint64_t vars_t; //FIXME: mpz or uint?
+typedef mpz_t coefs_t;
+typedef uint64_t vars_t;
 
 typedef enum {
     ST_ADD,
@@ -35,7 +38,7 @@ extern vars_t next_var;
 stree_t* st_init(stree_t *t);
 
 /**
- * Performs the given operation on the two trees and returns the result
+ * Performs the given operation on the two trees (a op b) and returns the result
  */
 stree_t* st_op(stree_t *a, stree_t *b, stnode_t op);
 

@@ -30,7 +30,7 @@ typedef struct lsymb {
 /**
  * Type for the coefficient k for symbolic representation
  */
-typedef mpz_t coefs_k_t; //FIXME: mpz or uint?
+typedef mpz_t coefs_k_t;
 
 /**
  * Complex number coefficient k for symbolic representation
@@ -68,7 +68,7 @@ char* my_leaf_symb_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf
 /**
  * Hashing function for calculating symbolic leaf's hash.
  */
-//uint64_t my_leaf_symb_hash(const uint64_t ldata_raw, const uint64_t seed); TODO: needed??
+uint64_t my_leaf_symb_hash(const uint64_t ldata_raw, const uint64_t seed);
 
 #endif
 /* end of "custom_mtbdd_symb.h" */
