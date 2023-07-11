@@ -1,6 +1,6 @@
 #include <sylvan.h>
 #include <gmp.h>
-#include "symbolic_tree.h"
+#include "custom_mtbdd.h"
 #include "leaf_hash.h"
 #include "symbolic_tree.h"
 #include "error.h"
@@ -69,6 +69,21 @@ char* my_leaf_symb_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf
  * Hashing function for calculating symbolic leaf's hash.
  */
 uint64_t my_leaf_symb_hash(const uint64_t ldata_raw, const uint64_t seed);
+
+/**
+ * Function for converting to a symbolic MTBDD
+ */
+TASK_DECL_2(MTBDD, mtbdd_to_symb, MTBDD, uint64_t*);
+
+/**
+ * Converts the given MTBDD to a symbolic MTBDD
+ * 
+ * @param t pointer to an MTBDD
+ * 
+ * @param arr array for saving the variable mapping to its value (complex number)
+ * 
+ */
+#define my_mtbdd_to_symb(t, arr) RUN(mtbdd_to_symb, t, arr)
 
 #endif
 /* end of "custom_mtbdd_symb.h" */

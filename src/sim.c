@@ -127,7 +127,7 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
         }
         // Identify the command
         //TODO: for loop -> sets is_symbolic true, init circ_s + all gates check if is_symbolic, then perform operation on mtbdd_s
-        //      (if EOF and is_symbolic -> error)
+        //      (if EOF and is_symbolic -> error; init new MTBDD type just the first time)
         //TODO: } -> if !is_symbolic error, else calls calculate_symb(MTBDD* circ, MTBDD* circ_s, int i) which updates circ
         if (strcmp(cmd, "OPENQASM") == 0) {}
         else if (strcmp(cmd, "include") == 0) {}

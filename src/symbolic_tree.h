@@ -35,6 +35,11 @@ extern vars_t next_var;
 /**
  * Creates a new tree for the given complex number coefficient variable
  */
+stree_t* st_create(vars_t v);
+
+/**
+ * Creates a new tree and initializes it from the data provided
+ */
 stree_t* st_init(stree_t *t);
 
 /**

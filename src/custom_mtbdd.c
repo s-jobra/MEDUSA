@@ -410,7 +410,7 @@ static inline prob_t calculate_prob(cnum* prob)
     prob_t prob_re, prob_im;
     prob_t c_a, c_b, c_c, c_d;
 
-    mp_bitcnt_t shift_cnt = mpz_get_ui(c_k);
+    mp_bitcnt_t shift_cnt = mpz_get_ui(c_k); // TODO: check possible bottleneck
 
     // k even, k+1 odd
     if (mpz_even_p(c_k) != 0) {
@@ -454,6 +454,7 @@ static inline prob_t calculate_prob(cnum* prob)
 
 TASK_IMPL_4(prob_t, mtbdd_prob_sum, MTBDD, a, uint32_t, xt, char*, curr_state, int, n)
 {
+    // we must immediately convert to float else the skip coefficient will be also squared
     prob_t res = 0;
 
     //TODO: cache + gc ??

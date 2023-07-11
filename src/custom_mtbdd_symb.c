@@ -5,6 +5,7 @@
  */
 
 uint32_t ltype_s_id;
+extern vars_t next_var;
 
 /* SETUP */
 void init_my_leaf_symb()
@@ -65,6 +66,34 @@ uint64_t my_leaf_symb_hash(const uint64_t ldata_raw, const uint64_t seed)
     val = MY_HASH_COMB_PTR(val, cs_k);
 
     return val;
+}
+
+/* CUSTOM MTBDD OPERATIONS */
+TASK_IMPL_2(MTBDD, mtbdd_to_symb, MTBDD, a, uint64_t*, arr)
+{
+    // Partial function check
+    if (a == mtbdd_false) return mtbdd_false;
+
+    if (mtbdd_isleaf(a)) {
+        cnum *orig_data = (cnum*) mtbdd_getvalue(a);
+        arr[next_var] = (uint64_t) orig_data->a; // needs typecasting as mpz_t is an array type
+        arr[next_var + 1] = (uint64_t) orig_data->b;
+        arr[next_var + 2] = (uint64_t) orig_data->c;
+        arr[next_var + 3] = (uint64_t) orig_data->d;
+
+        lsymb_t *new_data = my_malloc(sizeof(lsymb_t)); //TODO: check where is free
+        new_data->a = st_create(next_var);
+        new_data->b = st_create(next_var + 1);
+        new_data->c = st_create(next_var + 2);
+        new_data->d = st_create(next_var + 3);
+
+        MTBDD res = mtbdd_makeleaf(ltype_s_id, (uint64_t) new_data);
+        next_var += 4;
+
+        return res;
+    }
+
+    return mtbdd_invalid; // Recurse deeper
 }
 
 /* end of "custom_mtbdd_symb.c" */
