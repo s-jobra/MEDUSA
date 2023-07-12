@@ -6,10 +6,12 @@ extern uint32_t ltype_s_id; // leaf type id for symbolic representation
 coef_t c_k; // coefficient k common for all MTBDD leaf values
 coefs_k_t cs_k; // coefficient k common for all MTBDD leaf values for symbolic representation
 
+//TODO: make i in loop accessible?
+
 /** 
  * Initialize for all qubit values 0.
  */
-static void circuit_init(MTBDD *a, const uint32_t n)
+static void circuit_init(MTBDD *a, const uint32_t n) //TODO: move to custom_mtbdd ?
 {
     BDDSET variables = mtbdd_set_empty();
     for (uint32_t i = 0; i < n; i++) {
@@ -27,35 +29,46 @@ static void circuit_init(MTBDD *a, const uint32_t n)
     mpz_clears(point.a, point.b, point.c, point.d, NULL);
 }
 
-//TODO:
-static void symbolic_init(MTBDD *circ, const uint32_t n)
+/**
+ * Creates an symbolic MTBDD from the given MTBDD and returns the mapping of variables to their values
+ */
+static uint64_t* symb_init(MTBDD c) //TODO: move to custom_mtbdd_symb ?
 {
-    //TODO: create symbolic MTBDD
+    size_t leafs = mtbdd_leafcount(c);
+    uint64_t *map = my_malloc(sizeof(uint64_t) * leafs * 4 + 1);
+    map[leafs * 4] = 0; // end of array
+
+    vars_t next_var;
+    MTBDD symb = my_mtbdd_to_symb(c, map, &next_var);
+
     mpz_init(cs_k);
+    return map;
 }
 
-/** 
- * Function for getting the next qubit index for the command on the given line.
+/**
+ * Updates the circuits MTBDD according to the symbolic MTBDD, variable mapping and the number of iterations
  */
-static uint32_t get_q_num(FILE *in)
+static void symb_calc(MTBDD *circ, MTBDD *symbc, uint64_t *map, int i)
+{
+    //TODO: apply which updates circ 
+    mtbdd_unprotect(symbc);
+    mpz_clear(cs_k);
+}
+
+//FIXME: comment
+long parse_num(FILE *in, char end)
 {
     int c;
-    char num[Q_ID_MAX_LEN] = {0};
-    unsigned long n;
-
-    while ((c = fgetc(in)) != '[') {
-        if (c == EOF) {
-            error_exit("Invalid format - reached an unexpected end of file.");
-        }
-    }
+    char num[NUM_MAX_LEN] = {0};
+    long n;
 
     // Load number to string
-    while ((c = fgetc(in)) != ']') {
+    while ((c = fgetc(in)) != end) {
         if (c == EOF) {
             error_exit("Invalid format - reached an unexpected end of file.");
         }
-        else if (!isdigit(c)) {
-            error_exit("Invalid format - not a valid qubit identifier.");
+        else if (!isdigit(c) && c != '-') {
+            error_exit("Invalid format - not a valid number.");
         }
         else if (strlen(num) + 1 < CMD_MAX_LEN) {
             int *temp = &c;
@@ -67,12 +80,58 @@ static uint32_t get_q_num(FILE *in)
     }
 
     // Convert to integer value
-    n = strtoul(num, NULL, 10);
-    if (n > UINT32_MAX) {
+    char *ptr;
+    n = strtol(num, &ptr, 10);
+    if ((n == 0 && num[0] != 0) || *ptr != '\0') {
+        error_exit("Invalid format - not a valid number.");
+    }
+    return n;
+}
+
+/** 
+ * Function for getting the next qubit index for the command on the given line.
+ */
+static uint32_t get_q_num(FILE *in)
+{
+    int c;
+    unsigned long n;
+
+    while ((c = fgetc(in)) != '[') {
+        if (c == EOF) {
+            error_exit("Invalid format - reached an unexpected end of file.");
+        }
+    }
+
+    n = parse_num(in, ']');
+    if (n > UINT32_MAX || n < 0) {
         error_exit("Invalid format - not a valid qubit identifier.");
     }
 
     return ((uint32_t)n);
+}
+
+//FIXME: comment
+static uint32_t get_iters(FILE *in)
+{
+    int c;
+    long start, end, step, iters;
+
+    while ((c = fgetc(in)) != '[') {
+        if (c == EOF) {
+            error_exit("Invalid format - reached an unexpected end of file.");
+        }
+    }
+
+    start = parse_num(in, ':');
+    end = parse_num(in, ':');
+    step = parse_num(in, ']'); //TODO: support floats?
+
+    iters = (end + 1 - start) / step;
+    if (iters > UINT32_MAX || iters < 0) {
+        error_exit("Invalid number of loop iterations.");
+    }
+    
+    return ((uint32_t) iters);
 }
 
 void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool *is_measure)
@@ -80,9 +139,14 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
     int c;
     char cmd[CMD_MAX_LEN];
     bool init = false;
+    bool is_symbolic = false;
+
+    MTBDD symbc;
+    uint64_t *map;
+    uint32_t iters;
 
     while ((c = fgetc(in)) != EOF) {
-        for (int i=0; i< CMD_MAX_LEN; i++) {
+        for (int i=0; i < CMD_MAX_LEN; i++) {
             cmd[i] = '\0';
         }
 
@@ -126,9 +190,6 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
             error_exit("Invalid format - reached an unexpected end of file.");
         }
         // Identify the command
-        //TODO: for loop -> sets is_symbolic true, init circ_s + all gates check if is_symbolic, then perform operation on mtbdd_s
-        //      (if EOF and is_symbolic -> error; init new MTBDD type just the first time)
-        //TODO: } -> if !is_symbolic error, else calls calculate_symb(MTBDD* circ, MTBDD* circ_s, int i) which updates circ
         if (strcmp(cmd, "OPENQASM") == 0) {}
         else if (strcmp(cmd, "include") == 0) {}
         else if (strcmp(cmd, "creg") == 0) {} //TODO: check if is valid?
@@ -147,12 +208,37 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
             init = true;
         }
         else if (init) {
+            if (strcmp(cmd, "for") == 0) {
+                iters = get_iters(in);
+                if (iters == 0) {
+                    // skip symbolic
+                    while ((c = fgetc(in)) != '}') { //TODO: check for comments
+                        if (c == EOF) {
+                            error_exit("Invalid format - reached an unexpected end of file.");
+                        }
+                    }
+                    continue;
+                }
+                is_symbolic = true; // TODO: allow nested loops?
+
+                symbc = *circ;
+                mtbdd_protect(&symbc);
+                map = symb_init(symbc);
+            }
+            if (strcmp(cmd, "}") == 0) {
+                if (!is_symbolic) {
+                    error_exit("Invalid loop syntax.");
+                }
+                is_symbolic = false;
+                symb_calc(circ, &symbc, map, iters); // TODO: request gc call?
+            }
             if (strcmp(cmd, "measure") == 0) {
                 uint32_t qt = get_q_num(in);
                 uint32_t ct = get_q_num(in);
                 *is_measure = true;
                 (*bits_to_measure)[qt] = ct;
             }
+            //FIXME: all gates check for is_symbolic
             else if (strcmp(cmd, "x") == 0) {
                 uint32_t qt = get_q_num(in);
                 gate_x(circ, qt);

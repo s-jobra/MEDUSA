@@ -13,6 +13,7 @@ int main(int argc, char *argv[])
     unsigned long samples=1024;
 
     //TODO: add help + long options
+    //TODO: add allow measure and symbolic option -> when allow symbolic, init leaf
     char *endptr;
     while((opt = getopt(argc, argv, "tf:s:m:")) != -1) {
         switch(opt) {
@@ -44,6 +45,7 @@ int main(int argc, char *argv[])
 
     init_sylvan();
     init_my_leaf();
+    init_my_leaf_symb(); //FIXME: do conditionally
 
     FILE *out = fopen(OUT_FILE".dot", "w");
     if (out == NULL) {

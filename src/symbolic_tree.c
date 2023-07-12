@@ -1,7 +1,5 @@
 #include "symbolic_tree.h"
 
-vars_t next_var;
-
 stree_t* st_create(vars_t v) {
     stree_t *new = my_malloc(sizeof(stree_t));
 
@@ -13,7 +11,6 @@ stree_t* st_create(vars_t v) {
     new->ls = NULL;
     new->rs = NULL;
 
-    next_var++;
     return new;
 }
 
@@ -28,7 +25,6 @@ stree_t* st_init(stree_t *t) {
     new->ls = st_init(t->ls);  //TODO: check if should be realloc
     new->rs = st_init(t->rs);
 
-    next_var++; // FIXME: ????
     return new;
 }
 

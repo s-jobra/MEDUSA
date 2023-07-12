@@ -73,7 +73,7 @@ uint64_t my_leaf_symb_hash(const uint64_t ldata_raw, const uint64_t seed);
 /**
  * Function for converting to a symbolic MTBDD
  */
-TASK_DECL_2(MTBDD, mtbdd_to_symb, MTBDD, uint64_t*);
+TASK_DECL_3(MTBDD, mtbdd_to_symb, MTBDD, uint64_t*, vars_t*);
 
 /**
  * Converts the given MTBDD to a symbolic MTBDD
@@ -82,8 +82,10 @@ TASK_DECL_2(MTBDD, mtbdd_to_symb, MTBDD, uint64_t*);
  * 
  * @param arr array for saving the variable mapping to its value (complex number)
  * 
+ * @param next_var pointer to a variable for storing the next var index
+ * 
  */
-#define my_mtbdd_to_symb(t, arr) RUN(mtbdd_to_symb, t, arr)
+#define my_mtbdd_to_symb(t, map, next_var) RUN(mtbdd_to_symb, t, map, next_var)
 
 #endif
 /* end of "custom_mtbdd_symb.h" */

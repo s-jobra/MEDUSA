@@ -28,11 +28,6 @@ typedef struct stree {
 } stree_t;
 
 /**
- * Global variable for the next variable to be assigned
- */
-extern vars_t next_var;
-
-/**
  * Creates a new tree for the given complex number coefficient variable
  */
 stree_t* st_create(vars_t v);

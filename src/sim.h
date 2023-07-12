@@ -11,7 +11,7 @@
 #define SIMULATOR_H
 
 #define CMD_MAX_LEN 10 // Max. supported length of qasm command
-#define Q_ID_MAX_LEN 10 // Max. number of characters in qubit identificator
+#define NUM_MAX_LEN 25 // Max. number of characters in a parsed number
 
 /**
  * Function parses a given QASM file and simulates it.
