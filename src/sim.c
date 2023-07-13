@@ -18,7 +18,7 @@ static void circuit_init(MTBDD *a, const uint32_t n) //TODO: move to custom_mtbd
         variables = mtbdd_set_add(variables, i);
     }
 
-    cnum point;
+    cnum point; // can be local, mtbdd_makeleaf makes realloc
     mpz_init_set_ui(point.a, 1);
     mpz_inits(point.b, point.c, point.d, c_k, NULL);
     uint8_t point_symbol[n];
@@ -32,31 +32,45 @@ static void circuit_init(MTBDD *a, const uint32_t n) //TODO: move to custom_mtbd
 /**
  * Creates an symbolic MTBDD from the given MTBDD and returns the mapping of variables to their values
  */
-static uint64_t* symb_init(MTBDD c) //TODO: move to custom_mtbdd_symb ?
+static coef_t* symb_init(MTBDD *cc, size_t *map_size) //TODO: move to custom_mtbdd_symb ?
 {
-    size_t leafs = mtbdd_leafcount(c);
-    uint64_t *map = my_malloc(sizeof(uint64_t) * leafs * 4 + 1);
-    map[leafs * 4] = 0; // end of array
+    *map_size = 4 * mtbdd_leafcount(*cc); //TODO: one leaf will probably be F - solve?
+    coef_t *map = my_malloc(sizeof(coef_t) * *map_size);
 
     vars_t next_var;
-    MTBDD symb = my_mtbdd_to_symb(c, map, &next_var);
+    *cc = my_mtbdd_to_symb(*cc, map, &next_var);
 
     mpz_init(cs_k);
-    return map;
+    return map; //FIXME: one struct map + map_size??
 }
 
 /**
  * Updates the circuits MTBDD according to the symbolic MTBDD, variable mapping and the number of iterations
  */
-static void symb_calc(MTBDD *circ, MTBDD *symbc, uint64_t *map, int i)
+static void symb_calc(MTBDD *circ, MTBDD symbc, coef_t *map, size_t map_size, uint32_t iters)
 {
-    //TODO: apply which updates circ 
-    mtbdd_unprotect(symbc);
+    coef_t *temp_map = my_malloc(sizeof(coef_t) * map_size);
+
+    for (uint32_t i = 0; i < iters; i++) {
+        my_mtbdd_update_map(symbc, map, temp_map);
+        //FIXME: plus mpz clears all?
+        free(map);
+        map = temp_map; 
+    }
+    *circ = my_mtbdd_from_symb(symbc, map);
+
+    free(temp_map);
+    
+    mpz_mul_ui(cs_k, cs_k, (unsigned long)iters);
+    mpz_add(c_k, c_k, cs_k);
+
     mpz_clear(cs_k);
 }
 
-//FIXME: comment
-long parse_num(FILE *in, char end)
+/**
+ * Function for number parsing from the input file (reads the number from in until end character is encountered)
+ */
+static long parse_num(FILE *in, char end)
 {
     int c;
     char num[NUM_MAX_LEN] = {0};
@@ -110,7 +124,9 @@ static uint32_t get_q_num(FILE *in)
     return ((uint32_t)n);
 }
 
-//FIXME: comment
+/**
+ * Returns the number of iterations, should be called when a for loop is encountered
+ */
 static uint32_t get_iters(FILE *in)
 {
     int c;
@@ -142,7 +158,8 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
     bool is_symbolic = false;
 
     MTBDD symbc;
-    uint64_t *map;
+    coef_t *map;
+    size_t map_size;
     uint32_t iters;
 
     while ((c = fgetc(in)) != EOF) {
@@ -212,7 +229,7 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
                 iters = get_iters(in);
                 if (iters == 0) {
                     // skip symbolic
-                    while ((c = fgetc(in)) != '}') { //TODO: check for comments
+                    while ((c = fgetc(in)) != '}') { //TODO: check for comments - shouldn't count commented }
                         if (c == EOF) {
                             error_exit("Invalid format - reached an unexpected end of file.");
                         }
@@ -223,14 +240,15 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
 
                 symbc = *circ;
                 mtbdd_protect(&symbc);
-                map = symb_init(symbc);
+                map = symb_init(&symbc, &map_size);
             }
             if (strcmp(cmd, "}") == 0) {
                 if (!is_symbolic) {
                     error_exit("Invalid loop syntax.");
                 }
                 is_symbolic = false;
-                symb_calc(circ, &symbc, map, iters); // TODO: request gc call?
+                symb_calc(circ, symbc, map, map_size, iters); // TODO: should request gc call?
+                mtbdd_unprotect(&symbc);
             }
             if (strcmp(cmd, "measure") == 0) {
                 uint32_t qt = get_q_num(in);

@@ -1,5 +1,7 @@
 #include "symbolic_tree.h"
 
+// TODO: hash table for shared structures?
+
 stree_t* st_create(vars_t v) {
     stree_t *new = my_malloc(sizeof(stree_t));
 

@@ -21,10 +21,14 @@ extern uint32_t ltype_s_id;
  * MTBDD leaf value for symbolic representation
  */
 typedef struct lsymb {
-    stree_t *a;
+    stree_t *a;  // ptr to a tree representing the current expression
     stree_t *b;
     stree_t *c;
     stree_t *d;
+    vars_t var_a;   // value of the original variable stored
+    vars_t var_b;
+    vars_t var_c;
+    vars_t var_d;
 } lsymb_t;
 
 /**
@@ -73,19 +77,53 @@ uint64_t my_leaf_symb_hash(const uint64_t ldata_raw, const uint64_t seed);
 /**
  * Function for converting to a symbolic MTBDD
  */
-TASK_DECL_3(MTBDD, mtbdd_to_symb, MTBDD, uint64_t*, vars_t*);
+TASK_DECL_3(MTBDD, mtbdd_to_symb, MTBDD, coef_t*, vars_t*);
+
+/**
+ * Function for updating the map values according to the given symbolic MTBDD
+ */
+TASK_DECL_3(MTBDD, mtbdd_update_map, MTBDD, coef_t*,  coef_t*);
+
+/**
+ * Function for converting a symbolic MTBDD to a regular one according to the variable mapping
+ */
+TASK_DECL_2(MTBDD, mtbdd_from_symb, MTBDD, coef_t*);
+
+//FIXME: fix comments - should be probably just an MTBDD, not a pointer to an MTBDD (also in custom_mtbdd.h)
 
 /**
  * Converts the given MTBDD to a symbolic MTBDD
  * 
  * @param t pointer to an MTBDD
  * 
- * @param arr array for saving the variable mapping to its value (complex number)
+ * @param map array for saving the variable mapping to their values (complex numbers)
  * 
  * @param next_var pointer to a variable for storing the next var index
  * 
  */
 #define my_mtbdd_to_symb(t, map, next_var) RUN(mtbdd_to_symb, t, map, next_var)
+
+/**
+ * Simulates one symbolic iteration (single update of the map values)
+ * 
+ * @param t pointer to a symbolic MTBDD
+ * 
+ * @param map array with the variable mapping to their values (complex numbers)
+ * 
+ * @param new_map array for storing the new variable mapping
+ * 
+ */
+#define my_mtbdd_update_map(t, map, new_map) RUN(mtbdd_update_map, t, map, new_map)
+
+/**
+ * Converts the given symbolic MTBDD to a regular MTBDD according to the mapping values
+ * 
+ * @param t pointer to a symbolic MTBDD
+ * 
+ * @param map array with the variable mapping to their values (complex numbers)
+ * 
+ */
+#define my_mtbdd_from_symb(t, map) RUN(mtbdd_from_symb, t, map)
 
 #endif
 /* end of "custom_mtbdd_symb.h" */
