@@ -67,34 +67,21 @@ int my_leaf_symb_equals(const uint64_t ldata_a_raw, const uint64_t ldata_b_raw);
 /**
  * Handle for creating string representation of the symbolic leaf.
  */
-char* my_leaf_symb_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf, size_t sylvan_bufsize);
+//char* my_leaf_symb_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf, size_t sylvan_bufsize); FIXME: needed?
 
 /**
  * Hashing function for calculating symbolic leaf's hash.
  */
 uint64_t my_leaf_symb_hash(const uint64_t ldata_raw, const uint64_t seed);
 
-/**
- * Function for converting to a symbolic MTBDD
- */
+/* CUSTOM MTBDD OPERATIONS */
+// Basic operations:
+
 TASK_DECL_3(MTBDD, mtbdd_to_symb, MTBDD, coef_t*, vars_t*);
-
-/**
- * Function for updating the map values according to the given symbolic MTBDD
- */
-TASK_DECL_3(MTBDD, mtbdd_update_map, MTBDD, coef_t*,  coef_t*);
-
-/**
- * Function for converting a symbolic MTBDD to a regular one according to the variable mapping
- */
-TASK_DECL_2(MTBDD, mtbdd_from_symb, MTBDD, coef_t*);
-
-//FIXME: fix comments - should be probably just an MTBDD, not a pointer to an MTBDD (also in custom_mtbdd.h)
-
 /**
  * Converts the given MTBDD to a symbolic MTBDD
  * 
- * @param t pointer to an MTBDD
+ * @param t a regular MTBDD
  * 
  * @param map array for saving the variable mapping to their values (complex numbers)
  * 
@@ -103,10 +90,12 @@ TASK_DECL_2(MTBDD, mtbdd_from_symb, MTBDD, coef_t*);
  */
 #define my_mtbdd_to_symb(t, map, next_var) RUN(mtbdd_to_symb, t, map, next_var)
 
+
+TASK_DECL_3(MTBDD, mtbdd_update_map, MTBDD, coef_t*,  coef_t*);
 /**
  * Simulates one symbolic iteration (single update of the map values)
  * 
- * @param t pointer to a symbolic MTBDD
+ * @param t a symbolic MTBDD
  * 
  * @param map array with the variable mapping to their values (complex numbers)
  * 
@@ -115,15 +104,101 @@ TASK_DECL_2(MTBDD, mtbdd_from_symb, MTBDD, coef_t*);
  */
 #define my_mtbdd_update_map(t, map, new_map) RUN(mtbdd_update_map, t, map, new_map)
 
+
+TASK_DECL_2(MTBDD, mtbdd_from_symb, MTBDD, coef_t*);
 /**
- * Converts the given symbolic MTBDD to a regular MTBDD according to the mapping values
+ * Converts the given symbolic MTBDD to a regular MTBDD according to the variable mapping
  * 
- * @param t pointer to a symbolic MTBDD
+ * @param t a symbolic MTBDD
  * 
  * @param map array with the variable mapping to their values (complex numbers)
  * 
  */
 #define my_mtbdd_from_symb(t, map) RUN(mtbdd_from_symb, t, map)
+
+// ==========================================
+// Operations needed for gate representation:
+
+//FIXME: unite MTBDD params t and a
+
+TASK_DECL_2(MTBDD, mtbdd_symb_plus, MTBDD*, MTBDD*);
+/**
+ * Computes a + b with symbolic MTBDDs
+ * 
+ * @param a pointer to a symbolic MTBDD
+ * 
+ * @param b pointer to a symbolic MTBDD
+ * 
+ */
+#define my_mtbdd_symb_plus(a, b) mtbdd_apply(a, b, TASK(mtbdd_symb_plus))
+
+
+TASK_DECL_2(MTBDD, mtbdd_symb_minus, MTBDD*, MTBDD*);
+/**
+ * Computes a - b with symbolic MTBDDs
+ * 
+ * @param a pointer to a symbolic MTBDD
+ * 
+ * @param b pointer to a symbolic MTBDD
+ * 
+ */
+#define my_mtbdd_symb_minus(a, b) mtbdd_apply(a, b, TASK(mtbdd_symb_minus))
+
+
+TASK_DECL_2(MTBDD, mtbdd_symb_neg, MTBDD, size_t);
+/**
+ * Computes -a for a symbolic MTBDD
+ * 
+ * @param a pointer to an MTBDD
+ * 
+ */
+#define my_mtbdd_symb_neg(a) mtbdd_uapply(a, TASK(mtbdd_symb_neg), 0)
+
+
+/**
+ * Computes projection (Txt) on MTBDD t with target qubit xt (target qubit = 1)
+ * 
+ * @param t a symbolic MTBDD
+ * 
+ * @param xt target qubit index
+ * 
+ */
+#define my_mtbdd_symb_t_xt(t, xt) mtbdd_uapply(t, TASK(t_xt_create), xt)
+
+
+/**
+ * Computes projection (Txt_complement) on MTBDD t with target qubit xt (target qubit = 0)
+ * 
+ * @param t a symbolic MTBDD
+ * 
+ * @param xt target qubit index
+ * 
+ */
+#define my_mtbdd_symb_t_xt_comp(t, xt) mtbdd_uapply(t, TASK(t_xt_comp_create), xt)
+
+
+TASK_DECL_2(MTBDD, mtbdd_symb_b_xt_mul, MTBDD, uint64_t);
+/**
+ * Computes restriction (Bxt * T) on a symbolic MTBDD (multiplies target with: low -> 0, high -> 1)
+ * 
+ * @param t pointer to a symbolic MTBDD
+ * 
+ * @param xt target qubit index
+ * 
+ */
+#define my_mtbdd_symb_b_xt_mul(t, xt) mtbdd_uapply(t, TASK(mtbdd_symb_b_xt_mul), xt)
+
+
+TASK_DECL_2(MTBDD, mtbdd_symb_b_xt_comp_mul, MTBDD, uint64_t);
+/**
+ * Computes restriction (Bxt_complement * T) on a symbolic MTBDD (multiplies target with: low -> 1, high -> 0)
+ * 
+ * @param t pointer to a symbolic MTBDD
+ * 
+ * @param xt target qubit index
+ * 
+ */
+#define my_mtbdd_symb_b_xt_comp_mul(t, xt) mtbdd_uapply(t, TASK(mtbdd_symb_b_xt_comp_mul), xt)
 
 #endif
 /* end of "custom_mtbdd_symb.h" */

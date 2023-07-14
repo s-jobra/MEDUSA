@@ -1,5 +1,7 @@
 #include "gates.h"
 
+//TODO: change Bxt, Bxt_c create to Bxt * T, Bxt_c * T operations
+
 prob_t measure(MTBDD *a, uint32_t xt, char *curr_state, int n)
 {
     MTBDD t = create_t_xt(*a, xt);

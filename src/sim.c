@@ -6,8 +6,6 @@ extern uint32_t ltype_s_id; // leaf type id for symbolic representation
 coef_t c_k; // coefficient k common for all MTBDD leaf values
 coefs_k_t cs_k; // coefficient k common for all MTBDD leaf values for symbolic representation
 
-//TODO: make i in loop accessible?
-
 /** 
  * Initialize for all qubit values 0.
  */
@@ -152,6 +150,7 @@ static uint32_t get_iters(FILE *in)
 
 void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool *is_measure)
 {
+    //TODO: refactoring
     int c;
     char cmd[CMD_MAX_LEN];
     bool init = false;

@@ -80,6 +80,9 @@ char* my_leaf_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf, siz
 uint64_t my_leaf_hash(const uint64_t ldata_raw, const uint64_t seed);
 
 /* CUSTOM MTBDD OPERATIONS */
+//FIXME: check if binary ops should be ptr and unary should not be ptr
+//FIXME: fix naming conventions: every task vs macro (mtbdd_... vs my_mtbdd_...)
+//FIXME: fix comments: task + define together, change to "Computes ..." etc
 // Basic operations:
 /**
  * Operation plus for my custom MTBDDs.
@@ -111,6 +114,7 @@ TASK_DECL_2(MTBDD, my_op_coef_rot1, MTBDD, size_t);
  */
 TASK_DECL_2(MTBDD, my_op_coef_rot2, MTBDD, size_t);
 
+// ==========================================
 // Operations needed for gate representation:
 /**
  * Function for creating a new MTBDD from a given one with restriction: target qubit = 1.
@@ -154,6 +158,8 @@ MTBDD b_xt_create(uint32_t xt);
  */
 MTBDD b_xt_comp_create(uint32_t xt);
 
+// ==========================================
+//FIXME: fix comments - should probably be just an MTBDD, not a pointer to an MTBDD
 // Macros for applying operations:
 /**
  * Compute a + b with my custom MTBDDs

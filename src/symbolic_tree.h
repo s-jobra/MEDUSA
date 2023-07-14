@@ -11,6 +11,7 @@ typedef uint64_t vars_t;
 
 typedef enum {
     ST_ADD,
+    ST_SUB,
     ST_MUL,
     ST_VAL
 } stnode_t;

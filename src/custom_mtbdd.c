@@ -328,11 +328,8 @@ TASK_IMPL_2(MTBDD, t_xt_create, MTBDD, a, uint64_t, xt)
         }
     }
     // Else copy if mtbdd is leaf
-    else if (mtbdd_isleaf(a)) {
-        cnum *a_data = (cnum*) mtbdd_getvalue(a); //FIXME: why not just return a
-
-        MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) a_data);
-        return res;
+    else {
+        return a;
     }
 
     return mtbdd_invalid; // Recurse deeper
@@ -350,11 +347,8 @@ TASK_IMPL_2(MTBDD, t_xt_comp_create, MTBDD, a, uint64_t, xt)
         }
     }
     // Else copy if mtbdd is leaf
-    else if (mtbdd_isleaf(a)) { // TODO: just else ??
-        cnum *a_data = (cnum*) mtbdd_getvalue(a);
-
-        MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) a_data);
-        return res;
+    else {
+        return a;
     }
 
     return mtbdd_invalid; // Recurse deeper

@@ -19,22 +19,23 @@ stree_t* st_create(vars_t v) {
 stree_t* st_init(stree_t *t) {
     stree_t *new = my_malloc(sizeof(stree_t));
 
-    new->val = my_malloc(sizeof(stnode_val_t));  //TODO: check if should be realloc
+    new->val = my_malloc(sizeof(stnode_val_t));  //FIXME: check if should be realloc
     mpz_init_set(new->val->coef, t->val->coef);
     new->val->var = t->val->var;
 
     new->type = t->type;
-    new->ls = st_init(t->ls);  //TODO: check if should be realloc
+    new->ls = st_init(t->ls);  //FIXME: check if should be realloc
     new->rs = st_init(t->rs);
 
     return new;
 }
 
 stree_t* st_op(stree_t *a, stree_t *b, stnode_t op) {
-    //TODO: check if shouldnt free a,b
+    //FIXME: check if shouldnt free a,b
 
     stree_t *res = my_malloc(sizeof(stree_t));
     res->val = NULL;
+    res->type = op;
     res->ls = st_init(a);
     res->rs = st_init(b);
 }

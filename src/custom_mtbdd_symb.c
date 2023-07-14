@@ -54,10 +54,9 @@ int my_leaf_symb_equals(const uint64_t ldata_a_raw, const uint64_t ldata_b_raw)
 
 uint64_t my_leaf_symb_hash(const uint64_t ldata_raw, const uint64_t seed)
 {
-    (void)seed; // not needed when using leaves of a single type
     lsymb_t *ldata = (lsymb_t*) ldata_raw;
 
-    uint64_t val = 0;
+    uint64_t val = seed;
     val = MY_HASH_COMB_PTR(val, ldata->a);
     val = MY_HASH_COMB_PTR(val, ldata->b);
     val = MY_HASH_COMB_PTR(val, ldata->c);
@@ -110,13 +109,22 @@ static coef_t* eval_var(stree_t *data,  coef_t* map)
     mpz_init(*res);
 
     if (data->type == ST_VAL) {
+        //TODO: first check if coef is not 0
         mpz_set(*res, map[data->val->var]);
         mpz_mul(*res, *res, data->val->coef);
     }
     else {
         coef_t *l = eval_var(data->ls, map);
         coef_t *r = eval_var(data->rs, map);
-        data->type == ST_ADD? mpz_add(*res, *l, *r) : mpz_mul(*res, *l, *r);
+        if (data->type == ST_ADD) {
+            mpz_add(*res, *l, *r);
+        }
+        else if (data->type == ST_SUB) {
+            mpz_sub(*res, *l, *r);
+        }
+        else {
+            mpz_mul(*res, *l, *r);
+        }
     }
 
     return res;
@@ -170,6 +178,154 @@ TASK_IMPL_2(MTBDD, mtbdd_from_symb, MTBDD, a, coef_t*, map)
         mpz_clears(new_data.a, new_data.b, new_data.c, new_data.d, NULL);
 
         return res;
+    }
+
+    return mtbdd_invalid; // Recurse deeper
+}
+
+// Operations needed for gate representation:
+TASK_IMPL_2(MTBDD, mtbdd_symb_plus, MTBDD*, p_a, MTBDD*, p_b)
+{
+    MTBDD a = *p_a;
+    MTBDD b = *p_b;
+
+    // Partial function check
+    if (a == mtbdd_false) return b;
+    if (b == mtbdd_false) return a;
+
+    // Compute a + b if both mtbdds are leaves
+    if (mtbdd_isleaf(a) && mtbdd_isleaf(b)) {
+        lsymb_t *a_data = (lsymb_t*) mtbdd_getvalue(a);
+        lsymb_t *b_data = (lsymb_t*) mtbdd_getvalue(b);
+        
+        //FIXME: assert a,b,c,d in both data are the same var???
+
+        lsymb_t res_data;
+        res_data.var_a = a_data->var_a;
+        res_data.var_b = a_data->var_b;
+        res_data.var_c = a_data->var_c;
+        res_data.var_d = a_data->var_d;
+        res_data.a = st_op(a_data->a, b_data->a, ST_ADD);
+        res_data.b = st_op(a_data->b, b_data->b, ST_ADD);
+        res_data.c = st_op(a_data->c, b_data->c, ST_ADD);
+        res_data.d = st_op(a_data->d, b_data->d, ST_ADD);
+        
+        MTBDD res = mtbdd_makeleaf(ltype_s_id, (uint64_t) &res_data);
+        return res;
+    }
+
+    /* Commutative, so swap a,b for better cache performance*/
+    if (a < b) {
+        *p_a = b;
+        *p_b = a;
+    }
+
+    return mtbdd_invalid; // Recurse deeper
+}
+
+TASK_IMPL_2(MTBDD, mtbdd_symb_minus, MTBDD*, p_a, MTBDD*, p_b)
+{
+    MTBDD a = *p_a;
+    MTBDD b = *p_b;
+
+    // Partial function check
+    if (a == mtbdd_false){
+        MTBDD b_minus = my_mtbdd_symb_neg(b);
+        return b_minus;
+    } 
+    if (b == mtbdd_false) return a;
+
+    // Compute a - b if both mtbdds are leaves
+    if (mtbdd_isleaf(a) && mtbdd_isleaf(b)) {
+        lsymb_t *a_data = (lsymb_t*) mtbdd_getvalue(a);
+        lsymb_t *b_data = (lsymb_t*) mtbdd_getvalue(b);
+        
+        //FIXME: assert a,b,c,d in both data are the same var???
+
+        lsymb_t res_data;
+        res_data.var_a = a_data->var_a;
+        res_data.var_b = a_data->var_b;
+        res_data.var_c = a_data->var_c;
+        res_data.var_d = a_data->var_d;
+        res_data.a = st_op(a_data->a, b_data->a, ST_SUB);
+        res_data.b = st_op(a_data->b, b_data->b, ST_SUB);
+        res_data.c = st_op(a_data->c, b_data->c, ST_SUB);
+        res_data.d = st_op(a_data->d, b_data->d, ST_SUB);
+        
+        MTBDD res = mtbdd_makeleaf(ltype_s_id, (uint64_t) &res_data);
+        return res;
+    }
+
+    return mtbdd_invalid; // Recurse deeper
+}
+
+TASK_IMPL_2(MTBDD, mtbdd_symb_neg, MTBDD, a, size_t, x)
+{
+    (void)x; // extra parameter needed for task - not needed
+
+    // Partial function check
+    if (a == mtbdd_false) return mtbdd_false;
+
+    // Compute -a if mtbdd is a leaf
+    if (mtbdd_isleaf(a)) {
+        lsymb_t *a_data = (lsymb_t*) mtbdd_getvalue(a);
+
+        lsymb_t res_data;
+        res_data.var_a = a_data->var_a;
+        res_data.var_b = a_data->var_b;
+        res_data.var_c = a_data->var_c;
+        res_data.var_d = a_data->var_d;
+        res_data.a = st_init(a_data->a); //FIXME: maybe can just copy pointers??
+        res_data.b = st_init(a_data->b);
+        res_data.c = st_init(a_data->c);
+        res_data.d = st_init(a_data->d);
+        st_coef_mul(a_data->a, -1);
+        st_coef_mul(a_data->b, -1);
+        st_coef_mul(a_data->c, -1);
+        st_coef_mul(a_data->d, -1);
+
+        MTBDD res = mtbdd_makeleaf(ltype_s_id, (uint64_t) &res_data);
+        return res;
+    }
+
+    return mtbdd_invalid; // Recurse deeper
+}
+
+TASK_IMPL_2(MTBDD, mtbdd_symb_b_xt_mul, MTBDD, a, uint64_t, xt)
+{
+    // Partial function check
+    if (a == mtbdd_false) return mtbdd_false;
+
+    // If xt, ground the low edge
+    if (mtbdd_isnode(a)) {
+        if (mtbdd_getvar(a) == (uint32_t)xt) { // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
+            MTBDD res = mtbdd_makenode(xt, mtbdd_false, mtbdd_gethigh(a));
+            return res;
+        }
+    }
+    // Else copy if mtbdd is leaf
+    else {
+        return a;
+    }
+
+    return mtbdd_invalid; // Recurse deeper
+}
+
+TASK_IMPL_2(MTBDD, mtbdd_symb_b_xt_comp_mul, MTBDD, a, uint64_t, xt)
+{
+    // Partial function check
+    if (a == mtbdd_false) return mtbdd_false;
+
+    // If xt, ground the high edge
+    if (mtbdd_isnode(a)) {
+        if (mtbdd_getvar(a) == (uint32_t)xt) { // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
+            MTBDD res = mtbdd_makenode(xt, mtbdd_getlow(a), mtbdd_false);
+            return res;
+        }
+    }
+    // Else copy if mtbdd is leaf
+    else {
+        return a;
     }
 
     return mtbdd_invalid; // Recurse deeper
