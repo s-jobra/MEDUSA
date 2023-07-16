@@ -4,6 +4,7 @@
 #include "custom_mtbdd.h"
 #include "custom_mtbdd_symb.h"
 #include "gates.h"
+#include "gates_symb.h"
 #include "error.h"
 #include "htab.h"
 
