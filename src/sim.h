@@ -1,5 +1,6 @@
 #include <ctype.h>  // For isspace(), isdigit()
 #include <stdbool.h>
+#include <errno.h>
 
 #include "custom_mtbdd.h"
 #include "custom_mtbdd_symb.h"

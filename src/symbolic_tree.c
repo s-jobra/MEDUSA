@@ -24,14 +24,21 @@ stree_t* st_init(stree_t *t) {
     new->val->var = t->val->var;
 
     new->type = t->type;
-    new->ls = st_init(t->ls);  //FIXME: check if should be realloc
-    new->rs = st_init(t->rs);
+    
+    if (new->type == ST_VAL) {
+        new->ls = NULL;
+        new->rs = NULL;
+    }
+    else {
+        new->ls = st_init(t->ls);  //FIXME: copy ptr should probably suffice (check if should be realloc)
+        new->rs = st_init(t->rs);
+    }
 
     return new;
 }
 
 stree_t* st_op(stree_t *a, stree_t *b, stnode_t op) {
-    //FIXME: check if shouldnt free a,b
+    //FIXME: check if shouldnt free a,b + should be realloc?
 
     stree_t *res = my_malloc(sizeof(stree_t));
     res->val = NULL;

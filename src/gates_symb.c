@@ -2,6 +2,7 @@
 
 void gate_symb_x(MTBDD *p_t, uint32_t xt)
 {
+    //mtbdd_fprintdot(stdout, *p_t); //TODO:FIXME:
     // uses the same implementation as the regular MTBDDs
     *p_t = mtbdd_uapply(*p_t, TASK(m_gate_x), xt);
 }

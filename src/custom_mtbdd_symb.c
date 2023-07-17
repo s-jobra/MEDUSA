@@ -6,6 +6,11 @@
 
 uint32_t ltype_s_id;
 
+/**
+ * Max. size of string written as leaf value in output file.
+ */
+#define MAX_SYMB_LEAF_STR_LEN 10000
+
 /* SETUP */
 void init_my_leaf_symb()
 {
@@ -14,6 +19,7 @@ void init_my_leaf_symb()
     sylvan_mt_set_create(ltype_s_id, my_leaf_symb_create);
     sylvan_mt_set_destroy(ltype_s_id, my_leaf_symb_destroy);
     sylvan_mt_set_equals(ltype_s_id, my_leaf_symb_equals);
+    sylvan_mt_set_to_str(ltype_s_id, my_leaf_symb_to_str);
     sylvan_mt_set_hash(ltype_s_id, my_leaf_symb_hash);
 }
 
@@ -52,6 +58,38 @@ int my_leaf_symb_equals(const uint64_t ldata_a_raw, const uint64_t ldata_b_raw)
            && !st_cmp(ldata_a->d, ldata_b->d);
 }
 
+char* my_leaf_symb_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf, size_t sylvan_bufsize)
+{
+    (void) complemented;
+    lsymb_t *ldata = (lsymb_t*) ldata_raw;
+
+    char ldata_string[MAX_SYMB_LEAF_STR_LEN ] = {0};
+    
+    //TODO: print the whole expression (tree)?
+    int chars_written = gmp_snprintf(ldata_string, MAX_SYMB_LEAF_STR_LEN , "(1/√2)^(%Zd) * (%ld + %ldω +%ldω² + %ldω³)", \
+                                     cs_k, ldata->var_a, ldata->var_b, ldata->var_c, ldata->var_d);
+    // Was string truncated?
+    if (chars_written >= MAX_SYMB_LEAF_STR_LEN ) {
+        error_exit("Allocated string length for leaf value output has not been sufficient.\n");
+    }
+    else if (chars_written < 0) {
+        error_exit("An encoding error has occured when producing leaf value output.\n");
+    }
+
+    // Is buffer large enough?
+    if (chars_written < sylvan_bufsize) {
+        memcpy(sylvan_buf, ldata_string, chars_written * sizeof(char));
+        sylvan_buf[chars_written] = '\0';
+        return sylvan_buf;
+    }
+    
+    // Else return newly allocated string
+    char *new_buf = (char*)my_malloc((chars_written + 1) * sizeof(char));
+    memcpy(new_buf, ldata_string, chars_written * sizeof(char));
+    new_buf[chars_written] = '\0';
+    return new_buf;
+}
+
 uint64_t my_leaf_symb_hash(const uint64_t ldata_raw, const uint64_t seed)
 {
     lsymb_t *ldata = (lsymb_t*) ldata_raw;
@@ -67,32 +105,35 @@ uint64_t my_leaf_symb_hash(const uint64_t ldata_raw, const uint64_t seed)
 }
 
 /* CUSTOM MTBDD OPERATIONS */
-//TODO: should be next_var one global variable? maybe better as param of the function
-TASK_IMPL_3(MTBDD, mtbdd_to_symb, MTBDD, a, coef_t*, map, vars_t*, next_var)
+//TODO: should be next_var one global variable? maybe better as just a param of the function
+TASK_IMPL_2(MTBDD, mtbdd_to_symb, MTBDD, a, size_t, raw_m)
 {
     // Partial function check
     if (a == mtbdd_false) return mtbdd_false;
 
     if (mtbdd_isleaf(a)) {
+        vmap_t* m = (vmap_t*) raw_m;
+
         cnum *orig_data = (cnum*) mtbdd_getvalue(a);
-        mpz_init_set(map[*next_var], orig_data->a);
-        mpz_init_set(map[*next_var + 1], orig_data->b);
-        mpz_init_set(map[*next_var + 2], orig_data->c);
-        mpz_init_set(map[*next_var + 3], orig_data->d);
+        mpz_init_set(m->map[m->next_var], orig_data->a);
+        mpz_init_set(m->map[m->next_var + 1], orig_data->b);
+        mpz_init_set(m->map[m->next_var + 2], orig_data->c);
+        mpz_init_set(m->map[m->next_var + 3], orig_data->d);
 
         lsymb_t *new_data = my_malloc(sizeof(lsymb_t)); //TODO: should be malloc? (check where is the free)
-        new_data->a = st_create(*next_var);
-        new_data->b = st_create(*next_var + 1);
-        new_data->c = st_create(*next_var + 2);
-        new_data->d = st_create(*next_var + 3);
+        new_data->a = st_create(m->next_var);
+        new_data->b = st_create(m->next_var + 1);
+        new_data->c = st_create(m->next_var + 2);
+        new_data->d = st_create(m->next_var + 3);
 
-        new_data->var_a = *next_var;
-        new_data->var_b = *next_var + 1;
-        new_data->var_c = *next_var + 2;
-        new_data->var_d = *next_var + 3;
+        //TODO:FIXME: all variables are now 0
+        new_data->var_a = m->next_var;
+        new_data->var_b = m->next_var + 1;
+        new_data->var_c = m->next_var + 2;
+        new_data->var_d = m->next_var + 3;
 
         MTBDD res = mtbdd_makeleaf(ltype_s_id, (uint64_t) new_data);
-        *next_var += 4;
+        m->next_var += 4;
 
         return res;
     }
@@ -160,12 +201,13 @@ TASK_IMPL_3(MTBDD, mtbdd_update_map, MTBDD, a, coef_t*, map, coef_t*, new_map) /
     return mtbdd_invalid; // Recurse deeper
 }
 
-TASK_IMPL_2(MTBDD, mtbdd_from_symb, MTBDD, a, coef_t*, map)
+TASK_IMPL_2(MTBDD, mtbdd_from_symb, MTBDD, a, size_t, raw_map)
 {
     // Partial function check
     if (a == mtbdd_false) return mtbdd_false;
 
     if (mtbdd_isleaf(a)) {
+        coef_t* map = (coef_t*) raw_map;
         lsymb_t *data = (lsymb_t*) mtbdd_getvalue(a);
         
         cnum new_data; // can be local, mtbdd_makeleaf makes realloc

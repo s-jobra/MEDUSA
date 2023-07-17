@@ -41,6 +41,15 @@ typedef mpz_t coefs_k_t;
  */
 extern coefs_k_t cs_k;
 
+/**
+ * Type for saving and using the symbolic variable to value mapping
+ */
+typedef struct vmap {
+    coef_t *map;        // array for saving the variable mapping to their values (complex numbers)
+    size_t msize; 
+    vars_t next_var;    // next variable index to be assigned
+} vmap_t;
+
 /* SETUP */
 /**
  * Function for my custom symbolic leaf setup in Sylvan.
@@ -65,9 +74,9 @@ void my_leaf_symb_destroy(uint64_t ldata);
 int my_leaf_symb_equals(const uint64_t ldata_a_raw, const uint64_t ldata_b_raw);
 
 /**
- * Handle for creating string representation of the symbolic leaf.
+ * Handle for creating string representation of the symbolic leaf (for debugging purposes).
  */
-//char* my_leaf_symb_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf, size_t sylvan_bufsize); FIXME: needed?
+char* my_leaf_symb_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf, size_t sylvan_bufsize);
 
 /**
  * Hashing function for calculating symbolic leaf's hash.
@@ -77,18 +86,16 @@ uint64_t my_leaf_symb_hash(const uint64_t ldata_raw, const uint64_t seed);
 /* CUSTOM MTBDD OPERATIONS */
 // Basic operations:
 
-TASK_DECL_3(MTBDD, mtbdd_to_symb, MTBDD, coef_t*, vars_t*);
+TASK_DECL_2(MTBDD, mtbdd_to_symb, MTBDD, size_t);
 /**
  * Converts the given MTBDD to a symbolic MTBDD
  * 
  * @param t a regular MTBDD
  * 
- * @param map array for saving the variable mapping to their values (complex numbers)
- * 
- * @param next_var pointer to a variable for storing the next var index
+ * @param m pointer to a vmap_t mapping casted to size_t (needed for the TASK implementation)
  * 
  */
-#define my_mtbdd_to_symb(t, map, next_var) RUN(mtbdd_to_symb, t, map, next_var)
+#define my_mtbdd_to_symb(t, m) mtbdd_uapply(t, TASK(mtbdd_to_symb), m)
 
 
 TASK_DECL_3(MTBDD, mtbdd_update_map, MTBDD, coef_t*,  coef_t*);
@@ -105,16 +112,16 @@ TASK_DECL_3(MTBDD, mtbdd_update_map, MTBDD, coef_t*,  coef_t*);
 #define my_mtbdd_update_map(t, map, new_map) RUN(mtbdd_update_map, t, map, new_map)
 
 
-TASK_DECL_2(MTBDD, mtbdd_from_symb, MTBDD, coef_t*);
+TASK_DECL_2(MTBDD, mtbdd_from_symb, MTBDD, size_t);
 /**
  * Converts the given symbolic MTBDD to a regular MTBDD according to the variable mapping
  * 
  * @param t a symbolic MTBDD
  * 
- * @param map array with the variable mapping to their values (complex numbers)
+ * @param map array with the variable mapping to their values casted to size_t (needed for the TASK implementation)
  * 
  */
-#define my_mtbdd_from_symb(t, map) RUN(mtbdd_from_symb, t, map)
+#define my_mtbdd_from_symb(t, map) mtbdd_uapply(t, TASK(mtbdd_from_symb), map)
 
 // ==========================================
 // Operations needed for gate representation:

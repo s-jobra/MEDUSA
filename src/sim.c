@@ -30,32 +30,36 @@ static void circuit_init(MTBDD *a, const uint32_t n) //TODO: move to custom_mtbd
 /**
  * Creates an symbolic MTBDD from the given MTBDD and returns the mapping of variables to their values
  */
-static coef_t* symb_init(MTBDD *cc, size_t *map_size) //TODO: move to custom_mtbdd_symb ?
+static void symb_init(MTBDD *cc, vmap_t *m) //TODO: move to custom_mtbdd_symb ?
 {
-    *map_size = 4 * mtbdd_leafcount(*cc); //TODO: one leaf will probably be F - solve?
-    coef_t *map = my_malloc(sizeof(coef_t) * *map_size);
+    m->msize = 4 * mtbdd_leafcount(*cc); // does not count F, multiplied because one var is needed for every coefficient
+    m->map = my_malloc(sizeof(coef_t) * m->msize);
+    m->next_var = 0;
 
-    vars_t next_var;
-    *cc = my_mtbdd_to_symb(*cc, map, &next_var);
+    *cc = my_mtbdd_to_symb(*cc, (size_t) m);
 
     mpz_init(cs_k);
-    return map; //FIXME: one struct map + map_size??
 }
 
 /**
  * Updates the circuits MTBDD according to the symbolic MTBDD, variable mapping and the number of iterations
  */
-static void symb_calc(MTBDD *circ, MTBDD symbc, coef_t *map, size_t map_size, uint32_t iters)
+static void symb_calc(MTBDD *circ, MTBDD symbc, vmap_t *m, uint32_t iters)
 {
-    coef_t *temp_map = my_malloc(sizeof(coef_t) * map_size);
+    coef_t *temp_map = my_malloc(sizeof(coef_t) * m->msize);
 
-    for (uint32_t i = 0; i < iters; i++) {
-        my_mtbdd_update_map(symbc, map, temp_map);
+    //TODO:FIXME:
+    //FILE *out = fopen("res.dot", "w");
+    //mtbdd_fprintdot(out, symbc);
+    //fclose(out);
+
+    for (uint32_t i = 0; i < iters; i++) { //TODO:FIXME:
+        //my_mtbdd_update_map(symbc, map, temp_map); FIXME: redo as a recursive function?? 
         //FIXME: plus mpz clears all?
-        free(map);
-        map = temp_map; 
+        //free(m->map);
+        //m->map = temp_map; 
     }
-    *circ = my_mtbdd_from_symb(symbc, map);
+    *circ = my_mtbdd_from_symb(symbc, (size_t) m->map);
 
     free(temp_map);
     
@@ -93,8 +97,9 @@ static long parse_num(FILE *in, char end)
 
     // Convert to integer value
     char *ptr;
+    errno = 0;
     n = strtol(num, &ptr, 10);
-    if ((n == 0 && num[0] != 0) || *ptr != '\0') {
+    if (num == ptr || errno != 0) {
         error_exit("Invalid format - not a valid number.");
     }
     return n;
@@ -157,8 +162,7 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
     bool is_symbolic = false;
 
     MTBDD symbc;
-    coef_t *map;
-    size_t map_size;
+    vmap_t m;
     uint32_t iters;
 
     while ((c = fgetc(in)) != EOF) {
@@ -202,9 +206,11 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
                 error_exit("Invalid command.");
             }
         } while (!isspace(c = fgetc(in)));
+
         if (c == EOF) {
             error_exit("Invalid format - reached an unexpected end of file.");
         }
+
         // Identify the command
         if (strcmp(cmd, "OPENQASM") == 0) {}
         else if (strcmp(cmd, "include") == 0) {}
@@ -235,21 +241,30 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
                     }
                     continue;
                 }
+
+                //FIXME: make prettier
+                while ((c = fgetc(in)) != '{') {
+                    if (c == EOF) {
+                        error_exit("Invalid format - reached an unexpected end of file.");
+                    }
+                }
                 is_symbolic = true; // TODO: allow nested loops?
 
                 symbc = *circ;
                 mtbdd_protect(&symbc);
-                map = symb_init(&symbc, &map_size);
+                symb_init(&symbc, &m);
+                continue; // ';' not expected
             }
-            if (strcmp(cmd, "}") == 0) {
+            else if (strcmp(cmd, "}") == 0) {
                 if (!is_symbolic) {
                     error_exit("Invalid loop syntax.");
                 }
                 is_symbolic = false;
-                symb_calc(circ, symbc, map, map_size, iters); // TODO: should request gc call?
+                symb_calc(circ, symbc, &m, iters); // TODO: should request gc call?
                 mtbdd_unprotect(&symbc);
+                continue; // ';' not expected
             }
-            if (strcmp(cmd, "measure") == 0) {
+            else if (strcmp(cmd, "measure") == 0) {
                 uint32_t qt = get_q_num(in);
                 uint32_t ct = get_q_num(in);
                 *is_measure = true;
@@ -257,7 +272,7 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
             }
             else if (strcmp(cmd, "x") == 0) {
                 uint32_t qt = get_q_num(in);
-                is_symbolic? gate_symb_x(circ, qt) : gate_x(circ, qt);
+                is_symbolic? gate_symb_x(&symbc, qt) : gate_x(circ, qt);
             }
             else if (strcmp(cmd, "y") == 0) {
                 uint32_t qt = get_q_num(in);
@@ -269,7 +284,7 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
             }
             else if (strcmp(cmd, "h") == 0) {
                 uint32_t qt = get_q_num(in);
-                is_symbolic? gate_symb_h(circ, qt) : gate_h(circ, qt);
+                is_symbolic? gate_symb_h(&symbc, qt) : gate_h(circ, qt);
             }
             else if (strcmp(cmd, "s") == 0) {
                 uint32_t qt = get_q_num(in);
@@ -323,7 +338,7 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
                 error_exit("Invalid format - reached an unexpected end of file.");
             }
         }
-    }
+    } // while
 }
 
 void measure_all(unsigned long samples, FILE *output, MTBDD circ, int n, int *bits_to_measure)
