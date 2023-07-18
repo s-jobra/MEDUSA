@@ -109,39 +109,45 @@ uint64_t my_leaf_symb_hash(const uint64_t ldata_raw, const uint64_t seed)
 }
 
 /* CUSTOM MTBDD OPERATIONS */
-//TODO: should be next_var one global variable? maybe better as just a param of the function
 TASK_IMPL_2(MTBDD, mtbdd_to_symb, MTBDD, a, size_t, raw_m)
 {
-    // Partial function check
-    if (a == mtbdd_false) return mtbdd_false;
-
-    if (mtbdd_isleaf(a)) {
-        vmap_t* m = (vmap_t*) raw_m;
-
-        cnum *orig_data = (cnum*) mtbdd_getvalue(a);
-        mpz_init_set(m->map[m->next_var], orig_data->a);
-        mpz_init_set(m->map[m->next_var + 1], orig_data->b);
-        mpz_init_set(m->map[m->next_var + 2], orig_data->c);
-        mpz_init_set(m->map[m->next_var + 3], orig_data->d);
-
-        lsymb_t *new_data = my_malloc(sizeof(lsymb_t)); //TODO: should be malloc? (check where is the free)
-        new_data->a = st_create(m->next_var);
-        new_data->b = st_create(m->next_var + 1);
-        new_data->c = st_create(m->next_var + 2);
-        new_data->d = st_create(m->next_var + 3);
-
-        new_data->var_a = m->next_var;
-        new_data->var_b = m->next_var + 1;
-        new_data->var_c = m->next_var + 2;
-        new_data->var_d = m->next_var + 3;
-
-        MTBDD res = mtbdd_makeleaf(ltype_s_id, (uint64_t) new_data);
-        m->next_var += 4;
-
-        return res;
+    if (a != mtbdd_false && !mtbdd_isleaf(a)) {
+        return mtbdd_invalid; // Recurse deeper
     }
 
-    return mtbdd_invalid; // Recurse deeper
+    vmap_t* m = (vmap_t*) raw_m;
+    vars_t var_a = m->next_var;
+    vars_t var_b = m->next_var + 1;
+    vars_t var_c = m->next_var + 2;
+    vars_t var_d = m->next_var + 3;
+
+    // Partial function check
+    if (a == mtbdd_false) {
+        mpz_inits(m->map[var_a], m->map[var_b], m->map[var_c], m->map[var_d], 0);
+    }
+    else if (mtbdd_isleaf(a)) {
+        cnum *orig_data = (cnum*) mtbdd_getvalue(a);
+        mpz_init_set(m->map[var_a], orig_data->a);
+        mpz_init_set(m->map[var_b], orig_data->b);
+        mpz_init_set(m->map[var_c], orig_data->c);
+        mpz_init_set(m->map[var_d], orig_data->d);
+    }
+
+    lsymb_t *new_data = my_malloc(sizeof(lsymb_t)); //TODO: should be malloc? (check where is the free)
+    new_data->a = st_create(var_a);
+    new_data->b = st_create(var_b);
+    new_data->c = st_create(var_c);
+    new_data->d = st_create(var_d);
+
+    new_data->var_a = var_a;
+    new_data->var_b = var_b;
+    new_data->var_c = var_c;
+    new_data->var_d = var_d;
+
+    MTBDD res = mtbdd_makeleaf(ltype_s_id, (uint64_t) new_data);
+    m->next_var += 4;
+
+    return res;
 }
 
 /**
@@ -206,80 +212,6 @@ VOID_TASK_IMPL_3(mtbdd_update_map, MTBDD, a, coef_t*, map, coef_t*, new_map)
     SYNC(mtbdd_update_map);
 }
 
-// TASK_IMPL_3(MTBDD, mtbdd_update_map_old, MTBDD, a, coef_t*, map, coef_t*, new_map)
-// {
-//     // Partial function check
-//     if (a == mtbdd_false) return mtbdd_false;
-
-//     if (mtbdd_isleaf(a)) {
-//         lsymb_t *data = (lsymb_t*) mtbdd_getvalue(a);
-
-//         coef_t *res_a = eval_var(data->a, map);
-//         coef_t *res_b = eval_var(data->b, map);
-//         coef_t *res_c = eval_var(data->c, map);
-//         coef_t *res_d = eval_var(data->d, map);
-
-//         mpz_init_set(new_map[data->var_a], *res_a);
-//         mpz_init_set(new_map[data->var_b], *res_b);
-//         mpz_init_set(new_map[data->var_c], *res_c);
-//         mpz_init_set(new_map[data->var_d], *res_d);
-
-//         mpz_clears(*res_a, *res_b, *res_c, *res_d, NULL);
-//         free(res_a);
-//         free(res_b);
-//         free(res_c);
-//         free(res_d);
-
-//         return a;
-//     }
-
-//     return mtbdd_invalid; // Recurse deeper
-//     ////////////////////////////////////////
-
-//     /* Maybe perform garbage collection */
-//     sylvan_gc_test();
-
-//     /* Count operation */
-//     sylvan_stats_count(MTBDD_UAPPLY);
-
-//     /* Check cache */
-//     MTBDD result;
-//     if (cache_get3(CACHE_MTBDD_UAPPLY, dd, (size_t)op, param, &result)) {
-//         sylvan_stats_count(MTBDD_UAPPLY_CACHED);
-//         return result;
-//     }
-
-//     /* Check terminal case */
-//     result = WRAP(op, dd, param);
-//     if (result != mtbdd_invalid) {
-//         /* Store in cache */
-//         if (cache_put3(CACHE_MTBDD_UAPPLY, dd, (size_t)op, param, result)) {
-//             sylvan_stats_count(MTBDD_UAPPLY_CACHEDPUT);
-//         }
-
-//         return result;
-//     }
-
-//     /* Get cofactors */
-//     mtbddnode_t ndd = MTBDD_GETNODE(dd);
-//     MTBDD ddlow = node_getlow(dd, ndd);
-//     MTBDD ddhigh = node_gethigh(dd, ndd);
-
-//     /* Recursive */
-//     mtbdd_refs_spawn(SPAWN(mtbdd_uapply, ddhigh, op, param));
-//     MTBDD low = mtbdd_refs_push(CALL(mtbdd_uapply, ddlow, op, param));
-//     MTBDD high = mtbdd_refs_sync(SYNC(mtbdd_uapply));
-//     mtbdd_refs_pop(1);
-//     result = mtbdd_makenode(mtbddnode_getvariable(ndd), low, high);
-
-//     /* Store in cache */
-//     if (cache_put3(CACHE_MTBDD_UAPPLY, dd, (size_t)op, param, result)) {
-//         sylvan_stats_count(MTBDD_UAPPLY_CACHEDPUT);
-//     }
-
-//     return result;
-// }
-
 TASK_IMPL_2(MTBDD, mtbdd_from_symb, MTBDD, a, size_t, raw_map)
 {
     // Partial function check
@@ -294,6 +226,11 @@ TASK_IMPL_2(MTBDD, mtbdd_from_symb, MTBDD, a, size_t, raw_map)
         mpz_init_set(new_data.b, map[data->var_b]);
         mpz_init_set(new_data.c, map[data->var_c]);
         mpz_init_set(new_data.d, map[data->var_d]);
+
+        if (!mpz_cmp_si(new_data.a, 0) && !mpz_cmp_si(new_data.b, 0) && !mpz_cmp_si(new_data.c, 0) && !mpz_cmp_si(new_data.d, 0)) {
+            mpz_clears(new_data.a, new_data.b, new_data.c, new_data.d, NULL);
+            return (MTBDD)NULL;
+        }
         
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &new_data);
         mpz_clears(new_data.a, new_data.b, new_data.c, new_data.d, NULL);

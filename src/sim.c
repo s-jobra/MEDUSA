@@ -32,7 +32,7 @@ static void circuit_init(MTBDD *a, const uint32_t n) //TODO: move to custom_mtbd
  */
 static void symb_init(MTBDD *cc, vmap_t *m) //TODO: move to custom_mtbdd_symb ?
 {
-    m->msize = 4 * mtbdd_leafcount(*cc); // does not count F, multiplied because one var is needed for every coefficient
+    m->msize = 4 * (mtbdd_leafcount(*cc) + 1); // does not count F, multiplied because one var is needed for every coefficient
     m->map = my_malloc(sizeof(coef_t) * m->msize);
     m->next_var = 0;
 
@@ -61,12 +61,15 @@ static void symb_calc(MTBDD *circ, MTBDD symbc, vmap_t *m, uint32_t iters) //TOD
 
     *circ = my_mtbdd_from_symb(symbc, (size_t) m->map);
 
-    free(temp_map);
-    
     mpz_mul_ui(cs_k, cs_k, (unsigned long)iters);
     mpz_add(c_k, c_k, cs_k);
 
+    for (int j = 0; j < m->msize; j++) {
+        mpz_clear(m->map[j]);
+    }
+    free(temp_map);
     mpz_clear(cs_k);
+
 }
 
 /**
