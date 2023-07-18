@@ -44,21 +44,21 @@ static void symb_init(MTBDD *cc, vmap_t *m) //TODO: move to custom_mtbdd_symb ?
 /**
  * Updates the circuits MTBDD according to the symbolic MTBDD, variable mapping and the number of iterations
  */
-static void symb_calc(MTBDD *circ, MTBDD symbc, vmap_t *m, uint32_t iters)
+static void symb_calc(MTBDD *circ, MTBDD symbc, vmap_t *m, uint32_t iters) //TODO: move to custom_mtbdd_symb ?
 {
     coef_t *temp_map = my_malloc(sizeof(coef_t) * m->msize);
 
-    //TODO:FIXME:
-    //FILE *out = fopen("res.dot", "w");
-    //mtbdd_fprintdot(out, symbc);
-    //fclose(out);
-
-    for (uint32_t i = 0; i < iters; i++) { //TODO:FIXME:
-        //my_mtbdd_update_map(symbc, map, temp_map); FIXME: redo as a recursive function?? 
-        //FIXME: plus mpz clears all?
-        //free(m->map);
-        //m->map = temp_map; 
+    for (uint32_t i = 0; i < iters; i++) {
+        my_mtbdd_update_map(symbc, m->map, temp_map);
+        if (i == 0) {
+            for (int j = 0; j < m->msize; j++) {
+                mpz_clear(m->map[j]);
+            }
+            free(m->map);
+        }
+        m->map = temp_map; 
     }
+
     *circ = my_mtbdd_from_symb(symbc, (size_t) m->map);
 
     free(temp_map);

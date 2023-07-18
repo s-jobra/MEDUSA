@@ -98,7 +98,7 @@ TASK_DECL_2(MTBDD, mtbdd_to_symb, MTBDD, size_t);
 #define my_mtbdd_to_symb(t, m) mtbdd_uapply(t, TASK(mtbdd_to_symb), m)
 
 
-TASK_DECL_3(MTBDD, mtbdd_update_map, MTBDD, coef_t*,  coef_t*);
+VOID_TASK_DECL_3(mtbdd_update_map, MTBDD, coef_t*, coef_t*);
 /**
  * Simulates one symbolic iteration (single update of the map values)
  * 

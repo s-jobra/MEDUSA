@@ -29,6 +29,11 @@ typedef struct stree {
 } stree_t;
 
 /**
+ * Max. string size when converting expression from tree to string
+ */
+#define MAX_ST_TO_STR_LEN 2000
+
+/**
  * Creates a new tree for the given complex number coefficient variable
  */
 stree_t* st_create(vars_t v);
@@ -52,6 +57,11 @@ void st_coef_mul(stree_t *t, int64_t c);
  * Returns true if the two trees are equal
  */
 bool st_cmp(stree_t *a, stree_t *b);
+
+/**
+ * Returns the string representation of the expression represented by tree
+ */
+char* st_to_str(stree_t *data);
 
 /**
  * Deletes the given tree

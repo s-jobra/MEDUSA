@@ -78,6 +78,44 @@ bool st_cmp(stree_t *a, stree_t *b) {
     return false;
 }
 
+char* st_to_str(stree_t *t) {
+    char buf[MAX_ST_TO_STR_LEN] = {0};
+    int chars_written;
+
+    if (t->type == ST_VAL) {
+        chars_written = gmp_snprintf(buf, MAX_ST_TO_STR_LEN, "%Zdv[%ld]", t->val->coef, t->val->var);
+    }
+    else {
+        char *l = st_to_str(t->ls);
+        char *r = st_to_str(t->rs);
+
+        if (t->type == ST_ADD) {
+            chars_written = snprintf(buf, MAX_ST_TO_STR_LEN, "(%s + %s)", l, r);
+        }
+        else if (t->type == ST_SUB) {
+            chars_written = snprintf(buf, MAX_ST_TO_STR_LEN, "(%s - %s)", l, r);
+        }
+        else { // ST_MUL
+            chars_written = snprintf(buf, MAX_ST_TO_STR_LEN, "(%s * %s)", l, r);
+        }
+        free(l);
+        free(r);
+    }
+
+    // Was string truncated?
+    if (chars_written >= MAX_ST_TO_STR_LEN) {
+        error_exit("Allocated string length for leaf value output has not been sufficient.\n");
+    }
+    else if (chars_written < 0) {
+        error_exit("An encoding error has occured when producing leaf value output.\n");
+    }
+
+    char *new_buf = (char*)my_malloc((chars_written + 1) * sizeof(char));
+    memcpy(new_buf, buf, chars_written * sizeof(char));
+    new_buf[chars_written] = '\0';
+    return new_buf;
+}
+
 void st_delete(stree_t *t) {
     if (t != NULL) {
         st_delete(t->ls);

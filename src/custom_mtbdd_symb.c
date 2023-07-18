@@ -9,7 +9,7 @@ uint32_t ltype_s_id;
 /**
  * Max. size of string written as leaf value in output file.
  */
-#define MAX_SYMB_LEAF_STR_LEN 10000
+#define MAX_SYMB_LEAF_STR_LEN MAX_ST_TO_STR_LEN * 5
 
 /* SETUP */
 void init_my_leaf_symb()
@@ -68,13 +68,12 @@ char* my_leaf_symb_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf
     (void) complemented;
     lsymb_t *ldata = (lsymb_t*) ldata_raw;
 
-    char ldata_string[MAX_SYMB_LEAF_STR_LEN ] = {0};
+    char ldata_string[MAX_SYMB_LEAF_STR_LEN] = {0};
     
-    //TODO: print the whole expression (tree)?
-    int chars_written = gmp_snprintf(ldata_string, MAX_SYMB_LEAF_STR_LEN , "(1/√2)^(%Zd) * (%ld + %ldω +%ldω² + %ldω³)", \
-                                     cs_k, ldata->var_a, ldata->var_b, ldata->var_c, ldata->var_d);
+    int chars_written = gmp_snprintf(ldata_string, MAX_SYMB_LEAF_STR_LEN, "(1/√2)^(%Zd) * (%s + %sω +%sω² + %sω³)", \
+                                     cs_k, st_to_str(ldata->a), st_to_str(ldata->b), st_to_str(ldata->c), st_to_str(ldata->d));
     // Was string truncated?
-    if (chars_written >= MAX_SYMB_LEAF_STR_LEN ) {
+    if (chars_written >= MAX_SYMB_LEAF_STR_LEN) {
         error_exit("Allocated string length for leaf value output has not been sufficient.\n");
     }
     else if (chars_written < 0) {
@@ -175,10 +174,11 @@ static coef_t* eval_var(stree_t *data,  coef_t* map)
     return res;
 }
 
-TASK_IMPL_3(MTBDD, mtbdd_update_map, MTBDD, a, coef_t*, map, coef_t*, new_map) // TODO: should be an MTBDD task?
+VOID_TASK_IMPL_3(mtbdd_update_map, MTBDD, a, coef_t*, map, coef_t*, new_map)
 {
-    // Partial function check
-    if (a == mtbdd_false) return mtbdd_false;
+    //FIXME: gc + cache?
+
+    if (a == mtbdd_false) return;
 
     if (mtbdd_isleaf(a)) {
         lsymb_t *data = (lsymb_t*) mtbdd_getvalue(a);
@@ -198,12 +198,87 @@ TASK_IMPL_3(MTBDD, mtbdd_update_map, MTBDD, a, coef_t*, map, coef_t*, new_map) /
         free(res_b);
         free(res_c);
         free(res_d);
-
-        return a;
+        return;
     }
 
-    return mtbdd_invalid; // Recurse deeper
+    SPAWN(mtbdd_update_map, mtbdd_gethigh(a), map, new_map);
+    CALL(mtbdd_update_map, mtbdd_getlow(a), map, new_map);
+    SYNC(mtbdd_update_map);
 }
+
+// TASK_IMPL_3(MTBDD, mtbdd_update_map_old, MTBDD, a, coef_t*, map, coef_t*, new_map)
+// {
+//     // Partial function check
+//     if (a == mtbdd_false) return mtbdd_false;
+
+//     if (mtbdd_isleaf(a)) {
+//         lsymb_t *data = (lsymb_t*) mtbdd_getvalue(a);
+
+//         coef_t *res_a = eval_var(data->a, map);
+//         coef_t *res_b = eval_var(data->b, map);
+//         coef_t *res_c = eval_var(data->c, map);
+//         coef_t *res_d = eval_var(data->d, map);
+
+//         mpz_init_set(new_map[data->var_a], *res_a);
+//         mpz_init_set(new_map[data->var_b], *res_b);
+//         mpz_init_set(new_map[data->var_c], *res_c);
+//         mpz_init_set(new_map[data->var_d], *res_d);
+
+//         mpz_clears(*res_a, *res_b, *res_c, *res_d, NULL);
+//         free(res_a);
+//         free(res_b);
+//         free(res_c);
+//         free(res_d);
+
+//         return a;
+//     }
+
+//     return mtbdd_invalid; // Recurse deeper
+//     ////////////////////////////////////////
+
+//     /* Maybe perform garbage collection */
+//     sylvan_gc_test();
+
+//     /* Count operation */
+//     sylvan_stats_count(MTBDD_UAPPLY);
+
+//     /* Check cache */
+//     MTBDD result;
+//     if (cache_get3(CACHE_MTBDD_UAPPLY, dd, (size_t)op, param, &result)) {
+//         sylvan_stats_count(MTBDD_UAPPLY_CACHED);
+//         return result;
+//     }
+
+//     /* Check terminal case */
+//     result = WRAP(op, dd, param);
+//     if (result != mtbdd_invalid) {
+//         /* Store in cache */
+//         if (cache_put3(CACHE_MTBDD_UAPPLY, dd, (size_t)op, param, result)) {
+//             sylvan_stats_count(MTBDD_UAPPLY_CACHEDPUT);
+//         }
+
+//         return result;
+//     }
+
+//     /* Get cofactors */
+//     mtbddnode_t ndd = MTBDD_GETNODE(dd);
+//     MTBDD ddlow = node_getlow(dd, ndd);
+//     MTBDD ddhigh = node_gethigh(dd, ndd);
+
+//     /* Recursive */
+//     mtbdd_refs_spawn(SPAWN(mtbdd_uapply, ddhigh, op, param));
+//     MTBDD low = mtbdd_refs_push(CALL(mtbdd_uapply, ddlow, op, param));
+//     MTBDD high = mtbdd_refs_sync(SYNC(mtbdd_uapply));
+//     mtbdd_refs_pop(1);
+//     result = mtbdd_makenode(mtbddnode_getvariable(ndd), low, high);
+
+//     /* Store in cache */
+//     if (cache_put3(CACHE_MTBDD_UAPPLY, dd, (size_t)op, param, result)) {
+//         sylvan_stats_count(MTBDD_UAPPLY_CACHEDPUT);
+//     }
+
+//     return result;
+// }
 
 TASK_IMPL_2(MTBDD, mtbdd_from_symb, MTBDD, a, size_t, raw_map)
 {
