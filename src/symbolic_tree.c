@@ -2,7 +2,7 @@
 
 // TODO: hash table for shared structures?
 
-stree_t* st_create(vars_t v) {
+stree_t* st_create_val(vars_t v) {
     stree_t *new = my_malloc(sizeof(stree_t));
 
     new->val = my_malloc(sizeof(stnode_val_t));
@@ -18,18 +18,17 @@ stree_t* st_create(vars_t v) {
 
 stree_t* st_init(stree_t *t) {
     stree_t *new = my_malloc(sizeof(stree_t));
-
-    new->val = my_malloc(sizeof(stnode_val_t));  //FIXME: check if should be realloc
-    mpz_init_set(new->val->coef, t->val->coef);
-    new->val->var = t->val->var;
-
     new->type = t->type;
     
     if (new->type == ST_VAL) {
+        new->val = my_malloc(sizeof(stnode_val_t));  //FIXME: check if should be realloc
+        new->val->var = t->val->var;
+        mpz_init_set(new->val->coef, t->val->coef);
         new->ls = NULL;
         new->rs = NULL;
     }
     else {
+        new->val = NULL;
         new->ls = st_init(t->ls);  //FIXME: copy ptr should probably suffice (check if should be realloc)
         new->rs = st_init(t->rs);
     }
@@ -38,13 +37,12 @@ stree_t* st_init(stree_t *t) {
 }
 
 stree_t* st_op(stree_t *a, stree_t *b, stnode_t op) {
-    //FIXME: check if shouldnt free a,b + should be realloc?
-
     stree_t *res = my_malloc(sizeof(stree_t));
     res->val = NULL;
     res->type = op;
-    res->ls = st_init(a);
-    res->rs = st_init(b);
+    res->ls = a;
+    res->rs = b;
+    return res;
 }
 
 void st_coef_mul(stree_t *t, int64_t c) {

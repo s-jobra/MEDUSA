@@ -134,10 +134,10 @@ TASK_IMPL_2(MTBDD, mtbdd_to_symb, MTBDD, a, size_t, raw_m)
     }
 
     lsymb_t *new_data = my_malloc(sizeof(lsymb_t)); //TODO: should be malloc? (check where is the free)
-    new_data->a = st_create(var_a);
-    new_data->b = st_create(var_b);
-    new_data->c = st_create(var_c);
-    new_data->d = st_create(var_d);
+    new_data->a = st_create_val(var_a);
+    new_data->b = st_create_val(var_b);
+    new_data->c = st_create_val(var_c);
+    new_data->d = st_create_val(var_d);
 
     new_data->var_a = var_a;
     new_data->var_b = var_b;

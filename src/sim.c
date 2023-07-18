@@ -69,7 +69,6 @@ static void symb_calc(MTBDD *circ, MTBDD symbc, vmap_t *m, uint32_t iters) //TOD
     }
     free(temp_map);
     mpz_clear(cs_k);
-
 }
 
 /**

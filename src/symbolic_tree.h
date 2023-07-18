@@ -36,7 +36,7 @@ typedef struct stree {
 /**
  * Creates a new tree for the given complex number coefficient variable
  */
-stree_t* st_create(vars_t v);
+stree_t* st_create_val(vars_t v);
 
 /**
  * Creates a new tree and initializes it from the data provided
