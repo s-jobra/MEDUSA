@@ -25,7 +25,7 @@ typedef struct lsymb {
     stree_t *b;
     stree_t *c;
     stree_t *d;
-    vars_t var_a;   // value of the original variable stored
+    vars_t var_a;   // index of the originally stored variable
     vars_t var_b;
     vars_t var_c;
     vars_t var_d;

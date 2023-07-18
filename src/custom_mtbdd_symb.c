@@ -36,6 +36,11 @@ void my_leaf_symb_create(uint64_t *ldata_p_raw)
     new_ldata->c = st_init(orig_ldata->c);
     new_ldata->d = st_init(orig_ldata->d);
 
+    new_ldata->var_a = orig_ldata->var_a;
+    new_ldata->var_b = orig_ldata->var_b;
+    new_ldata->var_c = orig_ldata->var_c;
+    new_ldata->var_d = orig_ldata->var_d;
+
     *ldata_p = new_ldata;
 }
 
@@ -126,7 +131,6 @@ TASK_IMPL_2(MTBDD, mtbdd_to_symb, MTBDD, a, size_t, raw_m)
         new_data->c = st_create(m->next_var + 2);
         new_data->d = st_create(m->next_var + 3);
 
-        //TODO:FIXME: all variables are now 0
         new_data->var_a = m->next_var;
         new_data->var_b = m->next_var + 1;
         new_data->var_c = m->next_var + 2;
