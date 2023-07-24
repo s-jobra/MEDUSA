@@ -219,7 +219,7 @@ void gate_x(MTBDD *a, uint32_t xt)
 
 void gate_y(MTBDD *a, uint32_t xt)
 {
-    if (*a != mtbdd_false) { // check if xt shouldnt' be root
+    if (*a != mtbdd_false) { // check if xt shouldn't be root
         if (xt < mtbdd_getvar(*a)) {
             *a = _mtbdd_makenode(xt, *a, *a);
         }
@@ -229,7 +229,7 @@ void gate_y(MTBDD *a, uint32_t xt)
 
 void gate_z(MTBDD *a, uint32_t xt)
 {
-    if (*a != mtbdd_false) {  // check if xt shouldnt' be root
+    if (*a != mtbdd_false) {  // check if xt shouldn't be root
         if (xt < mtbdd_getvar(*a)) {
             *a = _mtbdd_makenode(xt, *a, *a);
         }

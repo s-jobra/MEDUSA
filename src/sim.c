@@ -72,7 +72,7 @@ static void symb_calc(MTBDD *circ, MTBDD symbc, vmap_t *m, uint32_t iters) //TOD
 }
 
 /**
- * Function for number parsing from the input file (reads the number from in until end character is encountered)
+ * Function for number parsing from the input file (reads the number from the input until the end character is encountered)
  */
 static long parse_num(FILE *in, char end)
 {

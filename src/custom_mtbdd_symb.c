@@ -59,6 +59,7 @@ int my_leaf_symb_equals(const uint64_t ldata_a_raw, const uint64_t ldata_b_raw)
     lsymb_t *ldata_a = (lsymb_t *) ldata_a_raw;
     lsymb_t *ldata_b = (lsymb_t *) ldata_b_raw;
 
+    //TODO: create st infrastructure so that ptr comparison is sufficient?
     return !st_cmp(ldata_a->a, ldata_b->a) && !st_cmp(ldata_a->b, ldata_b->b) && !st_cmp(ldata_a->c, ldata_b->c) \
            && !st_cmp(ldata_a->d, ldata_b->d);
 }
@@ -255,8 +256,6 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_plus, MTBDD*, p_a, MTBDD*, p_b)
     if (mtbdd_isleaf(a) && mtbdd_isleaf(b)) {
         lsymb_t *a_data = (lsymb_t*) mtbdd_getvalue(a);
         lsymb_t *b_data = (lsymb_t*) mtbdd_getvalue(b);
-        
-        //FIXME: assert a,b,c,d in both data are the same var???
 
         lsymb_t res_data;
         res_data.var_a = a_data->var_a;
@@ -298,8 +297,6 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_minus, MTBDD*, p_a, MTBDD*, p_b)
         lsymb_t *a_data = (lsymb_t*) mtbdd_getvalue(a);
         lsymb_t *b_data = (lsymb_t*) mtbdd_getvalue(b);
         
-        //FIXME: assert a,b,c,d in both data are the same var???
-
         lsymb_t res_data;
         res_data.var_a = a_data->var_a;
         res_data.var_b = a_data->var_b;
@@ -357,7 +354,7 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_b_xt_mul, MTBDD, a, uint64_t, xt)
     // If xt, ground the low edge
     if (mtbdd_isnode(a)) {
         if (mtbdd_getvar(a) == (uint32_t)xt) { // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
-            MTBDD res = mtbdd_makenode(xt, mtbdd_false, mtbdd_gethigh(a));
+            MTBDD res = mtbdd_makenode(xt, (MTBDD)NULL, mtbdd_gethigh(a));
             return res;
         }
     }
@@ -369,6 +366,16 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_b_xt_mul, MTBDD, a, uint64_t, xt)
     return mtbdd_invalid; // Recurse deeper
 }
 
+MTBDD mtbdd_symb_b_xt_mul_wrapper(MTBDD t, uint32_t xt)
+{
+    if (t != mtbdd_false) { // check if xt shouldn't be root
+        if (xt < mtbdd_getvar(t)) {
+            t = _mtbdd_makenode(xt, t, t);
+        }
+    }
+    return mtbdd_uapply(t, TASK(mtbdd_symb_b_xt_mul), xt);
+}
+
 TASK_IMPL_2(MTBDD, mtbdd_symb_b_xt_comp_mul, MTBDD, a, uint64_t, xt)
 {
     // Partial function check
@@ -377,7 +384,7 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_b_xt_comp_mul, MTBDD, a, uint64_t, xt)
     // If xt, ground the high edge
     if (mtbdd_isnode(a)) {
         if (mtbdd_getvar(a) == (uint32_t)xt) { // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
-            MTBDD res = mtbdd_makenode(xt, mtbdd_getlow(a), mtbdd_false);
+            MTBDD res = mtbdd_makenode(xt, mtbdd_getlow(a), (MTBDD)NULL);
             return res;
         }
     }
@@ -387,6 +394,16 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_b_xt_comp_mul, MTBDD, a, uint64_t, xt)
     }
 
     return mtbdd_invalid; // Recurse deeper
+}
+
+MTBDD mtbdd_symb_b_xt_comp_mul_wrapper(MTBDD t, uint32_t xt)
+{
+    if (t != mtbdd_false) { // check if xt shouldn't be root
+        if (xt < mtbdd_getvar(t)) {
+            t = _mtbdd_makenode(xt, t, t);
+        }
+    }
+    return mtbdd_uapply(t, TASK(mtbdd_symb_b_xt_comp_mul), xt);
 }
 
 /* end of "custom_mtbdd_symb.c" */
