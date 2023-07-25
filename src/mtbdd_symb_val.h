@@ -1,35 +1,28 @@
 #include <sylvan.h>
 #include <gmp.h>
-#include "custom_mtbdd.h"
+#include "mtbdd.h"
+#include "mtbdd_symb_map.h"
 #include "leaf_hash.h"
 #include "symbolic_tree.h"
 #include "error.h"
 
-#ifndef CUSTOM_MTBDD_SYMB_H
-#define CUSTOM_MTBDD_SYMB_H
-
-/*
- * Custom leaf implementation is taken from: https://github.com/MichalHe/sylvan-custom-leaf-example
- */
+#ifndef MTBDD_SYMB_VAL_H
+#define MTBDD_SYMB_VAL_H
 
 /**
- * Global variable for my custom symbolic leaf type id
+ * Global variable for my custom symbolic expression mtbdd leaf type id
  */
-extern uint32_t ltype_s_id;
+extern uint32_t ltype_symb_expr_id;
 
 /**
- * MTBDD leaf value for symbolic representation
+ * MTBDD symbolic leaf value
  */
-typedef struct lsymb {
+typedef struct sl_val {
     stree_t *a;  // ptr to a tree representing the current expression
     stree_t *b;
     stree_t *c;
     stree_t *d;
-    vars_t var_a;   // index of the originally stored variable
-    vars_t var_b;
-    vars_t var_c;
-    vars_t var_d;
-} lsymb_t;
+} sl_val_t;
 
 /**
  * Type for the coefficient k for symbolic representation
@@ -41,82 +34,73 @@ typedef mpz_t coefs_k_t;
  */
 extern coefs_k_t cs_k;
 
-/**
- * Type for saving and using the symbolic variable to value mapping
- */
-typedef struct vmap {
-    coef_t *map;        // array for saving the variable mapping to their values (complex numbers)
-    size_t msize; 
-    vars_t next_var;    // next variable index to be assigned
-} vmap_t;
-
 /* SETUP */
 /**
- * Function for my custom symbolic leaf setup in Sylvan.
+ * Function for my custom symbolic expression leaf setup in Sylvan.
  */
-void init_my_leaf_symb();
+void init_my_leaf_symb_expr();
 
 /* CUSTOM HANDLES */
 /**
- * Handle called when my new custom symbolic leaf is created and is not found in the internal table.
+ * Handle called when my new custom symbolic expression leaf is created and is not found in the internal table.
  * It allocates and initializes custom leaf data from the given data pointer.
  */
-void my_leaf_symb_create(uint64_t *ldata_p_raw);
+void my_leaf_symb_e_create(uint64_t *ldata_p_raw);
 
 /**
- * Handle called when my custom symbolic leaf is destroyed during garbage collection.
+ * Handle called when my custom symbolic expression leaf is destroyed during garbage collection.
  */
-void my_leaf_symb_destroy(uint64_t ldata);
+void my_leaf_symb_e_destroy(uint64_t ldata);
 
 /**
- * Handle called when comparing two custom symbolic leaves.
+ * Handle called when comparing two custom symbolic expression leaves.
  */
-int my_leaf_symb_equals(const uint64_t ldata_a_raw, const uint64_t ldata_b_raw);
+int my_leaf_symb_e_equals(const uint64_t ldata_a_raw, const uint64_t ldata_b_raw);
 
 /**
- * Handle for creating string representation of the symbolic leaf (for debugging purposes).
+ * Handle for creating string representation of the symbolic expression leaf (for debugging purposes).
  */
-char* my_leaf_symb_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf, size_t sylvan_bufsize);
+char* my_leaf_symb_e_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf, size_t sylvan_bufsize);
 
 /**
- * Hashing function for calculating symbolic leaf's hash.
+ * Hashing function for calculating symbolic expression leaf's hash.
  */
-uint64_t my_leaf_symb_hash(const uint64_t ldata_raw, const uint64_t seed);
+uint64_t my_leaf_symb_e_hash(const uint64_t ldata_raw, const uint64_t seed);
 
 /* CUSTOM MTBDD OPERATIONS */
 // Basic operations:
 
-TASK_DECL_2(MTBDD, mtbdd_to_symb, MTBDD, size_t);
+TASK_DECL_2(MTBDD, mtbdd_map_to_symb_val, MTBDD, size_t);
 /**
- * Converts the given MTBDD to a symbolic MTBDD
+ * Converts the given symbolic map MTBDD to a symbolic value MTBDD
  * 
  * @param t a regular MTBDD
  * 
- * @param m pointer to a vmap_t mapping casted to size_t (needed for the TASK implementation)
- * 
  */
-#define my_mtbdd_to_symb(t, m) mtbdd_uapply(t, TASK(mtbdd_to_symb), m)
+#define my_mtbdd_map_to_symb_val(t) mtbdd_uapply(t, TASK(mtbdd_map_to_symb_val), 0)
 
 
-VOID_TASK_DECL_3(mtbdd_update_map, MTBDD, coef_t*, coef_t*);
+VOID_TASK_DECL_4(mtbdd_update_map, MTBDD, MTBDD, coef_t*, coef_t*);
 /**
  * Simulates one symbolic iteration (single update of the map values)
  * 
- * @param t a symbolic MTBDD
+ * @param mtbdd_map a symbolic map MTBDD
+ * 
+ * @param mtbdd_val a symbolic value MTBDD
  * 
  * @param map array with the variable mapping to their values (complex numbers)
  * 
  * @param new_map array for storing the new variable mapping
  * 
  */
-#define my_mtbdd_update_map(t, map, new_map) RUN(mtbdd_update_map, t, map, new_map)
+#define my_mtbdd_update_map(mtbdd_map, mtbdd_val, map, new_map) RUN(mtbdd_update_map, mtbdd_map, mtbdd_val, map, new_map)
 
 
 TASK_DECL_2(MTBDD, mtbdd_from_symb, MTBDD, size_t);
 /**
  * Converts the given symbolic MTBDD to a regular MTBDD according to the variable mapping
  * 
- * @param t a symbolic MTBDD
+ * @param t a symbolic map MTBDD
  * 
  * @param map array with the variable mapping to their values casted to size_t (needed for the TASK implementation)
  * 
@@ -210,4 +194,4 @@ MTBDD mtbdd_symb_b_xt_comp_mul_wrapper(MTBDD t, uint32_t xt);
 #define my_mtbdd_symb_b_xt_comp_mul(t, xt) mtbdd_symb_b_xt_comp_mul_wrapper(t, xt)
 
 #endif
-/* end of "custom_mtbdd_symb.h" */
+/* end of "mtbdd_symb_val.h" */

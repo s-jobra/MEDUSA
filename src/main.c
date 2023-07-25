@@ -45,7 +45,8 @@ int main(int argc, char *argv[])
 
     init_sylvan();
     init_my_leaf();
-    init_my_leaf_symb(); //FIXME: do conditionally
+    init_my_leaf_symb_expr(); //FIXME: do conditionally
+    init_my_leaf_symb_map();
 
     FILE *out = fopen(OUT_FILE".dot", "w");
     if (out == NULL) {
@@ -68,7 +69,7 @@ int main(int argc, char *argv[])
 
     clock_gettime(CLOCK_MONOTONIC, &t_finish); // End the timer
     
-    mtbdd_fprintdot(out, circ);
+    //TODO:FIXME:mtbdd_fprintdot(out, circ);
     mpz_clear(c_k);
 
     fclose(out);

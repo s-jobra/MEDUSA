@@ -1,4 +1,4 @@
-#include "custom_mtbdd_symb.h"
+#include "mtbdd_symb_val.h"
 #include "gates.h"
 
 #ifndef GATES_SYMB_H

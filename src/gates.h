@@ -1,4 +1,4 @@
-#include "custom_mtbdd.h"
+#include "mtbdd.h"
 
 #ifndef GATES_H
 #define GATES_H

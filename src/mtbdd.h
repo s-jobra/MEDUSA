@@ -4,8 +4,8 @@
 #include "leaf_hash.h"
 #include "error.h"
 
-#ifndef CUSTOM_MTBDD_H
-#define CUSTOM_MTBDD_H
+#ifndef MTBDD_H
+#define MTBDD_H
 
 /*
  * Custom leaf implementation is taken from: https://github.com/MichalHe/sylvan-custom-leaf-example
@@ -279,4 +279,4 @@ MTBDD b_xt_comp_create(uint32_t xt);
         (end > target && start < target)? (1 << (end - start - 2)) : (1 << (end - start -1))
 
 #endif
-/* end of "custom_mtbdd.h" */
+/* end of "mtbdd.h" */

@@ -1,0 +1,156 @@
+#include "mtbdd_symb_map.h"
+
+#define MAX_SYMB_MAP_LEAF_STR_LEN 1000
+
+uint32_t ltype_symb_map_id;
+
+void vmap_init(vmap_t *vm, size_t size)
+{
+    vm = my_malloc(sizeof(vmap_t));
+    vm->msize = size;
+    vm->map = my_malloc(sizeof(coef_t) * size);
+    vm->next_var = 0;
+}
+
+void vmap_clear(vmap_t *vm)
+{
+    for (int i = 0; i < vm->msize; i++) {
+        mpz_clear(vm->map[i]);
+    }
+    free(vm->map);
+    vm->msize = 0;
+}
+
+void vmap_delete(vmap_t *vm)
+{
+    vmap_clear(vm);
+    free(vm);
+}
+
+/* SETUP */
+void init_my_leaf_symb_map()
+{
+    ltype_symb_map_id = sylvan_mt_create_type();
+
+    sylvan_mt_set_create(ltype_symb_map_id, my_leaf_symb_m_create);
+    sylvan_mt_set_destroy(ltype_symb_map_id, my_leaf_symb_m_destroy);
+    sylvan_mt_set_equals(ltype_symb_map_id, my_leaf_symb_m_equals);
+    sylvan_mt_set_to_str(ltype_symb_map_id, my_leaf_symb_m_to_str);
+    sylvan_mt_set_hash(ltype_symb_map_id, my_leaf_symb_m_hash);
+}
+
+/* CUSTOM HANDLES */
+void my_leaf_symb_m_create(uint64_t *ldata_p_raw)
+{
+    sl_map_t** ldata_p = (sl_map_t**)ldata_p_raw; // Leaf data type is uint64_t, we store there ptr to our actual data
+    
+    sl_map_t* orig_ldata = *ldata_p;
+    sl_map_t* new_ldata = (sl_map_t*)my_malloc(sizeof(sl_map_t));
+
+    new_ldata->va = orig_ldata->va;
+    new_ldata->vb = orig_ldata->vb;
+    new_ldata->vc = orig_ldata->vc;
+    new_ldata->vd = orig_ldata->vd;
+
+    *ldata_p = new_ldata;
+}
+
+void my_leaf_symb_m_destroy(uint64_t ldata)
+{
+    sl_map_t *data_p = (sl_map_t*) ldata; // Data in leaf = pointer to my data
+    free(data_p);
+}
+
+int my_leaf_symb_m_equals(const uint64_t ldata_a_raw, const uint64_t ldata_b_raw)
+{
+    sl_map_t *ldata_a = (sl_map_t*) ldata_a_raw;
+    sl_map_t *ldata_b = (sl_map_t*) ldata_b_raw;
+
+    return (ldata_a->va == ldata_b->va) && (ldata_a->vb == ldata_b->vb) && (ldata_a->vc == ldata_b->vc) \
+           && (ldata_a->vd == ldata_b->vd);
+}
+
+char* my_leaf_symb_m_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf, size_t sylvan_bufsize)
+{
+    (void) complemented;
+    sl_map_t *ldata = (sl_map_t*) ldata_raw;
+
+    char ldata_string[MAX_SYMB_MAP_LEAF_STR_LEN] = {0};
+    
+    int chars_written = snprintf(ldata_string, MAX_SYMB_MAP_LEAF_STR_LEN, "(v[%ld], v[%ld]ω, v[%ld]ω², v[%ld]ω³)", \
+                                 ldata->va, ldata->vb, ldata->vc, ldata->vd);
+    // Was string truncated?
+    if (chars_written >= MAX_SYMB_MAP_LEAF_STR_LEN) {
+        error_exit("Allocated string length for leaf value output has not been sufficient.\n");
+    }
+    else if (chars_written < 0) {
+        error_exit("An encoding error has occured when producing leaf value output.\n");
+    }
+
+    // Is buffer large enough?
+    if (chars_written < sylvan_bufsize) {
+        memcpy(sylvan_buf, ldata_string, chars_written * sizeof(char));
+        sylvan_buf[chars_written] = '\0';
+        return sylvan_buf;
+    }
+    
+    // Else return newly allocated string
+    char *new_buf = (char*)my_malloc((chars_written + 1) * sizeof(char));
+    memcpy(new_buf, ldata_string, chars_written * sizeof(char));
+    new_buf[chars_written] = '\0';
+    return new_buf;
+}
+
+uint64_t my_leaf_symb_m_hash(const uint64_t ldata_raw, const uint64_t seed)
+{
+    sl_map_t *ldata = (sl_map_t*) ldata_raw;
+
+    uint64_t val = seed;
+    val = MY_HASH_COMB_SYMB(val, ldata->va);
+    val = MY_HASH_COMB_SYMB(val, ldata->vb);
+    val = MY_HASH_COMB_SYMB(val, ldata->vc);
+    val = MY_HASH_COMB_SYMB(val, ldata->vd);
+    //FIXME: check performance - needed? val = MY_HASH_COMB_SYMB(val, cs_k);
+
+    return val;
+}
+
+/* CUSTOM MTBDD OPERATIONS */
+TASK_IMPL_2(MTBDD, mtbdd_to_symb_map, MTBDD, a, size_t, raw_m)
+{
+    if (a != mtbdd_false && !mtbdd_isleaf(a)) {
+        return mtbdd_invalid; // Recurse deeper
+    }
+
+    vmap_t* m = (vmap_t*) raw_m;
+    vars_t var_a = m->next_var;
+    vars_t var_b = m->next_var + 1;
+    vars_t var_c = m->next_var + 2;
+    vars_t var_d = m->next_var + 3;
+
+    // Partial function check
+    if (a == mtbdd_false) {
+        mpz_inits(m->map[var_a], m->map[var_b], m->map[var_c], m->map[var_d], 0);
+    }
+    else if (mtbdd_isleaf(a)) {
+        cnum *orig_data = (cnum*) mtbdd_getvalue(a);
+        mpz_init_set(m->map[var_a], orig_data->a);
+        mpz_init_set(m->map[var_b], orig_data->b);
+        mpz_init_set(m->map[var_c], orig_data->c);
+        mpz_init_set(m->map[var_d], orig_data->d);
+    }
+
+    sl_map_t *new_data = my_malloc(sizeof(sl_map_t)); //TODO: should be malloc? (check where is the free)
+
+    new_data->va = var_a;
+    new_data->vb = var_b;
+    new_data->vc = var_c;
+    new_data->vd = var_d;
+
+    MTBDD res = mtbdd_makeleaf(ltype_symb_map_id, (uint64_t) new_data);
+    m->next_var += 4;
+
+    return res;
+}
+
+/* end of "mtbdd_symb_map.c" */

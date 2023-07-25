@@ -1,4 +1,4 @@
-#include "custom_mtbdd.h"
+#include "mtbdd.h"
 
 /*
  * Custom leaf implementation is taken from: https://github.com/MichalHe/sylvan-custom-leaf-example
@@ -510,4 +510,4 @@ TASK_IMPL_4(prob_t, mtbdd_prob_sum, MTBDD, a, uint32_t, xt, char*, curr_state, i
     return res;
 }
 
-/* end of "custom_mtbdd.c" */
+/* end of "mtbdd.c" */

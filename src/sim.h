@@ -2,8 +2,8 @@
 #include <stdbool.h>
 #include <errno.h>
 
-#include "custom_mtbdd.h"
-#include "custom_mtbdd_symb.h"
+#include "mtbdd.h"
+#include "mtbdd_symb_val.h"
 #include "gates.h"
 #include "gates_symb.h"
 #include "error.h"
@@ -14,6 +14,15 @@
 
 #define CMD_MAX_LEN 10 // Max. supported length of qasm command
 #define NUM_MAX_LEN 25 // Max. number of characters in a parsed number
+
+/**
+ * Type for encapsulating the mtbdd tuple and map function needed for symbolic representation
+ */
+typedef struct mtbdd_symb {
+    MTBDD map;
+    MTBDD val;
+    vmap_t *vm;
+} mtbdd_symb_t;
 
 /**
  * Function parses a given QASM file and simulates it.

@@ -6,6 +6,7 @@
 #ifndef SYMBOLIC_TREE_H
 #define SYMBOLIC_TREE_H
 
+//FIXME: add comments
 typedef mpz_t coefs_t;
 typedef uint64_t vars_t;
 

@@ -1,10 +1,6 @@
-#include "custom_mtbdd_symb.h"
+#include "mtbdd_symb_val.h"
 
-/*
- * Custom leaf implementation is taken from: https://github.com/MichalHe/sylvan-custom-leaf-example
- */
-
-uint32_t ltype_s_id;
+uint32_t ltype_symb_expr_id;
 
 /**
  * Max. size of string written as leaf value in output file.
@@ -12,41 +8,36 @@ uint32_t ltype_s_id;
 #define MAX_SYMB_LEAF_STR_LEN MAX_ST_TO_STR_LEN * 5
 
 /* SETUP */
-void init_my_leaf_symb()
+void init_my_leaf_symb_expr()
 {
-    ltype_s_id = sylvan_mt_create_type();
+    ltype_symb_expr_id = sylvan_mt_create_type();
 
-    sylvan_mt_set_create(ltype_s_id, my_leaf_symb_create);
-    sylvan_mt_set_destroy(ltype_s_id, my_leaf_symb_destroy);
-    sylvan_mt_set_equals(ltype_s_id, my_leaf_symb_equals);
-    sylvan_mt_set_to_str(ltype_s_id, my_leaf_symb_to_str);
-    sylvan_mt_set_hash(ltype_s_id, my_leaf_symb_hash);
+    sylvan_mt_set_create(ltype_symb_expr_id, my_leaf_symb_e_create);
+    sylvan_mt_set_destroy(ltype_symb_expr_id, my_leaf_symb_e_destroy);
+    sylvan_mt_set_equals(ltype_symb_expr_id, my_leaf_symb_e_equals);
+    sylvan_mt_set_to_str(ltype_symb_expr_id, my_leaf_symb_e_to_str);
+    sylvan_mt_set_hash(ltype_symb_expr_id, my_leaf_symb_e_hash);
 }
 
 /* CUSTOM HANDLES */
-void my_leaf_symb_create(uint64_t *ldata_p_raw)
+void my_leaf_symb_e_create(uint64_t *ldata_p_raw)
 {
-    lsymb_t** ldata_p = (lsymb_t**)ldata_p_raw; // Leaf data type is uint64_t, we store there ptr to our actual data
+    sl_val_t** ldata_p = (sl_val_t**)ldata_p_raw; // Leaf data type is uint64_t, we store there ptr to our actual data
     
-    lsymb_t* orig_ldata = *ldata_p;
-    lsymb_t* new_ldata = (lsymb_t*)my_malloc(sizeof(lsymb_t));
+    sl_val_t* orig_ldata = *ldata_p;
+    sl_val_t* new_ldata = (sl_val_t*)my_malloc(sizeof(sl_val_t));
 
     new_ldata->a = st_init(orig_ldata->a);
     new_ldata->b = st_init(orig_ldata->b);
     new_ldata->c = st_init(orig_ldata->c);
     new_ldata->d = st_init(orig_ldata->d);
 
-    new_ldata->var_a = orig_ldata->var_a;
-    new_ldata->var_b = orig_ldata->var_b;
-    new_ldata->var_c = orig_ldata->var_c;
-    new_ldata->var_d = orig_ldata->var_d;
-
     *ldata_p = new_ldata;
 }
 
-void my_leaf_symb_destroy(uint64_t ldata)
+void my_leaf_symb_e_destroy(uint64_t ldata)
 {
-    lsymb_t *data_p = (lsymb_t*) ldata; // Data in leaf = pointer to my data
+    sl_val_t *data_p = (sl_val_t*) ldata; // Data in leaf = pointer to my data
     st_delete(data_p->a);
     st_delete(data_p->b);
     st_delete(data_p->c);
@@ -54,20 +45,20 @@ void my_leaf_symb_destroy(uint64_t ldata)
     free(data_p);
 }
 
-int my_leaf_symb_equals(const uint64_t ldata_a_raw, const uint64_t ldata_b_raw)
+int my_leaf_symb_e_equals(const uint64_t ldata_a_raw, const uint64_t ldata_b_raw)
 {
-    lsymb_t *ldata_a = (lsymb_t *) ldata_a_raw;
-    lsymb_t *ldata_b = (lsymb_t *) ldata_b_raw;
+    sl_val_t *ldata_a = (sl_val_t *) ldata_a_raw;
+    sl_val_t *ldata_b = (sl_val_t *) ldata_b_raw;
 
     //TODO: create st infrastructure so that ptr comparison is sufficient?
     return !st_cmp(ldata_a->a, ldata_b->a) && !st_cmp(ldata_a->b, ldata_b->b) && !st_cmp(ldata_a->c, ldata_b->c) \
            && !st_cmp(ldata_a->d, ldata_b->d);
 }
 
-char* my_leaf_symb_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf, size_t sylvan_bufsize)
+char* my_leaf_symb_e_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf, size_t sylvan_bufsize)
 {
     (void) complemented;
-    lsymb_t *ldata = (lsymb_t*) ldata_raw;
+    sl_val_t *ldata = (sl_val_t*) ldata_raw;
 
     char ldata_string[MAX_SYMB_LEAF_STR_LEN] = {0};
     
@@ -95,60 +86,43 @@ char* my_leaf_symb_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf
     return new_buf;
 }
 
-uint64_t my_leaf_symb_hash(const uint64_t ldata_raw, const uint64_t seed)
+uint64_t my_leaf_symb_e_hash(const uint64_t ldata_raw, const uint64_t seed)
 {
-    lsymb_t *ldata = (lsymb_t*) ldata_raw;
+    sl_val_t *ldata = (sl_val_t*) ldata_raw;
 
     uint64_t val = seed;
-    val = MY_HASH_COMB_PTR(val, ldata->a);
-    val = MY_HASH_COMB_PTR(val, ldata->b);
-    val = MY_HASH_COMB_PTR(val, ldata->c);
-    val = MY_HASH_COMB_PTR(val, ldata->d);
-    val = MY_HASH_COMB_PTR(val, cs_k);
+    val = MY_HASH_COMB_SYMB(val, ldata->a);
+    val = MY_HASH_COMB_SYMB(val, ldata->b);
+    val = MY_HASH_COMB_SYMB(val, ldata->c);
+    val = MY_HASH_COMB_SYMB(val, ldata->d);
+    val = MY_HASH_COMB_SYMB(val, cs_k);
 
     return val;
 }
 
 /* CUSTOM MTBDD OPERATIONS */
-TASK_IMPL_2(MTBDD, mtbdd_to_symb, MTBDD, a, size_t, raw_m)
+TASK_IMPL_2(MTBDD, mtbdd_map_to_symb_val, MTBDD, a, size_t, x)
 {
-    if (a != mtbdd_false && !mtbdd_isleaf(a)) {
-        return mtbdd_invalid; // Recurse deeper
-    }
-
-    vmap_t* m = (vmap_t*) raw_m;
-    vars_t var_a = m->next_var;
-    vars_t var_b = m->next_var + 1;
-    vars_t var_c = m->next_var + 2;
-    vars_t var_d = m->next_var + 3;
+    (void) x; // needed for TASK_IMPL_2
 
     // Partial function check
-    if (a == mtbdd_false) {
-        mpz_inits(m->map[var_a], m->map[var_b], m->map[var_c], m->map[var_d], 0);
+    if (a == mtbdd_false) return mtbdd_false;
+
+    if (mtbdd_isleaf(a)) {
+        sl_map_t *a_data = (sl_map_t*) mtbdd_getvalue(a);
+        sl_val_t *new_data = my_malloc(sizeof(sl_val_t)); //TODO: should be malloc? (check where is the free)
+        
+        new_data->a = st_create_val(a_data->va);
+        new_data->b = st_create_val(a_data->vb);
+        new_data->c = st_create_val(a_data->vc);
+        new_data->d = st_create_val(a_data->vd);
+
+        MTBDD res = mtbdd_makeleaf(ltype_symb_expr_id, (uint64_t) new_data);
+
+        return res;
     }
-    else if (mtbdd_isleaf(a)) {
-        cnum *orig_data = (cnum*) mtbdd_getvalue(a);
-        mpz_init_set(m->map[var_a], orig_data->a);
-        mpz_init_set(m->map[var_b], orig_data->b);
-        mpz_init_set(m->map[var_c], orig_data->c);
-        mpz_init_set(m->map[var_d], orig_data->d);
-    }
 
-    lsymb_t *new_data = my_malloc(sizeof(lsymb_t)); //TODO: should be malloc? (check where is the free)
-    new_data->a = st_create_val(var_a);
-    new_data->b = st_create_val(var_b);
-    new_data->c = st_create_val(var_c);
-    new_data->d = st_create_val(var_d);
-
-    new_data->var_a = var_a;
-    new_data->var_b = var_b;
-    new_data->var_c = var_c;
-    new_data->var_d = var_d;
-
-    MTBDD res = mtbdd_makeleaf(ltype_s_id, (uint64_t) new_data);
-    m->next_var += 4;
-
-    return res;
+    return mtbdd_invalid; // Recurse deeper
 }
 
 /**
@@ -181,36 +155,41 @@ static coef_t* eval_var(stree_t *data,  coef_t* map)
     return res;
 }
 
-VOID_TASK_IMPL_3(mtbdd_update_map, MTBDD, a, coef_t*, map, coef_t*, new_map)
+VOID_TASK_IMPL_4(mtbdd_update_map, MTBDD, mtbdd_map, MTBDD, mtbdd_val, coef_t*, map, coef_t*, new_map)
 {
     //FIXME: gc + cache?
 
-    if (a == mtbdd_false) return;
+    //FIXME: are there any other terminal cases?
 
-    if (mtbdd_isleaf(a)) {
-        lsymb_t *data = (lsymb_t*) mtbdd_getvalue(a);
+    if (mtbdd_val == mtbdd_false) {
+        sl_map_t *map_data = (sl_map_t*) mtbdd_getvalue(mtbdd_map);
+        mpz_inits(new_map[map_data->va], new_map[map_data->vb], new_map[map_data->vc], new_map[map_data->vd], NULL);
+    }
+    else if (mtbdd_isleaf(mtbdd_map) && mtbdd_isleaf(mtbdd_val)) {
+        sl_map_t *map_data = (sl_map_t*) mtbdd_getvalue(mtbdd_map);
+        sl_val_t *val_data = (sl_val_t*) mtbdd_getvalue(mtbdd_val);
 
-        coef_t *res_a = eval_var(data->a, map);
-        coef_t *res_b = eval_var(data->b, map);
-        coef_t *res_c = eval_var(data->c, map);
-        coef_t *res_d = eval_var(data->d, map);
+        coef_t *res_a = eval_var(val_data->a, map);
+        coef_t *res_b = eval_var(val_data->b, map);
+        coef_t *res_c = eval_var(val_data->c, map);
+        coef_t *res_d = eval_var(val_data->d, map);
 
-        mpz_init_set(new_map[data->var_a], *res_a);
-        mpz_init_set(new_map[data->var_b], *res_b);
-        mpz_init_set(new_map[data->var_c], *res_c);
-        mpz_init_set(new_map[data->var_d], *res_d);
+        mpz_init_set(new_map[map_data->va], *res_a);
+        mpz_init_set(new_map[map_data->vb], *res_b);
+        mpz_init_set(new_map[map_data->vc], *res_c);
+        mpz_init_set(new_map[map_data->vd], *res_d);
 
         mpz_clears(*res_a, *res_b, *res_c, *res_d, NULL);
         free(res_a);
         free(res_b);
         free(res_c);
         free(res_d);
-        return;
     }
-
-    SPAWN(mtbdd_update_map, mtbdd_gethigh(a), map, new_map);
-    CALL(mtbdd_update_map, mtbdd_getlow(a), map, new_map);
-    SYNC(mtbdd_update_map);
+    else {
+        SPAWN(mtbdd_update_map, mtbdd_gethigh(mtbdd_map), mtbdd_gethigh(mtbdd_val), map, new_map);
+        CALL(mtbdd_update_map, mtbdd_getlow(mtbdd_map), mtbdd_getlow(mtbdd_val), map, new_map);
+        SYNC(mtbdd_update_map);
+    }
 }
 
 TASK_IMPL_2(MTBDD, mtbdd_from_symb, MTBDD, a, size_t, raw_map)
@@ -220,13 +199,13 @@ TASK_IMPL_2(MTBDD, mtbdd_from_symb, MTBDD, a, size_t, raw_map)
 
     if (mtbdd_isleaf(a)) {
         coef_t* map = (coef_t*) raw_map;
-        lsymb_t *data = (lsymb_t*) mtbdd_getvalue(a);
+        sl_map_t *data = (sl_map_t*) mtbdd_getvalue(a);
         
         cnum new_data; // can be local, mtbdd_makeleaf makes realloc
-        mpz_init_set(new_data.a, map[data->var_a]);
-        mpz_init_set(new_data.b, map[data->var_b]);
-        mpz_init_set(new_data.c, map[data->var_c]);
-        mpz_init_set(new_data.d, map[data->var_d]);
+        mpz_init_set(new_data.a, map[data->va]);
+        mpz_init_set(new_data.b, map[data->vb]);
+        mpz_init_set(new_data.c, map[data->vc]);
+        mpz_init_set(new_data.d, map[data->vd]);
 
         if (!mpz_cmp_si(new_data.a, 0) && !mpz_cmp_si(new_data.b, 0) && !mpz_cmp_si(new_data.c, 0) && !mpz_cmp_si(new_data.d, 0)) {
             mpz_clears(new_data.a, new_data.b, new_data.c, new_data.d, NULL);
@@ -254,20 +233,16 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_plus, MTBDD*, p_a, MTBDD*, p_b)
 
     // Compute a + b if both mtbdds are leaves
     if (mtbdd_isleaf(a) && mtbdd_isleaf(b)) {
-        lsymb_t *a_data = (lsymb_t*) mtbdd_getvalue(a);
-        lsymb_t *b_data = (lsymb_t*) mtbdd_getvalue(b);
+        sl_val_t *a_data = (sl_val_t*) mtbdd_getvalue(a);
+        sl_val_t *b_data = (sl_val_t*) mtbdd_getvalue(b);
 
-        lsymb_t res_data;
-        res_data.var_a = a_data->var_a;
-        res_data.var_b = a_data->var_b;
-        res_data.var_c = a_data->var_c;
-        res_data.var_d = a_data->var_d;
+        sl_val_t res_data;
         res_data.a = st_op(a_data->a, b_data->a, ST_ADD);
         res_data.b = st_op(a_data->b, b_data->b, ST_ADD);
         res_data.c = st_op(a_data->c, b_data->c, ST_ADD);
         res_data.d = st_op(a_data->d, b_data->d, ST_ADD);
         
-        MTBDD res = mtbdd_makeleaf(ltype_s_id, (uint64_t) &res_data);
+        MTBDD res = mtbdd_makeleaf(ltype_symb_expr_id, (uint64_t) &res_data);
         return res;
     }
 
@@ -294,20 +269,16 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_minus, MTBDD*, p_a, MTBDD*, p_b)
 
     // Compute a - b if both mtbdds are leaves
     if (mtbdd_isleaf(a) && mtbdd_isleaf(b)) {
-        lsymb_t *a_data = (lsymb_t*) mtbdd_getvalue(a);
-        lsymb_t *b_data = (lsymb_t*) mtbdd_getvalue(b);
+        sl_val_t *a_data = (sl_val_t*) mtbdd_getvalue(a);
+        sl_val_t *b_data = (sl_val_t*) mtbdd_getvalue(b);
         
-        lsymb_t res_data;
-        res_data.var_a = a_data->var_a;
-        res_data.var_b = a_data->var_b;
-        res_data.var_c = a_data->var_c;
-        res_data.var_d = a_data->var_d;
+        sl_val_t res_data;
         res_data.a = st_op(a_data->a, b_data->a, ST_SUB);
         res_data.b = st_op(a_data->b, b_data->b, ST_SUB);
         res_data.c = st_op(a_data->c, b_data->c, ST_SUB);
         res_data.d = st_op(a_data->d, b_data->d, ST_SUB);
         
-        MTBDD res = mtbdd_makeleaf(ltype_s_id, (uint64_t) &res_data);
+        MTBDD res = mtbdd_makeleaf(ltype_symb_expr_id, (uint64_t) &res_data);
         return res;
     }
 
@@ -323,13 +294,9 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_neg, MTBDD, a, size_t, x)
 
     // Compute -a if mtbdd is a leaf
     if (mtbdd_isleaf(a)) {
-        lsymb_t *a_data = (lsymb_t*) mtbdd_getvalue(a);
+        sl_val_t *a_data = (sl_val_t*) mtbdd_getvalue(a);
 
-        lsymb_t res_data;
-        res_data.var_a = a_data->var_a;
-        res_data.var_b = a_data->var_b;
-        res_data.var_c = a_data->var_c;
-        res_data.var_d = a_data->var_d;
+        sl_val_t res_data;
         res_data.a = st_init(a_data->a); //FIXME: maybe can just copy pointers??
         res_data.b = st_init(a_data->b);
         res_data.c = st_init(a_data->c);
@@ -339,7 +306,7 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_neg, MTBDD, a, size_t, x)
         st_coef_mul(a_data->c, -1);
         st_coef_mul(a_data->d, -1);
 
-        MTBDD res = mtbdd_makeleaf(ltype_s_id, (uint64_t) &res_data);
+        MTBDD res = mtbdd_makeleaf(ltype_symb_expr_id, (uint64_t) &res_data);
         return res;
     }
 
@@ -406,4 +373,4 @@ MTBDD mtbdd_symb_b_xt_comp_mul_wrapper(MTBDD t, uint32_t xt)
     return mtbdd_uapply(t, TASK(mtbdd_symb_b_xt_comp_mul), xt);
 }
 
-/* end of "custom_mtbdd_symb.c" */
+/* end of "mtbdd_symb_val.c" */
