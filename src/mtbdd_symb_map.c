@@ -4,12 +4,12 @@
 
 uint32_t ltype_symb_map_id;
 
-void vmap_init(vmap_t *vm, size_t size)
+void vmap_init(vmap_t **vm, size_t size)
 {
-    vm = my_malloc(sizeof(vmap_t));
-    vm->msize = size;
-    vm->map = my_malloc(sizeof(coef_t) * size);
-    vm->next_var = 0;
+    *vm = my_malloc(sizeof(vmap_t));
+    (*vm)->msize = size;
+    (*vm)->map = my_malloc(sizeof(coef_t) * size);
+    (*vm)->next_var = 0;
 }
 
 void vmap_clear(vmap_t *vm)

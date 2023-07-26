@@ -34,7 +34,7 @@ static void symb_init(MTBDD *circ, mtbdd_symb_t *symbc) //TODO: move to mtbdd_sy
 {
     size_t msize = 4 * (mtbdd_leafcount(*circ) + 1); // does not count F, multiplied because one var \
                                                         is needed for every coefficient
-    vmap_init(symbc->vm, msize);
+    vmap_init(&(symbc->vm), msize);
 
     symbc->map = my_mtbdd_to_symb_map(*circ, (size_t) symbc->vm);
     mtbdd_protect(&(symbc->map));
@@ -51,6 +51,11 @@ static void symb_calc(MTBDD *circ,  mtbdd_symb_t *symbc, uint32_t iters) //TODO:
 {
     coef_t *temp_map = my_malloc(sizeof(coef_t) * symbc->vm->msize);
 
+    //TODO:FIXME:
+    // FILE *out = fopen("res.dot", "w");
+    // mtbdd_fprintdot(out, symbc->val);
+    // fclose(out);
+    
     for (uint32_t i = 0; i < iters; i++) {
         my_mtbdd_update_map(symbc->map, symbc->val, symbc->vm->map, temp_map);
         if (i == 0) {
@@ -59,18 +64,12 @@ static void symb_calc(MTBDD *circ,  mtbdd_symb_t *symbc, uint32_t iters) //TODO:
         symbc->vm->map = temp_map;
     }
 
-    //TODO:FIXME:
-    FILE *out = fopen("res.dot", "w");
-    mtbdd_fprintdot(out, symbc->val);
-    fclose(out);
-
     *circ = my_mtbdd_from_symb(symbc->map, (size_t) symbc->vm->map);
 
     mpz_mul_ui(cs_k, cs_k, (unsigned long)iters);
     mpz_add(c_k, c_k, cs_k);
 
     vmap_delete(symbc->vm);
-    free(temp_map);
     mpz_clear(cs_k);
 }
 
@@ -158,14 +157,15 @@ static uint32_t get_iters(FILE *in)
     return ((uint32_t) iters);
 }
 
-void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool *is_measure)
+void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool *is_measure, bool opt_symb)
 {
     //TODO: refactoring
     int c;
     char cmd[CMD_MAX_LEN];
     bool init = false;
-    bool is_symbolic = false;
 
+    bool is_loop = false;
+    fpos_t loop_start;
     mtbdd_symb_t symbc;
     uint32_t iters;
 
@@ -252,16 +252,32 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
                         error_exit("Invalid format - reached an unexpected end of file.");
                     }
                 }
-                is_symbolic = true; // TODO: allow nested loops?
+                is_loop = true; // TODO: allow nested loops?
                 symb_init(circ, &symbc);
+                if (fgetpos(in, &loop_start) != 0) {
+                    error_exit("Could not get the current position of the stream.");
+                }
                 continue; // ';' not expected
             }
             else if (strcmp(cmd, "}") == 0) {
-                if (!is_symbolic) {
+                if (!is_loop) {
                     error_exit("Invalid loop syntax.");
                 }
-                is_symbolic = false;
-                symb_calc(circ, &symbc, iters); // TODO: should request gc call?
+                if (!opt_symb) {
+                    iters--;
+                    if (!iters) {
+                        is_loop = false;
+                    }
+                    else { // next iteration
+                        if (fsetpos(in, &loop_start) != 0) {
+                            error_exit("Could not set a new position of the stream.");
+                        }
+                    }
+                }
+                else {
+                    is_loop = false;
+                    symb_calc(circ, &symbc, iters); // TODO: should request gc call?
+                }
                 continue; // ';' not expected
             }
             else if (strcmp(cmd, "measure") == 0) {
@@ -272,57 +288,57 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
             }
             else if (strcmp(cmd, "x") == 0) {
                 uint32_t qt = get_q_num(in);
-                is_symbolic? gate_symb_x(&symbc.val, qt) : gate_x(circ, qt);
+                (opt_symb && is_loop)? gate_symb_x(&symbc.val, qt) : gate_x(circ, qt);
             }
             else if (strcmp(cmd, "y") == 0) {
                 uint32_t qt = get_q_num(in);
-                is_symbolic? error_exit("Gate does not support symbolic simulation") : gate_y(circ, qt); //TODO:
+                (opt_symb && is_loop)? error_exit("Gate does not support symbolic simulation") : gate_y(circ, qt); //TODO:
             }
             else if (strcmp(cmd, "z") == 0) {
                 uint32_t qt = get_q_num(in);
-                is_symbolic? error_exit("Gate does not support symbolic simulation") : gate_z(circ, qt); //TODO:
+                (opt_symb && is_loop)? error_exit("Gate does not support symbolic simulation") : gate_z(circ, qt); //TODO:
             }
             else if (strcmp(cmd, "h") == 0) {
                 uint32_t qt = get_q_num(in);
-                is_symbolic? gate_symb_h(&symbc.val, qt) : gate_h(circ, qt);
+                (opt_symb && is_loop)? gate_symb_h(&symbc.val, qt) : gate_h(circ, qt);
             }
             else if (strcmp(cmd, "s") == 0) {
                 uint32_t qt = get_q_num(in);
-                is_symbolic? error_exit("Gate does not support symbolic simulation") : gate_s(circ, qt); //TODO:
+                (opt_symb && is_loop)? error_exit("Gate does not support symbolic simulation") : gate_s(circ, qt); //TODO:
             }
             else if (strcmp(cmd, "t") == 0) {
                 uint32_t qt = get_q_num(in);
-                is_symbolic? error_exit("Gate does not support symbolic simulation") : gate_t(circ, qt); //TODO:
+                (opt_symb && is_loop)? error_exit("Gate does not support symbolic simulation") : gate_t(circ, qt); //TODO:
             }
             else if (strcmp(cmd, "rx(pi/2)") == 0) {
                 uint32_t qt = get_q_num(in);
-                is_symbolic? error_exit("Gate does not support symbolic simulation") : gate_rx_pihalf(circ, qt); //TODO:
+                (opt_symb && is_loop)? error_exit("Gate does not support symbolic simulation") : gate_rx_pihalf(circ, qt); //TODO:
             }
             else if (strcmp(cmd, "ry(pi/2)") == 0) {
                 uint32_t qt = get_q_num(in);
-                is_symbolic? error_exit("Gate does not support symbolic simulation") : gate_ry_pihalf(circ, qt); //TODO:
+                (opt_symb && is_loop)? error_exit("Gate does not support symbolic simulation") : gate_ry_pihalf(circ, qt); //TODO:
             }
             else if (strcmp(cmd, "cx") == 0) {
                 uint32_t qc = get_q_num(in);
                 uint32_t qt = get_q_num(in);
-                is_symbolic? error_exit("Gate does not support symbolic simulation") : gate_cnot(circ, qt, qc); //TODO:
+                (opt_symb && is_loop)? error_exit("Gate does not support symbolic simulation") : gate_cnot(circ, qt, qc); //TODO:
             }
             else if (strcmp(cmd, "cz") == 0) {
                 uint32_t qc = get_q_num(in);
                 uint32_t qt = get_q_num(in);
-                is_symbolic? error_exit("Gate does not support symbolic simulation") : gate_cz(circ, qt, qc); //TODO:
+                (opt_symb && is_loop)? error_exit("Gate does not support symbolic simulation") : gate_cz(circ, qt, qc); //TODO:
             }
             else if (strcmp(cmd, "ccx") == 0) {
                 uint32_t qc1 = get_q_num(in);
                 uint32_t qc2 = get_q_num(in);
                 uint32_t qt = get_q_num(in);
-                is_symbolic? error_exit("Gate does not support symbolic simulation") : gate_toffoli(circ, qt, qc1, qc2); //TODO:
+                (opt_symb && is_loop)? error_exit("Gate does not support symbolic simulation") : gate_toffoli(circ, qt, qc1, qc2); //TODO:
             }
             else if (strcmp(cmd, "cswap") == 0) {
                 uint32_t qc = get_q_num(in);
                 uint32_t qt1 = get_q_num(in);
                 uint32_t qt2 = get_q_num(in);
-                is_symbolic? error_exit("Gate does not support symbolic simulation") : gate_fredkin(circ, qt1, qt2, qc); //TODO:
+                (opt_symb && is_loop)? error_exit("Gate does not support symbolic simulation") : gate_fredkin(circ, qt1, qt2, qc); //TODO:
             }
             else {
                 error_exit("Invalid command.");

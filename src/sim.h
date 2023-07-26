@@ -36,8 +36,11 @@ typedef struct mtbdd_symb {
  * @param bits_to_measure array for storing the qubits that are to be measured
  * 
  * @param is_measure true if some measure operation is present
+ * 
+ * @param is_symb should perform symbolic simulation
+ * 
  */
-void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool *is_measure);
+void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool *is_measure, bool opt_symb);
 
 /**
  * Function measures all bits in the given array (compatible only with measurement at the end of the circuit)

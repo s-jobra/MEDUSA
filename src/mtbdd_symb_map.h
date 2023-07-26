@@ -32,7 +32,7 @@ typedef struct vmap {
 /**
  * Allocates and initializes the variable mapping structure (the map itself only allocated)
  */
-void vmap_init(vmap_t *vm, size_t size);
+void vmap_init(vmap_t **vm, size_t size);
 
 /**
  * Clears and deallocates the map from the given mapping structure

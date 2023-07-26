@@ -155,17 +155,35 @@ static coef_t* eval_var(stree_t *data,  coef_t* map)
     return res;
 }
 
+#include <sylvan_int.h>
+
 VOID_TASK_IMPL_4(mtbdd_update_map, MTBDD, mtbdd_map, MTBDD, mtbdd_val, coef_t*, map, coef_t*, new_map)
 {
-    //FIXME: gc + cache?
+//     //TODO:FIXME: proper apply
+    
+//     /* Check terminal case */
+//     MTBDD result = WRAP(op, &a, &b);
+//     if (result != mtbdd_invalid) return result;
 
+//     /* Maybe perform garbage collection */
+//     sylvan_gc_test();
+
+//     /* Count operation */
+//     sylvan_stats_count(MTBDD_APPLY);
+// ////////////////////////////////////////////////////////
+
+    //FIXME: gc + cache?
     //FIXME: are there any other terminal cases?
 
     if (mtbdd_val == mtbdd_false) {
         sl_map_t *map_data = (sl_map_t*) mtbdd_getvalue(mtbdd_map);
         mpz_inits(new_map[map_data->va], new_map[map_data->vb], new_map[map_data->vc], new_map[map_data->vd], NULL);
+        return;
     }
-    else if (mtbdd_isleaf(mtbdd_map) && mtbdd_isleaf(mtbdd_val)) {
+
+    int lmap = mtbdd_isleaf(mtbdd_map);  //TODO:FIXME: rename
+    int lval = mtbdd_isleaf(mtbdd_val);
+    if (lmap && lval) {
         sl_map_t *map_data = (sl_map_t*) mtbdd_getvalue(mtbdd_map);
         sl_val_t *val_data = (sl_val_t*) mtbdd_getvalue(mtbdd_val);
 
@@ -186,8 +204,45 @@ VOID_TASK_IMPL_4(mtbdd_update_map, MTBDD, mtbdd_map, MTBDD, mtbdd_val, coef_t*, 
         free(res_d);
     }
     else {
-        SPAWN(mtbdd_update_map, mtbdd_gethigh(mtbdd_map), mtbdd_gethigh(mtbdd_val), map, new_map);
-        CALL(mtbdd_update_map, mtbdd_getlow(mtbdd_map), mtbdd_getlow(mtbdd_val), map, new_map);
+        /* Get top variable */
+        mtbddnode_t nmap, nval;
+        uint32_t vmap, vval; //FIXME: rename
+        if (!lmap) {
+            nmap = MTBDD_GETNODE(mtbdd_map);
+            vmap = mtbddnode_getvariable(nmap);
+        } else {
+            nmap = 0;
+            vmap = 0xffffffff;
+        }
+        if (!lval) {
+            nval = MTBDD_GETNODE(mtbdd_val);
+            vval = mtbddnode_getvariable(nval);
+        } else {
+            nval = 0;
+            vval = 0xffffffff;
+        }
+        uint32_t v = vmap < vval ? vmap : vval;
+
+        /* Get cofactors */
+        MTBDD map_low, map_high, val_low, val_high;
+        if (!lmap && vmap == v) {
+            map_low = node_getlow(mtbdd_map, nmap);
+            map_high = node_gethigh(mtbdd_map, nmap);
+        } else {
+            map_low = mtbdd_map;
+            map_high = mtbdd_map;
+        }
+        if (!lval && vval == v) {
+            val_low = node_getlow(mtbdd_val, nval);
+            val_high = node_gethigh(mtbdd_val, nval);
+        } else {
+            val_low = mtbdd_val;
+            val_high = mtbdd_val;
+        }
+
+        /* Recursive */
+        SPAWN(mtbdd_update_map, map_high, val_high, map, new_map);
+        CALL(mtbdd_update_map, map_low, val_low, map, new_map);
         SYNC(mtbdd_update_map);
     }
 }
