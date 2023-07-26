@@ -37,12 +37,12 @@ $(BIN_DIR) $(OBJ_DIR):
 -include $(OBJ:.o=.d)
 
 run-my:
-	@./$(EXEC) -f ./examples/$(F).qasm
+	@./$(EXEC) -f ./examples/$(F).qasm -m -s
 	@dot -T$(OF_TYPE) $(F_OUT_NAME).dot -o $(F_OUT_NAME).$(OF_TYPE)
 	@rm $(F_OUT_NAME).dot
 
 run-b:
-	@./$(EXEC) -f ../benchmarks/$(T)/circuit.qasm
+	@./$(EXEC) -f ../benchmarks/$(T)/circuit.qasm -m -s
 	@dot -T$(OF_TYPE) $(F_OUT_NAME).dot -o $(F_OUT_NAME).$(OF_TYPE)
 	@rm $(F_OUT_NAME).dot
 
