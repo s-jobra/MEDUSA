@@ -8,19 +8,19 @@ uint32_t ltype_symb_expr_id;
 #define MAX_SYMB_LEAF_STR_LEN MAX_ST_TO_STR_LEN * 5
 
 /* SETUP */
-void init_my_leaf_symb_expr()
+void init_my_leaf_symb_val()
 {
     ltype_symb_expr_id = sylvan_mt_create_type();
 
-    sylvan_mt_set_create(ltype_symb_expr_id, my_leaf_symb_e_create);
-    sylvan_mt_set_destroy(ltype_symb_expr_id, my_leaf_symb_e_destroy);
-    sylvan_mt_set_equals(ltype_symb_expr_id, my_leaf_symb_e_equals);
-    sylvan_mt_set_to_str(ltype_symb_expr_id, my_leaf_symb_e_to_str);
-    sylvan_mt_set_hash(ltype_symb_expr_id, my_leaf_symb_e_hash);
+    sylvan_mt_set_create(ltype_symb_expr_id, my_leaf_symb_v_create);
+    sylvan_mt_set_destroy(ltype_symb_expr_id, my_leaf_symb_v_destroy);
+    sylvan_mt_set_equals(ltype_symb_expr_id, my_leaf_symb_v_equals);
+    sylvan_mt_set_to_str(ltype_symb_expr_id, my_leaf_symb_v_to_str);
+    sylvan_mt_set_hash(ltype_symb_expr_id, my_leaf_symb_v_hash);
 }
 
 /* CUSTOM HANDLES */
-void my_leaf_symb_e_create(uint64_t *ldata_p_raw)
+void my_leaf_symb_v_create(uint64_t *ldata_p_raw)
 {
     sl_val_t** ldata_p = (sl_val_t**)ldata_p_raw; // Leaf data type is uint64_t, we store there ptr to our actual data
     
@@ -35,7 +35,7 @@ void my_leaf_symb_e_create(uint64_t *ldata_p_raw)
     *ldata_p = new_ldata;
 }
 
-void my_leaf_symb_e_destroy(uint64_t ldata)
+void my_leaf_symb_v_destroy(uint64_t ldata)
 {
     sl_val_t *data_p = (sl_val_t*) ldata; // Data in leaf = pointer to my data
     st_delete(data_p->a);
@@ -45,17 +45,17 @@ void my_leaf_symb_e_destroy(uint64_t ldata)
     free(data_p);
 }
 
-int my_leaf_symb_e_equals(const uint64_t ldata_a_raw, const uint64_t ldata_b_raw)
+int my_leaf_symb_v_equals(const uint64_t ldata_a_raw, const uint64_t ldata_b_raw)
 {
     sl_val_t *ldata_a = (sl_val_t *) ldata_a_raw;
     sl_val_t *ldata_b = (sl_val_t *) ldata_b_raw;
 
-    //TODO: create st infrastructure so that ptr comparison is sufficient?
+    //TODO: z3?
     return !st_cmp(ldata_a->a, ldata_b->a) && !st_cmp(ldata_a->b, ldata_b->b) && !st_cmp(ldata_a->c, ldata_b->c) \
            && !st_cmp(ldata_a->d, ldata_b->d);
 }
 
-char* my_leaf_symb_e_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf, size_t sylvan_bufsize)
+char* my_leaf_symb_v_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf, size_t sylvan_bufsize)
 {
     (void) complemented;
     sl_val_t *ldata = (sl_val_t*) ldata_raw;
@@ -86,7 +86,7 @@ char* my_leaf_symb_e_to_str(int complemented, uint64_t ldata_raw, char *sylvan_b
     return new_buf;
 }
 
-uint64_t my_leaf_symb_e_hash(const uint64_t ldata_raw, const uint64_t seed)
+uint64_t my_leaf_symb_v_hash(const uint64_t ldata_raw, const uint64_t seed)
 {
     sl_val_t *ldata = (sl_val_t*) ldata_raw;
 
@@ -101,21 +101,21 @@ uint64_t my_leaf_symb_e_hash(const uint64_t ldata_raw, const uint64_t seed)
 }
 
 /* CUSTOM MTBDD OPERATIONS */
-TASK_IMPL_2(MTBDD, mtbdd_map_to_symb_val, MTBDD, a, size_t, x)
+TASK_IMPL_2(MTBDD, mtbdd_map_to_symb_val, MTBDD, t, size_t, x)
 {
     (void) x; // needed for TASK_IMPL_2
 
     // Partial function check
-    if (a == mtbdd_false) return mtbdd_false;
+    if (t == mtbdd_false) return mtbdd_false;
 
-    if (mtbdd_isleaf(a)) {
-        sl_map_t *a_data = (sl_map_t*) mtbdd_getvalue(a);
+    if (mtbdd_isleaf(t)) {
+        sl_map_t *t_data = (sl_map_t*) mtbdd_getvalue(t);
         sl_val_t *new_data = my_malloc(sizeof(sl_val_t)); //TODO: should be malloc? (check where is the free)
         
-        new_data->a = st_create_val(a_data->va);
-        new_data->b = st_create_val(a_data->vb);
-        new_data->c = st_create_val(a_data->vc);
-        new_data->d = st_create_val(a_data->vd);
+        new_data->a = st_create_val(t_data->va);
+        new_data->b = st_create_val(t_data->vb);
+        new_data->c = st_create_val(t_data->vc);
+        new_data->d = st_create_val(t_data->vd);
 
         MTBDD res = mtbdd_makeleaf(ltype_symb_expr_id, (uint64_t) new_data);
 
@@ -134,9 +134,10 @@ static coef_t* eval_var(stree_t *data,  coef_t* map)
     mpz_init(*res);
 
     if (data->type == ST_VAL) {
-        //TODO: first check if coef is not 0
-        mpz_set(*res, map[data->val->var]);
-        mpz_mul(*res, *res, data->val->coef);
+        if (data->val->coef != 0) {
+            mpz_set(*res, map[data->val->var]);
+            mpz_mul(*res, *res, data->val->coef);
+        }
     }
     else {
         coef_t *l = eval_var(data->ls, map);
@@ -159,20 +160,8 @@ static coef_t* eval_var(stree_t *data,  coef_t* map)
 
 VOID_TASK_IMPL_4(mtbdd_update_map, MTBDD, mtbdd_map, MTBDD, mtbdd_val, coef_t*, map, coef_t*, new_map)
 {
-//     //TODO:FIXME: proper apply
-    
-//     /* Check terminal case */
-//     MTBDD result = WRAP(op, &a, &b);
-//     if (result != mtbdd_invalid) return result;
 
-//     /* Maybe perform garbage collection */
-//     sylvan_gc_test();
-
-//     /* Count operation */
-//     sylvan_stats_count(MTBDD_APPLY);
-// ////////////////////////////////////////////////////////
-
-    //FIXME: gc + cache?
+    //TODO: gc + cache?
     //FIXME: are there any other terminal cases?
 
     if (mtbdd_val == mtbdd_false) {
@@ -181,7 +170,7 @@ VOID_TASK_IMPL_4(mtbdd_update_map, MTBDD, mtbdd_map, MTBDD, mtbdd_val, coef_t*, 
         return;
     }
 
-    int lmap = mtbdd_isleaf(mtbdd_map);  //TODO:FIXME: rename
+    int lmap = mtbdd_isleaf(mtbdd_map);
     int lval = mtbdd_isleaf(mtbdd_val);
     if (lmap && lval) {
         sl_map_t *map_data = (sl_map_t*) mtbdd_getvalue(mtbdd_map);
@@ -205,36 +194,36 @@ VOID_TASK_IMPL_4(mtbdd_update_map, MTBDD, mtbdd_map, MTBDD, mtbdd_val, coef_t*, 
     }
     else {
         /* Get top variable */
-        mtbddnode_t nmap, nval;
-        uint32_t vmap, vval; //FIXME: rename
+        mtbddnode_t n_map, n_val;
+        uint32_t v_map, v_val;
         if (!lmap) {
-            nmap = MTBDD_GETNODE(mtbdd_map);
-            vmap = mtbddnode_getvariable(nmap);
+            n_map = MTBDD_GETNODE(mtbdd_map);
+            v_map = mtbddnode_getvariable(n_map);
         } else {
-            nmap = 0;
-            vmap = 0xffffffff;
+            n_map = 0;
+            v_map = 0xffffffff;
         }
         if (!lval) {
-            nval = MTBDD_GETNODE(mtbdd_val);
-            vval = mtbddnode_getvariable(nval);
+            n_val = MTBDD_GETNODE(mtbdd_val);
+            v_val = mtbddnode_getvariable(n_val);
         } else {
-            nval = 0;
-            vval = 0xffffffff;
+            n_val = 0;
+            v_val = 0xffffffff;
         }
-        uint32_t v = vmap < vval ? vmap : vval;
+        uint32_t v = v_map < v_val ? v_map : v_val;
 
         /* Get cofactors */
         MTBDD map_low, map_high, val_low, val_high;
-        if (!lmap && vmap == v) {
-            map_low = node_getlow(mtbdd_map, nmap);
-            map_high = node_gethigh(mtbdd_map, nmap);
+        if (!lmap && v_map == v) {
+            map_low = node_getlow(mtbdd_map, n_map);
+            map_high = node_gethigh(mtbdd_map, n_map);
         } else {
             map_low = mtbdd_map;
             map_high = mtbdd_map;
         }
-        if (!lval && vval == v) {
-            val_low = node_getlow(mtbdd_val, nval);
-            val_high = node_gethigh(mtbdd_val, nval);
+        if (!lval && v_val == v) {
+            val_low = node_getlow(mtbdd_val, n_val);
+            val_high = node_gethigh(mtbdd_val, n_val);
         } else {
             val_low = mtbdd_val;
             val_high = mtbdd_val;
@@ -247,14 +236,14 @@ VOID_TASK_IMPL_4(mtbdd_update_map, MTBDD, mtbdd_map, MTBDD, mtbdd_val, coef_t*, 
     }
 }
 
-TASK_IMPL_2(MTBDD, mtbdd_from_symb, MTBDD, a, size_t, raw_map)
+TASK_IMPL_2(MTBDD, mtbdd_from_symb, MTBDD, t, size_t, raw_map)
 {
     // Partial function check
-    if (a == mtbdd_false) return mtbdd_false;
+    if (t == mtbdd_false) return mtbdd_false;
 
-    if (mtbdd_isleaf(a)) {
+    if (mtbdd_isleaf(t)) {
         coef_t* map = (coef_t*) raw_map;
-        sl_map_t *data = (sl_map_t*) mtbdd_getvalue(a);
+        sl_map_t *data = (sl_map_t*) mtbdd_getvalue(t);
         
         cnum new_data; // can be local, mtbdd_makeleaf makes realloc
         mpz_init_set(new_data.a, map[data->va]);
@@ -340,16 +329,16 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_minus, MTBDD*, p_a, MTBDD*, p_b)
     return mtbdd_invalid; // Recurse deeper
 }
 
-TASK_IMPL_2(MTBDD, mtbdd_symb_neg, MTBDD, a, size_t, x)
+TASK_IMPL_2(MTBDD, mtbdd_symb_neg, MTBDD, t, size_t, x)
 {
     (void)x; // extra parameter needed for task - not needed
 
     // Partial function check
-    if (a == mtbdd_false) return mtbdd_false;
+    if (t == mtbdd_false) return mtbdd_false;
 
     // Compute -a if mtbdd is a leaf
-    if (mtbdd_isleaf(a)) {
-        sl_val_t *a_data = (sl_val_t*) mtbdd_getvalue(a);
+    if (mtbdd_isleaf(t)) {
+        sl_val_t *a_data = (sl_val_t*) mtbdd_getvalue(t);
 
         sl_val_t res_data;
         res_data.a = st_init(a_data->a); //FIXME: maybe can just copy pointers??
@@ -368,21 +357,21 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_neg, MTBDD, a, size_t, x)
     return mtbdd_invalid; // Recurse deeper
 }
 
-TASK_IMPL_2(MTBDD, mtbdd_symb_b_xt_mul, MTBDD, a, uint64_t, xt)
+TASK_IMPL_2(MTBDD, mtbdd_symb_b_xt_mul, MTBDD, t, uint64_t, xt)
 {
     // Partial function check
-    if (a == mtbdd_false) return mtbdd_false;
+    if (t == mtbdd_false) return mtbdd_false;
 
     // If xt, ground the low edge
-    if (mtbdd_isnode(a)) {
-        if (mtbdd_getvar(a) == (uint32_t)xt) { // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
-            MTBDD res = mtbdd_makenode(xt, (MTBDD)NULL, mtbdd_gethigh(a));
+    if (mtbdd_isnode(t)) {
+        if (mtbdd_getvar(t) == (uint32_t)xt) { // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
+            MTBDD res = mtbdd_makenode(xt, (MTBDD)NULL, mtbdd_gethigh(t));
             return res;
         }
     }
     // Else copy if mtbdd is leaf
     else {
-        return a;
+        return t;
     }
 
     return mtbdd_invalid; // Recurse deeper
@@ -398,21 +387,21 @@ MTBDD mtbdd_symb_b_xt_mul_wrapper(MTBDD t, uint32_t xt)
     return mtbdd_uapply(t, TASK(mtbdd_symb_b_xt_mul), xt);
 }
 
-TASK_IMPL_2(MTBDD, mtbdd_symb_b_xt_comp_mul, MTBDD, a, uint64_t, xt)
+TASK_IMPL_2(MTBDD, mtbdd_symb_b_xt_comp_mul, MTBDD, t, uint64_t, xt)
 {
     // Partial function check
-    if (a == mtbdd_false) return mtbdd_false;
+    if (t == mtbdd_false) return mtbdd_false;
 
     // If xt, ground the high edge
-    if (mtbdd_isnode(a)) {
-        if (mtbdd_getvar(a) == (uint32_t)xt) { // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
-            MTBDD res = mtbdd_makenode(xt, mtbdd_getlow(a), (MTBDD)NULL);
+    if (mtbdd_isnode(t)) {
+        if (mtbdd_getvar(t) == (uint32_t)xt) { // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
+            MTBDD res = mtbdd_makenode(xt, mtbdd_getlow(t), (MTBDD)NULL);
             return res;
         }
     }
     // Else copy if mtbdd is leaf
     else {
-        return a;
+        return t;
     }
 
     return mtbdd_invalid; // Recurse deeper

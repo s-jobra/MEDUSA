@@ -159,7 +159,7 @@ MTBDD b_xt_create(uint32_t xt);
 MTBDD b_xt_comp_create(uint32_t xt);
 
 // ==========================================
-//FIXME: fix comments - should probably be just an MTBDD, not a pointer to an MTBDD
+//FIXME: fix comments (probably just an MTBDD, not a pointer to an MTBDD) and t vs a,b naming
 // Macros for applying operations:
 /**
  * Compute a + b with my custom MTBDDs

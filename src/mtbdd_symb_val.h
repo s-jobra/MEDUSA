@@ -38,34 +38,34 @@ extern coefs_k_t cs_k;
 /**
  * Function for my custom symbolic expression leaf setup in Sylvan.
  */
-void init_my_leaf_symb_expr();
+void init_my_leaf_symb_val();
 
 /* CUSTOM HANDLES */
 /**
  * Handle called when my new custom symbolic expression leaf is created and is not found in the internal table.
  * It allocates and initializes custom leaf data from the given data pointer.
  */
-void my_leaf_symb_e_create(uint64_t *ldata_p_raw);
+void my_leaf_symb_v_create(uint64_t *ldata_p_raw);
 
 /**
  * Handle called when my custom symbolic expression leaf is destroyed during garbage collection.
  */
-void my_leaf_symb_e_destroy(uint64_t ldata);
+void my_leaf_symb_v_destroy(uint64_t ldata);
 
 /**
  * Handle called when comparing two custom symbolic expression leaves.
  */
-int my_leaf_symb_e_equals(const uint64_t ldata_a_raw, const uint64_t ldata_b_raw);
+int my_leaf_symb_v_equals(const uint64_t ldata_a_raw, const uint64_t ldata_b_raw);
 
 /**
  * Handle for creating string representation of the symbolic expression leaf (for debugging purposes).
  */
-char* my_leaf_symb_e_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf, size_t sylvan_bufsize);
+char* my_leaf_symb_v_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf, size_t sylvan_bufsize);
 
 /**
  * Hashing function for calculating symbolic expression leaf's hash.
  */
-uint64_t my_leaf_symb_e_hash(const uint64_t ldata_raw, const uint64_t seed);
+uint64_t my_leaf_symb_v_hash(const uint64_t ldata_raw, const uint64_t seed);
 
 /* CUSTOM MTBDD OPERATIONS */
 // Basic operations:
@@ -93,7 +93,8 @@ VOID_TASK_DECL_4(mtbdd_update_map, MTBDD, MTBDD, coef_t*, coef_t*);
  * @param new_map array for storing the new variable mapping
  * 
  */
-#define my_mtbdd_update_map(mtbdd_map, mtbdd_val, map, new_map) RUN(mtbdd_update_map, mtbdd_map, mtbdd_val, map, new_map)
+#define my_mtbdd_update_map(mtbdd_map, mtbdd_val, map, new_map) \
+        RUN(mtbdd_update_map, mtbdd_map, mtbdd_val, map, new_map)
 
 
 TASK_DECL_2(MTBDD, mtbdd_from_symb, MTBDD, size_t);
@@ -110,46 +111,44 @@ TASK_DECL_2(MTBDD, mtbdd_from_symb, MTBDD, size_t);
 // ==========================================
 // Operations needed for gate representation:
 
-//FIXME: unite MTBDD params t and a
-
 TASK_DECL_2(MTBDD, mtbdd_symb_plus, MTBDD*, MTBDD*);
 /**
  * Computes a + b with symbolic MTBDDs
  * 
- * @param a pointer to a symbolic MTBDD
+ * @param p_a pointer to a symbolic value MTBDD
  * 
- * @param b pointer to a symbolic MTBDD
+ * @param p_b pointer to a symbolic value MTBDD
  * 
  */
-#define my_mtbdd_symb_plus(a, b) mtbdd_apply(a, b, TASK(mtbdd_symb_plus))
+#define my_mtbdd_symb_plus(a, b) mtbdd_apply(p_a, p_b, TASK(mtbdd_symb_plus))
 
 
 TASK_DECL_2(MTBDD, mtbdd_symb_minus, MTBDD*, MTBDD*);
 /**
  * Computes a - b with symbolic MTBDDs
  * 
- * @param a pointer to a symbolic MTBDD
+ * @param p_a pointer to a symbolic value MTBDD
  * 
- * @param b pointer to a symbolic MTBDD
+ * @param p_b pointer to a symbolic value MTBDD
  * 
  */
-#define my_mtbdd_symb_minus(a, b) mtbdd_apply(a, b, TASK(mtbdd_symb_minus))
+#define my_mtbdd_symb_minus(p_a, p_b) mtbdd_apply(p_a, p_b, TASK(mtbdd_symb_minus))
 
 
 TASK_DECL_2(MTBDD, mtbdd_symb_neg, MTBDD, size_t);
 /**
  * Computes -a for a symbolic MTBDD
  * 
- * @param a pointer to an MTBDD
+ * @param t symbolic value MTBDD
  * 
  */
-#define my_mtbdd_symb_neg(a) mtbdd_uapply(a, TASK(mtbdd_symb_neg), 0)
+#define my_mtbdd_symb_neg(t) mtbdd_uapply(t, TASK(mtbdd_symb_neg), 0)
 
 
 /**
  * Computes projection (Txt) on MTBDD t with target qubit xt (target qubit = 1)
  * 
- * @param t a symbolic MTBDD
+ * @param t a symbolic value MTBDD
  * 
  * @param xt target qubit index
  * 
@@ -160,7 +159,7 @@ TASK_DECL_2(MTBDD, mtbdd_symb_neg, MTBDD, size_t);
 /**
  * Computes projection (Txt_complement) on MTBDD t with target qubit xt (target qubit = 0)
  * 
- * @param t a symbolic MTBDD
+ * @param t a symbolic value MTBDD
  * 
  * @param xt target qubit index
  * 
@@ -173,7 +172,7 @@ MTBDD mtbdd_symb_b_xt_mul_wrapper(MTBDD t, uint32_t xt);
 /**
  * Computes restriction (Bxt * T) on a symbolic MTBDD (multiplies target with: low -> 0, high -> 1)
  * 
- * @param t a symbolic MTBDD
+ * @param t a symbolic value MTBDD
  * 
  * @param xt target qubit index
  * 
@@ -186,7 +185,7 @@ MTBDD mtbdd_symb_b_xt_comp_mul_wrapper(MTBDD t, uint32_t xt);
 /**
  * Computes restriction (Bxt_complement * T) on a symbolic MTBDD (multiplies target with: low -> 1, high -> 0)
  * 
- * @param t a symbolic MTBDD
+ * @param t a symbolic value MTBDD
  * 
  * @param xt target qubit index
  * 
