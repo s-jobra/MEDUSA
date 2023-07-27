@@ -181,10 +181,10 @@ VOID_TASK_IMPL_4(mtbdd_update_map, MTBDD, mtbdd_map, MTBDD, mtbdd_val, coef_t*, 
         coef_t *res_c = eval_var(val_data->c, map);
         coef_t *res_d = eval_var(val_data->d, map);
 
-        mpz_init_set(new_map[map_data->va], *res_a);
-        mpz_init_set(new_map[map_data->vb], *res_b);
-        mpz_init_set(new_map[map_data->vc], *res_c);
-        mpz_init_set(new_map[map_data->vd], *res_d);
+        mpz_set(new_map[map_data->va], *res_a);
+        mpz_set(new_map[map_data->vb], *res_b);
+        mpz_set(new_map[map_data->vc], *res_c);
+        mpz_set(new_map[map_data->vd], *res_d);
 
         mpz_clears(*res_a, *res_b, *res_c, *res_d, NULL);
         free(res_a);
@@ -199,14 +199,17 @@ VOID_TASK_IMPL_4(mtbdd_update_map, MTBDD, mtbdd_map, MTBDD, mtbdd_val, coef_t*, 
         if (!lmap) {
             n_map = MTBDD_GETNODE(mtbdd_map);
             v_map = mtbddnode_getvariable(n_map);
-        } else {
+        }
+        else {
             n_map = 0;
             v_map = 0xffffffff;
         }
+
         if (!lval) {
             n_val = MTBDD_GETNODE(mtbdd_val);
             v_val = mtbddnode_getvariable(n_val);
-        } else {
+        }
+        else {
             n_val = 0;
             v_val = 0xffffffff;
         }
@@ -217,14 +220,17 @@ VOID_TASK_IMPL_4(mtbdd_update_map, MTBDD, mtbdd_map, MTBDD, mtbdd_val, coef_t*, 
         if (!lmap && v_map == v) {
             map_low = node_getlow(mtbdd_map, n_map);
             map_high = node_gethigh(mtbdd_map, n_map);
-        } else {
+        }
+        else {
             map_low = mtbdd_map;
             map_high = mtbdd_map;
         }
+
         if (!lval && v_val == v) {
             val_low = node_getlow(mtbdd_val, n_val);
             val_high = node_gethigh(mtbdd_val, n_val);
-        } else {
+        }
+        else {
             val_low = mtbdd_val;
             val_high = mtbdd_val;
         }

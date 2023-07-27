@@ -120,7 +120,7 @@ TASK_DECL_2(MTBDD, mtbdd_symb_plus, MTBDD*, MTBDD*);
  * @param p_b pointer to a symbolic value MTBDD
  * 
  */
-#define my_mtbdd_symb_plus(a, b) mtbdd_apply(p_a, p_b, TASK(mtbdd_symb_plus))
+#define my_mtbdd_symb_plus(p_a, p_b) mtbdd_apply(p_a, p_b, TASK(mtbdd_symb_plus))
 
 
 TASK_DECL_2(MTBDD, mtbdd_symb_minus, MTBDD*, MTBDD*);

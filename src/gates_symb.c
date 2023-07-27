@@ -2,7 +2,6 @@
 
 void gate_symb_x(MTBDD *p_t, uint32_t xt)
 {
-    //FIXME: cannot do the permutation the same way as in regular mtbdds
     // uses the same implementation as the regular MTBDDs
     *p_t = mtbdd_uapply(*p_t, TASK(m_gate_x), xt);
 }

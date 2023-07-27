@@ -49,19 +49,24 @@ static void symb_init(MTBDD *circ, mtbdd_symb_t *symbc) //TODO: move to mtbdd_sy
  */
 static void symb_calc(MTBDD *circ,  mtbdd_symb_t *symbc, uint32_t iters) //TODO: move to mtbdd_symb ?
 {
-    coef_t *temp_map = my_malloc(sizeof(coef_t) * symbc->vm->msize);
+    coef_t *new_map = my_malloc(sizeof(coef_t) * symbc->vm->msize);
+    for (int i; i < symbc->vm->msize; i++) {
+        mpz_init(new_map[i]);
+    }
+    coef_t *temp_map;
 
     //TODO:FIXME:
     // FILE *out = fopen("res.dot", "w");
     // mtbdd_fprintdot(out, symbc->val);
     // fclose(out);
-    
+
     for (uint32_t i = 0; i < iters; i++) {
-        my_mtbdd_update_map(symbc->map, symbc->val, symbc->vm->map, temp_map);
-        if (i == 0) {
-            vmap_clear(symbc->vm);
-        }
-        symbc->vm->map = temp_map;
+        my_mtbdd_update_map(symbc->map, symbc->val, symbc->vm->map, new_map);
+
+        // swap maps
+        temp_map = symbc->vm->map;
+        symbc->vm->map = new_map;
+        new_map = temp_map;
     }
 
     *circ = my_mtbdd_from_symb(symbc->map, (size_t) symbc->vm->map);
@@ -69,6 +74,10 @@ static void symb_calc(MTBDD *circ,  mtbdd_symb_t *symbc, uint32_t iters) //TODO:
     mpz_mul_ui(cs_k, cs_k, (unsigned long)iters);
     mpz_add(c_k, c_k, cs_k);
 
+    for (int i = 0; i < symbc->vm->msize; i++) {
+        mpz_clear(new_map[i]);
+    }
+    free(new_map);
     vmap_delete(symbc->vm);
     mpz_clear(cs_k);
 }

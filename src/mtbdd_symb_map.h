@@ -35,7 +35,7 @@ typedef struct vmap {
 void vmap_init(vmap_t **vm, size_t size);
 
 /**
- * Clears and deallocates the map from the given mapping structure
+ * Clears and deallocates the map in the given mapping structure
  */
 void vmap_clear(vmap_t *vm);
 
