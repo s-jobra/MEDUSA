@@ -12,16 +12,20 @@ void error_exit(const char *error)
     exit(1);
 }
 
-/**
- * Custom malloc function including error handling.
- */
 void* my_malloc(size_t size) {
-    void* p = malloc(size);
+    void *p = malloc(size);
     if (p == NULL) {
         error_exit("Bad memory allocation.");
     }
-
     return p;
+}
+
+void* my_realloc(void *p, size_t size) {
+    void *p_new = realloc(p, size);
+    if (p_new == NULL) {
+        error_exit("Memory reallocation failed.");
+    }
+    return p_new;
 }
 
 /* end of "error.c" */

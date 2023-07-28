@@ -160,7 +160,6 @@ static coef_t* eval_var(stree_t *data,  coef_t* map)
 
 VOID_TASK_IMPL_4(mtbdd_update_map, MTBDD, mtbdd_map, MTBDD, mtbdd_val, coef_t*, map, coef_t*, new_map)
 {
-
     //TODO: gc + cache?
     //FIXME: are there any other terminal cases?
 
@@ -173,18 +172,18 @@ VOID_TASK_IMPL_4(mtbdd_update_map, MTBDD, mtbdd_map, MTBDD, mtbdd_val, coef_t*, 
     int lmap = mtbdd_isleaf(mtbdd_map);
     int lval = mtbdd_isleaf(mtbdd_val);
     if (lmap && lval) {
-        sl_map_t *map_data = (sl_map_t*) mtbdd_getvalue(mtbdd_map);
-        sl_val_t *val_data = (sl_val_t*) mtbdd_getvalue(mtbdd_val);
+        sl_map_t *mdata = (sl_map_t*) mtbdd_getvalue(mtbdd_map);
+        sl_val_t *vdata = (sl_val_t*) mtbdd_getvalue(mtbdd_val);
 
-        coef_t *res_a = eval_var(val_data->a, map);
-        coef_t *res_b = eval_var(val_data->b, map);
-        coef_t *res_c = eval_var(val_data->c, map);
-        coef_t *res_d = eval_var(val_data->d, map);
+        coef_t *res_a = eval_var(vdata->a, map);
+        coef_t *res_b = eval_var(vdata->b, map);
+        coef_t *res_c = eval_var(vdata->c, map);
+        coef_t *res_d = eval_var(vdata->d, map);
 
-        mpz_set(new_map[map_data->va], *res_a);
-        mpz_set(new_map[map_data->vb], *res_b);
-        mpz_set(new_map[map_data->vc], *res_c);
-        mpz_set(new_map[map_data->vd], *res_d);
+        mpz_set(new_map[mdata->va], *res_a);
+        mpz_set(new_map[mdata->vb], *res_b);
+        mpz_set(new_map[mdata->vc], *res_c);
+        mpz_set(new_map[mdata->vd], *res_d);
 
         mpz_clears(*res_a, *res_b, *res_c, *res_d, NULL);
         free(res_a);

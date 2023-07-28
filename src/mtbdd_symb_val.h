@@ -103,10 +103,10 @@ TASK_DECL_2(MTBDD, mtbdd_from_symb, MTBDD, size_t);
  * 
  * @param t a symbolic map MTBDD
  * 
- * @param map array with the variable mapping to their values casted to size_t (needed for the TASK implementation)
+ * @param map array with the variable mapping to their values
  * 
  */
-#define my_mtbdd_from_symb(t, map) mtbdd_uapply(t, TASK(mtbdd_from_symb), map)
+#define my_mtbdd_from_symb(t, map) mtbdd_uapply(t, TASK(mtbdd_from_symb), (size_t)map)
 
 // ==========================================
 // Operations needed for gate representation:

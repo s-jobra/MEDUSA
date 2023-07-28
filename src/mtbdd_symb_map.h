@@ -35,6 +35,11 @@ typedef struct vmap {
 void vmap_init(vmap_t **vm, size_t size);
 
 /**
+ * Appends the existing map with the next_var (with the same value as the 'old' variable)
+ */
+void vmap_add(vmap_t *vm, vars_t old);
+
+/**
  * Clears and deallocates the map in the given mapping structure
  */
 void vmap_clear(vmap_t *vm);
@@ -86,10 +91,10 @@ TASK_DECL_2(MTBDD, mtbdd_to_symb_map, MTBDD, size_t);
  * 
  * @param t a regular MTBDD
  * 
- * @param m pointer to a vmap_t mapping casted to size_t (needed for the TASK implementation)
+ * @param m pointer to a vmap_t mapping
  * 
  */
-#define my_mtbdd_to_symb_map(t, m) mtbdd_uapply(t, TASK(mtbdd_to_symb_map), m)
+#define my_mtbdd_to_symb_map(t, m) mtbdd_uapply(t, TASK(mtbdd_to_symb_map), (size_t)m)
 
 #endif
 /* end of "mtbdd_symb_map.h" */

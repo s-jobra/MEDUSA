@@ -2,10 +2,12 @@
 #include <stdbool.h>
 #include <errno.h>
 
+#include "sylvan_int.h"
 #include "mtbdd.h"
 #include "mtbdd_symb_val.h"
 #include "gates.h"
 #include "gates_symb.h"
+#include "refine_utils.h"
 #include "error.h"
 #include "htab.h"
 
@@ -25,7 +27,7 @@ typedef struct mtbdd_symb {
 } mtbdd_symb_t;
 
 /**
- * Function parses a given QASM file and simulates it.
+ * Parses a given QASM file and simulates this circuit
  * 
  * @param in input QASM file
  * 
@@ -43,7 +45,7 @@ typedef struct mtbdd_symb {
 void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool *is_measure, bool opt_symb);
 
 /**
- * Function measures all bits in the given array (compatible only with measurement at the end of the circuit)
+ * Measures all bits in the given array (compatible only with measurement at the end of the circuit)
  * 
  * @param samples the total number of samples
  * 

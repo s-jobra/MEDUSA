@@ -12,6 +12,15 @@ void vmap_init(vmap_t **vm, size_t size)
     (*vm)->next_var = 0;
 }
 
+void vmap_add(vmap_t *vm, vars_t old)
+{
+    //TODO: should realloc with step 1?
+    vm->map = my_realloc(vm->map, sizeof(coef_t) * (vm->msize + 1));
+    vm->msize++;
+    mpz_init_set(vm->map[vm->next_var], vm->map[old]);
+    vm->next_var++;
+}
+
 void vmap_clear(vmap_t *vm)
 {
     for (int i = 0; i < vm->msize; i++) {
@@ -140,14 +149,13 @@ TASK_IMPL_2(MTBDD, mtbdd_to_symb_map, MTBDD, a, size_t, raw_m)
         mpz_init_set(m->map[var_d], orig_data->d);
     }
 
-    sl_map_t *new_data = my_malloc(sizeof(sl_map_t)); //TODO: should be malloc? (check where is the free)
+    sl_map_t new_data;
+    new_data.va = var_a;
+    new_data.vb = var_b;
+    new_data.vc = var_c;
+    new_data.vd = var_d;
 
-    new_data->va = var_a;
-    new_data->vb = var_b;
-    new_data->vc = var_c;
-    new_data->vd = var_d;
-
-    MTBDD res = mtbdd_makeleaf(ltype_symb_map_id, (uint64_t) new_data);
+    MTBDD res = mtbdd_makeleaf(ltype_symb_map_id, (uint64_t) &new_data);
     m->next_var += 4;
 
     return res;

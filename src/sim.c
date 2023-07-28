@@ -36,7 +36,7 @@ static void symb_init(MTBDD *circ, mtbdd_symb_t *symbc) //TODO: move to mtbdd_sy
                                                         is needed for every coefficient
     vmap_init(&(symbc->vm), msize);
 
-    symbc->map = my_mtbdd_to_symb_map(*circ, (size_t) symbc->vm);
+    symbc->map = my_mtbdd_to_symb_map(*circ, symbc->vm);
     mtbdd_protect(&(symbc->map));
     symbc->val = my_mtbdd_map_to_symb_val(symbc->map);
     mtbdd_protect(&(symbc->val));
@@ -45,9 +45,30 @@ static void symb_init(MTBDD *circ, mtbdd_symb_t *symbc) //TODO: move to mtbdd_sy
 }
 
 /**
+ * Executes refine on the symbolic MTBDDs and returns true if the MTBDDs haven't been changed.
+ */
+static bool symb_refine(mtbdd_symb_t *symbc)
+{
+    rdata_t *rdata = rdata_create(symbc->vm);
+
+    MTBDD refined = my_mtbdd_symb_refine(symbc->map, symbc->val, rdata, cache_next_opid());
+    mtbdd_protect(&refined);
+    bool is_finished = (rdata->ref->first == NULL); //FIXME: check if is sufficient
+    if (!is_finished) {
+        mtbdd_unprotect(&symbc->map);
+        symbc->map = refined;
+        mtbdd_unprotect(&symbc->val);
+        symbc->val = my_mtbdd_map_to_symb_val(refined);
+    }
+
+    rdata_delete(rdata);
+    return is_finished;
+}
+
+/**
  * Updates the circuits MTBDD according to the symbolic MTBDD, variable mapping and the number of iterations
  */
-static void symb_calc(MTBDD *circ,  mtbdd_symb_t *symbc, uint32_t iters) //TODO: move to mtbdd_symb ?
+static void symb_eval(MTBDD *circ,  mtbdd_symb_t *symbc, uint32_t iters) //TODO: move to mtbdd_symb ?
 {
     coef_t *new_map = my_malloc(sizeof(coef_t) * symbc->vm->msize);
     for (int i; i < symbc->vm->msize; i++) {
@@ -69,7 +90,7 @@ static void symb_calc(MTBDD *circ,  mtbdd_symb_t *symbc, uint32_t iters) //TODO:
         new_map = temp_map;
     }
 
-    *circ = my_mtbdd_from_symb(symbc->map, (size_t) symbc->vm->map);
+    *circ = my_mtbdd_from_symb(symbc->map, symbc->vm->map);
 
     mpz_mul_ui(cs_k, cs_k, (unsigned long)iters);
     mpz_add(c_k, c_k, cs_k);
@@ -284,8 +305,17 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
                     }
                 }
                 else {
-                    is_loop = false;
-                    symb_calc(circ, &symbc, iters); // TODO: should request gc call?
+                    if (symb_refine(&symbc)) {
+                        // is final result
+                        is_loop = false;
+                        symb_eval(circ, &symbc, iters); // TODO: should request gc call?
+                    }
+                    else {
+                        if (fsetpos(in, &loop_start) != 0) {
+                            error_exit("Could not set a new position of the stream.");
+                        }
+                        mpz_set_ui(cs_k, 0);
+                    }
                 }
                 continue; // ';' not expected
             }

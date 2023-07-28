@@ -20,5 +20,10 @@ void error_exit(const char *error);
  */
 void* my_malloc(size_t size);
 
+/**
+ * Custom realloc function including error handling.
+ */
+void* my_realloc(void *p, size_t size);
+
 #endif
 /* end of "error.h" */
