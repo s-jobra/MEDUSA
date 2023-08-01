@@ -2,6 +2,7 @@
 #include "mtbdd_symb_map.h"
 #include "mtbdd_symb_val.h"
 #include "symbolic_tree.h"
+#include "solver.h"
 
 #ifndef REFINE_UTILS_H
 #define REFINE_UTILS_H

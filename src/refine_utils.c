@@ -48,10 +48,12 @@ void rdata_delete(rdata_t *rd)
     free(rd);
 }
 
-//FIXME: add comment
-static bool expr_is_equal(stree_t *t_a, stree_t *t_b)
+/**
+ * Returns true if the two expressions are equal
+ */
+static inline bool expr_is_equal(stree_t *t_a, stree_t *t_b, size_t nvars)
 {
-    return (t_a == t_b); //FIXME: add z3 call
+    return solve_is_equal(t_a, t_b, nvars);
 }
 
 /**
@@ -64,7 +66,7 @@ static vars_t refine_var_check(vars_t var, stree_t *data, rdata_t *rd)
         return var;
     }
 
-    if (expr_is_equal(data, rd->upd[var])) {
+    if (expr_is_equal(data, rd->upd[var], rd->vm->msize)) {
         return var;
     }
 

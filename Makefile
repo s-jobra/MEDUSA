@@ -9,7 +9,7 @@ OBJS:=$(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRCS))
 
 CC:=gcc
 CFLAGS:=-g -O2
-CLIBS=-lgmp -lpthread -lm
+CLIBS=-lgmp -lpthread -lm -lz3
 INC_DIRS:=-I $(LIB_DIR)/sylvan/src/ -I $(LIB_DIR)/lace/src/ -I $(LIB_DIR)/lace/build/
 
 N_JOBS=4
@@ -68,8 +68,8 @@ get-benchmarks:
 	@bash ./$(BSCRIPT_PATH)/add-measure.sh
 
 # INIT:
-install-deps: make-sylvan make-lace
-	mkdir $(LIB_DIR) && mv sylvan $(LIB_DIR) && mv lace $(LIB_DIR)
+install-deps: make-sylvan make-lace make-z3
+	mkdir $(LIB_DIR) && mv sylvan lace z3 $(LIB_DIR)
 
 make-sylvan: download-sylvan
 	cd sylvan;			\
