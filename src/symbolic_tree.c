@@ -17,7 +17,7 @@ stree_t* st_create_val(vars_t v) {
 stree_t* st_init(stree_t *t) {
     stree_t *new = my_malloc(sizeof(stree_t));
     new->type = t->type;
-    
+
     if (new->type == ST_VAL) {
         new->val = my_malloc(sizeof(stnode_val_t));  //FIXME: check if should be realloc
         new->val->var = t->val->var;
@@ -38,8 +38,8 @@ stree_t* st_op(stree_t *a, stree_t *b, stnode_t op) {
     stree_t *res = my_malloc(sizeof(stree_t));
     res->val = NULL;
     res->type = op;
-    res->ls = a;
-    res->rs = b;
+    res->ls = st_init(a); //FIXME: realloc?
+    res->rs = st_init(b);
     return res;
 }
 
@@ -55,6 +55,7 @@ void st_coef_mul(stree_t *t, int64_t c) {
     }
 }
 
+//TODO: z3?
 bool st_cmp(stree_t *a, stree_t *b) {
     if (a == NULL && b == NULL) {
         return true;

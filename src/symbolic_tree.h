@@ -6,10 +6,19 @@
 #ifndef SYMBOLIC_TREE_H
 #define SYMBOLIC_TREE_H
 
-//FIXME: add comments
+/**
+ * Type for symbolic variables' coefficients
+ */
 typedef mpz_t coefs_t;
+
+/**
+ * Type for symbolic variables
+ */
 typedef uint64_t vars_t;
 
+/**
+ * Type for symbolic tree node type
+ */
 typedef enum {
     ST_ADD,
     ST_SUB,
@@ -17,11 +26,17 @@ typedef enum {
     ST_VAL
 } stnode_t;
 
+/**
+ * Type for symbolic tree node value
+ */
 typedef struct stnode_val {
     coefs_t coef;
     vars_t var;
 } stnode_val_t;
 
+/**
+ * Type for symbolic tree node
+ */
 typedef struct stree {
     stnode_val_t *val;
     stnode_t type;

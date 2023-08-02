@@ -111,7 +111,7 @@ TASK_DECL_2(MTBDD, mtbdd_from_symb, MTBDD, size_t);
 // ==========================================
 // Operations needed for gate representation:
 
-TASK_DECL_2(MTBDD, mtbdd_symb_plus, MTBDD*, MTBDD*);
+TASK_DECL_2(MTBDD, mtbdd_symb_plus, MTBDD*, MTBDD*); // ptrs needed because of the binary apply
 /**
  * Computes a + b with symbolic MTBDDs
  * 
@@ -123,7 +123,7 @@ TASK_DECL_2(MTBDD, mtbdd_symb_plus, MTBDD*, MTBDD*);
 #define my_mtbdd_symb_plus(p_a, p_b) mtbdd_apply(p_a, p_b, TASK(mtbdd_symb_plus))
 
 
-TASK_DECL_2(MTBDD, mtbdd_symb_minus, MTBDD*, MTBDD*);
+TASK_DECL_2(MTBDD, mtbdd_symb_minus, MTBDD*, MTBDD*); // ptrs needed because of the binary apply
 /**
  * Computes a - b with symbolic MTBDDs
  * 

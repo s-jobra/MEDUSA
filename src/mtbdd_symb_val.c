@@ -1,11 +1,16 @@
 #include "mtbdd_symb_val.h"
 
-uint32_t ltype_symb_expr_id;
+
+uint32_t ltype_symb_expr_id;  // leaf type id for symbolic representation
+
+coefs_k_t cs_k; // coefficient k common for all MTBDD leaf values for symbolic representation
+
 
 /**
  * Max. size of string written as leaf value in output file.
  */
 #define MAX_SYMB_LEAF_STR_LEN MAX_ST_TO_STR_LEN * 5
+
 
 /* SETUP */
 void init_my_leaf_symb_val()
@@ -50,7 +55,6 @@ int my_leaf_symb_v_equals(const uint64_t ldata_a_raw, const uint64_t ldata_b_raw
     sl_val_t *ldata_a = (sl_val_t *) ldata_a_raw;
     sl_val_t *ldata_b = (sl_val_t *) ldata_b_raw;
 
-    //TODO: z3?
     return !st_cmp(ldata_a->a, ldata_b->a) && !st_cmp(ldata_a->b, ldata_b->b) && !st_cmp(ldata_a->c, ldata_b->c) \
            && !st_cmp(ldata_a->d, ldata_b->d);
 }
@@ -95,7 +99,7 @@ uint64_t my_leaf_symb_v_hash(const uint64_t ldata_raw, const uint64_t seed)
     val = MY_HASH_COMB_SYMB(val, ldata->b);
     val = MY_HASH_COMB_SYMB(val, ldata->c);
     val = MY_HASH_COMB_SYMB(val, ldata->d);
-    val = MY_HASH_COMB_SYMB(val, cs_k);
+    //FIXME: check performance - needed? val = MY_HASH_COMB_SYMB(val, cs_k);
 
     return val;
 }
@@ -110,14 +114,14 @@ TASK_IMPL_2(MTBDD, mtbdd_map_to_symb_val, MTBDD, t, size_t, x)
 
     if (mtbdd_isleaf(t)) {
         sl_map_t *t_data = (sl_map_t*) mtbdd_getvalue(t);
-        sl_val_t *new_data = my_malloc(sizeof(sl_val_t)); //TODO: should be malloc? (check where is the free)
+        sl_val_t new_data;
         
-        new_data->a = st_create_val(t_data->va);
-        new_data->b = st_create_val(t_data->vb);
-        new_data->c = st_create_val(t_data->vc);
-        new_data->d = st_create_val(t_data->vd);
+        new_data.a = st_create_val(t_data->va);
+        new_data.b = st_create_val(t_data->vb);
+        new_data.c = st_create_val(t_data->vc);
+        new_data.d = st_create_val(t_data->vd);
 
-        MTBDD res = mtbdd_makeleaf(ltype_symb_expr_id, (uint64_t) new_data);
+        MTBDD res = mtbdd_makeleaf(ltype_symb_expr_id, (uint64_t) &new_data);
 
         return res;
     }
@@ -161,7 +165,6 @@ static coef_t* eval_var(stree_t *data,  coef_t* map)
 VOID_TASK_IMPL_4(mtbdd_update_map, MTBDD, mtbdd_map, MTBDD, mtbdd_val, coef_t*, map, coef_t*, new_map)
 {
     //TODO: gc + cache?
-    //FIXME: are there any other terminal cases?
 
     if (mtbdd_val == mtbdd_false) {
         sl_map_t *map_data = (sl_map_t*) mtbdd_getvalue(mtbdd_map);
@@ -343,17 +346,17 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_neg, MTBDD, t, size_t, x)
 
     // Compute -a if mtbdd is a leaf
     if (mtbdd_isleaf(t)) {
-        sl_val_t *a_data = (sl_val_t*) mtbdd_getvalue(t);
+        sl_val_t *ldata = (sl_val_t*) mtbdd_getvalue(t);
 
         sl_val_t res_data;
-        res_data.a = st_init(a_data->a); //FIXME: maybe can just copy pointers??
-        res_data.b = st_init(a_data->b);
-        res_data.c = st_init(a_data->c);
-        res_data.d = st_init(a_data->d);
-        st_coef_mul(a_data->a, -1);
-        st_coef_mul(a_data->b, -1);
-        st_coef_mul(a_data->c, -1);
-        st_coef_mul(a_data->d, -1);
+        res_data.a = ldata->a;
+        res_data.b = ldata->b;
+        res_data.c = ldata->c;
+        res_data.d = ldata->d;
+        st_coef_mul(res_data.a, -1);
+        st_coef_mul(res_data.b, -1);
+        st_coef_mul(res_data.c, -1);
+        st_coef_mul(res_data.d, -1);
 
         MTBDD res = mtbdd_makeleaf(ltype_symb_expr_id, (uint64_t) &res_data);
         return res;

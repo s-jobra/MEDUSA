@@ -2,7 +2,7 @@
 
 #define MAX_SYMB_MAP_LEAF_STR_LEN 1000
 
-uint32_t ltype_symb_map_id;
+uint32_t ltype_symb_map_id;  // leaf type id for symbolic representation
 
 void vmap_init(vmap_t **vm, size_t size)
 {

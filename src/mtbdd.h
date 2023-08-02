@@ -7,10 +7,6 @@
 #ifndef MTBDD_H
 #define MTBDD_H
 
-/*
- * Custom leaf implementation is taken from: https://github.com/MichalHe/sylvan-custom-leaf-example
- */
-
 /**
  * Global variable for my custom leaf type id
  */
@@ -52,6 +48,16 @@ void init_sylvan();
  */
 void init_my_leaf();
 
+/** 
+ * Initialize for all qubit values 0.
+ * 
+ * @param a pointer to the circuit's MTBDD
+ * 
+ * @param n number of circuit's qubits
+ * 
+ */
+void circuit_init(MTBDD *a, const uint32_t n);
+
 /* CUSTOM HANDLES */
 /**
  * Handle called when my new custom leaf is created and is not found in the internal table.
@@ -80,143 +86,77 @@ char* my_leaf_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf, siz
 uint64_t my_leaf_hash(const uint64_t ldata_raw, const uint64_t seed);
 
 /* CUSTOM MTBDD OPERATIONS */
-//FIXME: check if binary ops should be ptr and unary should not be ptr
-//FIXME: fix naming conventions: every task vs macro (mtbdd_... vs my_mtbdd_...)
-//FIXME: fix comments: task + define together, change to "Computes ..." etc
-// Basic operations:
-/**
- * Operation plus for my custom MTBDDs.
- */
-TASK_DECL_2(MTBDD, my_op_plus, MTBDD*, MTBDD*);
-
-/**
- * Operation minus for my custom MTBDDs.
- */
-TASK_DECL_2(MTBDD, my_op_minus, MTBDD*, MTBDD*);
-
-/**
- * Operation times for my custom MTBDDs.
- */
-TASK_DECL_2(MTBDD, my_op_times, MTBDD*, MTBDD*);
-
-/**
- * Operation times with constant -1 for my custom MTBDD.
- */
-TASK_DECL_2(MTBDD, my_op_negate, MTBDD, size_t);
-
-/**
- * Operation times with constant ω (right rotate coefficients) for my custom MTBDD.
- */
-TASK_DECL_2(MTBDD, my_op_coef_rot1, MTBDD, size_t);
-
-/**
- * Operation times with constant ω² (right rotate coefficients twice) for my custom MTBDD.
- */
-TASK_DECL_2(MTBDD, my_op_coef_rot2, MTBDD, size_t);
-
-// ==========================================
 // Operations needed for gate representation:
+
+TASK_DECL_2(MTBDD, mtbdd_plus, MTBDD*, MTBDD*); // ptrs needed because of the binary apply
 /**
- * Function for creating a new MTBDD from a given one with restriction: target qubit = 1.
+ * Computes a + b with cnum MTBDDs
+ * 
+ * @param p_a pointer to an MTBDD
+ * 
+ * @param p_b pointer to an MTBDD
+ * 
  */
+#define my_mtbdd_plus(p_a, p_b) mtbdd_apply(p_a, p_b, TASK(mtbdd_plus))
+
+
+TASK_DECL_2(MTBDD, mtbdd_minus, MTBDD*, MTBDD*); // ptrs needed because of the binary apply
+/**
+ * Computes a - b with cnum MTBDDs
+ * 
+ * @param p_a pointer to an MTBDD
+ * 
+ * @param p_b pointer to an MTBDD
+ * 
+ */
+#define my_mtbdd_minus(p_a, p_b) mtbdd_apply(p_a, p_b, TASK(mtbdd_minus))
+
+
+TASK_DECL_2(MTBDD, mtbdd_times, MTBDD*, MTBDD*); // ptrs needed because of the binary apply
+/**
+ * Computes a * b with cnum MTBDDs
+ * 
+ * @param p_a pointer to an MTBDD
+ * 
+ * @param p_b pointer to an MTBDD
+ * 
+ */
+#define my_mtbdd_times(p_a, p_b) mtbdd_apply(p_a, p_b, TASK(mtbdd_times))
+
+
+TASK_DECL_2(MTBDD, mtbdd_negate, MTBDD, size_t);
+/**
+ * Computes -t for a cnum MTBDD
+ * 
+ * @param t an MTBDD
+ * 
+ */
+#define my_mtbdd_neg(t) mtbdd_uapply(t, TASK(mtbdd_negate), 0)
+
+
+TASK_DECL_2(MTBDD, mtbdd_coef_rot1, MTBDD, size_t);
+/**
+ * Computes t * ω for a cnum MTBDD (rotate coefficients)
+ * 
+ * @param t an MTBDD
+ * 
+ */
+#define my_mtbdd_coef_rot1(t) mtbdd_uapply(t, TASK(mtbdd_coef_rot1), 0)
+
+
+TASK_DECL_2(MTBDD, mtbdd_coef_rot2, MTBDD, size_t);
+/**
+ * Computes t * ω² for my custom MTBDD (rotate coefficients twice)
+ * 
+ * @param t an MTBDD
+ * 
+ */
+#define my_mtbdd_coef_rot2(t) mtbdd_uapply(t, TASK(mtbdd_coef_rot2), 0)
+
+
 TASK_DECL_2(MTBDD, t_xt_create, MTBDD, uint64_t);
-
 /**
- * Function for creating a new MTBDD from a given one with restriction: target qubit = 0.
- */
-TASK_DECL_2(MTBDD, t_xt_comp_create, MTBDD, uint64_t);
-
-/**
- * Function for calculating the sum of all leafs in a given MTBDD where the target qubit is 1 
- * (with respect to all currently measured qubits).
- */
-TASK_DECL_4(prob_t, mtbdd_prob_sum, MTBDD, uint32_t, char*, int);
-
-/**
- * Function for calculating the probability from a given complex number
- * 
- * @param p pointer to a complex number
- * 
- */
-static inline prob_t calculate_prob(cnum *prob);
-
-/**
- * Function for creating auxiliary MTBDD for a target qubit.
- * (low -> 0, high -> 1)
- * 
- * @param xt target qubit index
- * 
- */
-MTBDD b_xt_create(uint32_t xt);
-
-/**
- * Function for creating auxiliary MTBDD for a target qubit complement.
- * (low -> 1, high -> 0)
- * 
- * @param xt target qubit index
- * 
- */
-MTBDD b_xt_comp_create(uint32_t xt);
-
-// ==========================================
-//FIXME: fix comments (probably just an MTBDD, not a pointer to an MTBDD) and t vs a,b naming
-// Macros for applying operations:
-/**
- * Compute a + b with my custom MTBDDs
- * 
- * @param a pointer to an MTBDD
- * 
- * @param b pointer to an MTBDD
- * 
- */
-#define my_mtbdd_plus(a, b) mtbdd_apply(a, b, TASK(my_op_plus))
-
-/**
- * Compute a * b with my custom MTBDDs
- * 
- * @param a pointer to an MTBDD
- * 
- * @param b pointer to an MTBDD
- * 
- */
-#define my_mtbdd_times(a, b) mtbdd_apply(a, b, TASK(my_op_times))
-
-/**
- * Compute a - b with my custom MTBDDs
- * 
- * @param a pointer to an MTBDD
- * 
- * @param b pointer to an MTBDD
- * 
- */
-#define my_mtbdd_minus(a, b) mtbdd_apply(a, b, TASK(my_op_minus))
-
-/**
- * Compute -a for my custom MTBDD
- * 
- * @param a pointer to an MTBDD
- * 
- */
-#define my_mtbdd_neg(a) mtbdd_uapply(a, TASK(my_op_negate), 0)
-
-/**
- * Compute a * ω for my custom MTBDD (rotate coefficients)
- * 
- * @param a pointer to an MTBDD
- * 
- */
-#define my_mtbdd_coef_rot1(a) mtbdd_uapply(a, TASK(my_op_coef_rot1), 0)
-
-/**
- * Compute a * ω² for my custom MTBDD (rotate coefficients twice)
- * 
- * @param a pointer to an MTBDD
- * 
- */
-#define my_mtbdd_coef_rot2(a) mtbdd_uapply(a, TASK(my_op_coef_rot2), 0)
-
-/**
- * Compute Txt on MTBDD t with target qubit xt
+ * Computes projection (Txt) on MTBDD t with target qubit xt (target qubit = 1)
  * 
  * @param t pointer to an MTBDD
  * 
@@ -225,8 +165,10 @@ MTBDD b_xt_comp_create(uint32_t xt);
  */
 #define create_t_xt(t, xt) mtbdd_uapply(t, TASK(t_xt_create), xt)
 
+
+TASK_DECL_2(MTBDD, t_xt_comp_create, MTBDD, uint64_t);
 /**
- * Compute Txt_complement on MTBDD t with target qubit xt
+ * Computes projection (Txt_complement) on MTBDD t with target qubit xt (target qubit = 0)
  * 
  * @param t pointer to an MTBDD
  * 
@@ -235,26 +177,35 @@ MTBDD b_xt_comp_create(uint32_t xt);
  */
 #define create_t_xt_comp(t, xt) mtbdd_uapply(t, TASK(t_xt_comp_create), xt)
 
-// For unitary interface:
+
+MTBDD b_xt_create(uint32_t xt);
 /**
- * Compute Bxt with target qubit xt
+ * Creates Bxt for the target qubit (low -> 0, high -> 1)
  * 
  * @param xt target qubit index
  * 
  */
 #define create_b_xt(xt) b_xt_create(xt)
+
+
+MTBDD b_xt_comp_create(uint32_t xt);
 /**
- * Compute Bxt_complement with target qubit xt
+ * Creates Bxt_complement for the target qubit (low -> 1, high -> 0)
  * 
  * @param xt target qubit index
  * 
  */
 #define create_b_xt_comp(xt) b_xt_comp_create(xt)
 
+// ==========================================
+// Measurement operations:
+
+TASK_DECL_4(prob_t, mtbdd_prob_sum, MTBDD, uint32_t, char*, int);
 /**
- * Computes the sum probability that the target qubit will be 1 in the MTBDD.
+ * Computes the sum probability that the target qubit will be 1 in the MTBDD
+ * (with respect to all currently measured qubits).
  * 
- * @param a pointer an MTBDD
+ * @param t cnum MTBDD
  * 
  * @param xt target qubit index
  * 
@@ -263,8 +214,9 @@ MTBDD b_xt_comp_create(uint32_t xt);
  * @param n number of qubits in the circuit
  * 
  */
-#define my_mtbdd_prob_sum(a, xt, curr_state, n) RUN(mtbdd_prob_sum, a, xt, curr_state, n)
+#define my_mtbdd_prob_sum(t, xt, curr_state, n) RUN(mtbdd_prob_sum, t, xt, curr_state, n)
 
+// Can't be private because of the op measure (in gates.c):
 /**
  * Computes the skip coefficient value for measure
  * 

@@ -24,6 +24,9 @@ void solver_data_delete(solver_data_t *sd)
     Z3_del_context(sd->ctx);
 }
 
+/**
+ * Creates a new solver instance
+ */
 static solver_t solver_create(solver_data_t *sdata)
 {
     solver_t s = Z3_mk_solver(sdata->ctx);
@@ -31,6 +34,9 @@ static solver_t solver_create(solver_data_t *sdata)
     return s;
 }
 
+/**
+ * Deletes the given solver instance
+ */
 static void solver_delete(solver_data_t *sdata, solver_t s)
 {
     Z3_solver_dec_ref(sdata->ctx, s);
