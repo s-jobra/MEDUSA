@@ -53,7 +53,18 @@ void rdata_delete(rdata_t *rd)
  */
 static inline bool expr_is_equal(stree_t *t_a, stree_t *t_b, size_t nvars)
 {
-    return solve_is_equal(t_a, t_b, nvars);
+    solver_data_t sdata;
+    solver_data_init(&sdata, nvars);
+
+    solver_exp_t res_a = parse_stree(t_a, &sdata);
+    solver_exp_t res_b = parse_stree(t_b, &sdata);
+    solver_exp_t query = solver_create_neq(&sdata, res_a, res_b);
+
+    bool is_equal = solve(&sdata, query);
+
+    solver_data_delete(&sdata);
+
+    return is_equal;
 }
 
 /**

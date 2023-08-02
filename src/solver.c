@@ -1,18 +1,10 @@
 #include "solver.h"
 
-/**
- * Type for encapsulating solver data needed by all functions working with the solver
- */
-typedef struct solver_data {
-    Z3_ast *vars;
-    Z3_context ctx;
-    Z3_sort sort;
-} solver_data_t;
+// =============
+// Z3 interface:
+// =============
 
-/**
- * Initializes the solver_data structure
- */
-static void solver_data_init(solver_data_t *sd, size_t nvars)
+void solver_data_init(solver_data_t *sd, size_t nvars)
 {
     sd->vars = my_malloc(sizeof(Z3_ast) * nvars);
     for (int i = 0; i < nvars; i++) {
@@ -26,17 +18,26 @@ static void solver_data_init(solver_data_t *sd, size_t nvars)
     sd->sort = Z3_mk_int_sort(sd->ctx);
 }
 
-/**
- * Deletes the solver_data structure
- */
-static void solver_data_delete(solver_data_t *sd)
+void solver_data_delete(solver_data_t *sd)
 {
     free(sd->vars);
     Z3_del_context(sd->ctx);
 }
 
+static solver_t solver_create(solver_data_t *sdata)
+{
+    solver_t s = Z3_mk_solver(sdata->ctx);
+    Z3_solver_inc_ref(sdata->ctx, s);
+    return s;
+}
+
+static void solver_delete(solver_data_t *sdata, solver_t s)
+{
+    Z3_solver_dec_ref(sdata->ctx, s);
+}
+
 /**
- * Creates new solver constant
+ * Creates a new solver constant (0-ary function)
  */
 static void solver_init_var(stree_t *t, solver_data_t *sdata)
 {
@@ -46,31 +47,51 @@ static void solver_init_var(stree_t *t, solver_data_t *sdata)
 /**
  * Returns the solver representation of the tree's variable and its coefficient
  */
-static Z3_ast solver_get_var(stree_t *t, solver_data_t *sdata)
+static solver_exp_t solver_get_var(stree_t *t, solver_data_t *sdata)
 {
     if (sdata->vars[t->val->var] == NULL) {
         solver_init_var(t, sdata);
     }
 
-    Z3_ast args[2];
+    solver_exp_t args[2];
     args[0] = Z3_mk_int64(sdata->ctx, mpz_get_si(t->val->coef), sdata->sort);
     args[1] = sdata->vars[t->val->var];
-    Z3_ast res = Z3_mk_mul(sdata->ctx, 2, args);
+    solver_exp_t res = Z3_mk_mul(sdata->ctx, 2, args);
     return res;
 }
 
 /**
- * Converts the symbolic tree to solver's internal tree
+ * Asserts the query and checks the result
  */
-static Z3_ast parse_stree(stree_t *t, solver_data_t *sdata)
+static bool solver_assert(solver_t s, solver_data_t *sdata, solver_exp_t query)
 {
-    Z3_ast res;
+    bool res;
+    Z3_solver_assert(sdata->ctx, s, query);
+    if (Z3_solver_check(sdata->ctx, s) == Z3_L_FALSE) {
+        res = true;
+    }
+    else {
+        res = false;
+    }
+    return res;
+}
+
+solver_exp_t solver_create_neq(solver_data_t *sdata, solver_exp_t a, solver_exp_t b)
+{
+    solver_exp_t eq = Z3_mk_eq(sdata->ctx, a, b);
+    solver_exp_t neq = Z3_mk_not(sdata->ctx, eq);
+    return neq;
+}
+
+solver_exp_t parse_stree(stree_t *t, solver_data_t *sdata)
+{
+    solver_exp_t res;
 
     if(t->type == ST_VAL) {
         res = solver_get_var(t, sdata);
     }
     else {
-        Z3_ast args[2];
+        solver_exp_t args[2];
         args[0] = parse_stree(t->ls, sdata);
         args[1] = parse_stree(t->rs, sdata);
 
@@ -89,38 +110,14 @@ static Z3_ast parse_stree(stree_t *t, solver_data_t *sdata)
     return res;
 }
 
-/**
- * Returns whether the given query is solvable
- */
-static bool solve(solver_data_t *sdata, Z3_ast query)
+// =======================================================
+
+bool solve(solver_data_t *sdata, solver_exp_t query)
 {
-    bool res;
-    Z3_solver s = Z3_mk_solver(sdata->ctx);
-    Z3_solver_assert(sdata->ctx, s, query);
-    if (Z3_solver_check(sdata->ctx, s) == Z3_L_FALSE) {
-        res = true;
-    }
-    else {
-        res = false;
-    }
+    solver_t s = solver_create(sdata);
+    bool res = solver_assert(s, sdata, query);
+    solver_delete(sdata, s);
     return res;
-}
-
-bool solve_is_equal(stree_t *t_a, stree_t *t_b, size_t nvars)
-{
-    solver_data_t sdata;
-    solver_data_init(&sdata, nvars);
-
-    Z3_ast res_a = parse_stree(t_a, &sdata);
-    Z3_ast res_b = parse_stree(t_b, &sdata);
-    Z3_ast eq = Z3_mk_eq(sdata.ctx, res_a, res_b);
-    Z3_ast query = Z3_mk_not(sdata.ctx, eq);
-
-    bool is_equal = solve(&sdata, query);
-
-    solver_data_delete(&sdata);
-
-    return is_equal;
 }
 
 /* end of "solver.c" */
