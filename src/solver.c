@@ -7,9 +7,7 @@
 void solver_data_init(solver_data_t *sd, size_t nvars)
 {
     sd->vars = my_malloc(sizeof(Z3_ast) * nvars);
-    for (int i = 0; i < nvars; i++) {
-        sd->vars[i] = NULL;
-    }
+    memset(sd->vars, 0, sizeof(Z3_ast) * nvars);
 
     Z3_config cfg = Z3_mk_config();
     sd->ctx = Z3_mk_context(cfg);

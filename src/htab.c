@@ -5,14 +5,11 @@ htab_t* htab_init(size_t n)
     htab_t *t = my_malloc(sizeof(htab_t));
 
     t->arr_ptr = my_malloc(sizeof(htab_item_t*) * n);
+    memset(t->arr_ptr, 0, sizeof(htab_item_t*) * n);
 
     t->size = 0;
     t->arr_size = n;
 
-    for (size_t i = 0; i < n; i++) {
-        t->arr_ptr[i] = NULL;
-    }
-    
     return t;
 }
 
@@ -46,14 +43,10 @@ void htab_resize(htab_t *t, size_t newn)
         return;
     }
 
-    //allocate new array
+    //alloc and init new array
     htab_item_t **new_arr_ptr;
     new_arr_ptr = my_malloc(newn * sizeof(htab_item_t*));
-
-    //init new array
-    for (size_t i = 0; i < newn; i++) {
-        new_arr_ptr[i] = NULL;
-    }
+    memset(new_arr_ptr, 0, newn * sizeof(htab_item_t*));
 
     //index change
     htab_item_t *curr;

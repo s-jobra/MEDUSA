@@ -47,9 +47,7 @@ static rdata_t* rdata_create(vmap_t *vm)
     rd->ref->cur = NULL;
 
     rd->upd = my_malloc(sizeof(upd_elem_t) * vm->msize);
-    for (int i = 0; i < vm->msize; i++) {
-        rd->upd[i] = NULL;
-    }
+    memset(rd->upd, 0, sizeof(upd_elem_t) * vm->msize);
 
     rd->vm = vm;
     return rd;
