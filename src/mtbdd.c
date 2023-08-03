@@ -32,7 +32,7 @@ void init_my_leaf()
     sylvan_mt_set_hash(ltype_id, my_leaf_hash);
 }
 
-void circuit_init(MTBDD *a, const uint32_t n)
+void circuit_init(MTBDD *c, const uint32_t n)
 {
     BDDSET variables = mtbdd_set_empty();
     for (uint32_t i = 0; i < n; i++) {
@@ -45,9 +45,21 @@ void circuit_init(MTBDD *a, const uint32_t n)
     uint8_t point_symbol[n];
     memset(point_symbol, 0, n*sizeof(uint8_t));
     MTBDD leaf  = mtbdd_makeleaf(ltype_id, (uint64_t) &point);
-    *a = mtbdd_cube(variables, point_symbol, leaf);
+    *c = mtbdd_cube(variables, point_symbol, leaf);
 
     mpz_clears(point.a, point.b, point.c, point.d, NULL);
+}
+
+void circuit_delete(MTBDD *c)
+{
+    mtbdd_unprotect(c);
+    mpz_clear(c_k);
+}
+
+void stop_sylvan()
+{
+    sylvan_quit();
+    lace_stop();
 }
 
 /* CUSTOM HANDLES */

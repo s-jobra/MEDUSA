@@ -51,12 +51,25 @@ void init_my_leaf();
 /** 
  * Initialize for all qubit values 0.
  * 
- * @param a pointer to the circuit's MTBDD
+ * @param c pointer to the circuit's MTBDD
  * 
  * @param n number of circuit's qubits
  * 
  */
-void circuit_init(MTBDD *a, const uint32_t n);
+void circuit_init(MTBDD *c, const uint32_t n);
+
+/** 
+ * Deletes the circuit.
+ * 
+ * @param c pointer to the circuit's MTBDD
+ * 
+ */
+void circuit_delete(MTBDD *c);
+
+/**
+ * Stops Sylvan and Lace.
+ */
+void stop_sylvan();
 
 /* CUSTOM HANDLES */
 /**

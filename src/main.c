@@ -26,6 +26,7 @@ int main(int argc, char *argv[])
 {
     FILE *input = stdin;
     FILE *measure_output = stdout;
+    bool opt_infile = false;
     bool opt_time = false;
     bool opt_measure = false;
     bool opt_symbolic = false;
@@ -52,6 +53,7 @@ int main(int argc, char *argv[])
                 opt_time = true;
                 break; 
             case 'f':
+                opt_infile = true;
                 input = fopen(optarg, "r");
                 if (input == NULL) {
                     error_exit("Invalid input file.");
@@ -87,7 +89,6 @@ int main(int argc, char *argv[])
         init_my_leaf_symb_val();
         init_my_leaf_symb_map();
     }
-
     FILE *out = fopen(OUT_FILE".dot", "w");
     if (out == NULL) {
         error_exit("Cannot open output file.");
@@ -110,15 +111,13 @@ int main(int argc, char *argv[])
     clock_gettime(CLOCK_MONOTONIC, &t_finish); // End the timer
     
     mtbdd_fprintdot(out, circ);
-    mpz_clear(c_k);
 
+    circuit_delete(&circ);
+    stop_sylvan();
     fclose(out);
-    if (argc == 2){
+    if (opt_infile) {
         fclose(input);
     }
-
-    sylvan_quit();
-    lace_stop();
 
     t_el = t_finish.tv_sec - t_start.tv_sec + (t_finish.tv_nsec - t_start.tv_nsec) * 1.0e-9;
 
