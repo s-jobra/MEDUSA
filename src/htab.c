@@ -43,15 +43,15 @@ void htab_resize(htab_t *t, size_t newn)
         return;
     }
 
-    //alloc and init new array
+    // alloc and init new array
     htab_item_t **new_arr_ptr;
     new_arr_ptr = my_malloc(newn * sizeof(htab_item_t*));
     memset(new_arr_ptr, 0, newn * sizeof(htab_item_t*));
 
-    //index change
+    // index change
     htab_item_t *curr;
-    htab_item_t *temp; //pomocná proměnná pro ukazatel na záznam v novém poli
-    size_t new_index; //pomocná proměnná pro nový index současného záznamu
+    htab_item_t *temp; // aux ptr to the elem in the new arr
+    size_t new_index; // aux var for the new index of the current elem
     
     for (size_t i = 0; i < t->arr_size; i++) {
         curr = t->arr_ptr[i];
@@ -59,7 +59,7 @@ void htab_resize(htab_t *t, size_t newn)
         while (curr != NULL) {
             new_index = htab_hash_function(curr->data.key) % newn;
 
-            //insert into new array
+            // insert into new array
             if (new_arr_ptr[new_index] == NULL) {
                 new_arr_ptr[new_index] = curr;
                 curr = curr->next; //preserve the original list
@@ -71,7 +71,7 @@ void htab_resize(htab_t *t, size_t newn)
                     temp = temp->next;
                 }
                 temp->next = curr;
-                curr = curr->next; //preserve the original list
+                curr = curr->next; // preserve the original list
                 temp->next->next = NULL;
             }
         }
@@ -87,7 +87,7 @@ void htab_lookup_add(htab_t *t, htab_key_t key)
 {
     htab_item_t *item = t->arr_ptr[htab_hash_function(key) % t->arr_size];
 
-    //find the item
+    // find the item
     while (item != NULL) {
         if (strcmp(item->data.key,key) == 0) {
             item->data.value++;
@@ -98,13 +98,13 @@ void htab_lookup_add(htab_t *t, htab_key_t key)
 
     item = my_malloc(sizeof(htab_item_t));
     
-    //item init
+    // item init
     char *key_temp = my_malloc(sizeof(char) * (strlen(key) + 1));
     item->data.key = strcpy(key_temp, key);
     item->data.value = 1;
     item->next = NULL;
 
-    //insert new item into the table
+    // insert new item into the table
     size_t new_index = htab_hash_function(key) % t->arr_size;
     if (t->arr_ptr[new_index] == NULL) {
         t->arr_ptr[new_index] = item;
@@ -118,7 +118,7 @@ void htab_lookup_add(htab_t *t, htab_key_t key)
     }
 
     t->size++;
-    if (((t->size + 0.0)/ t->arr_size) > AVG_LEN_MAX) { //+0.0 because of non-integer division
+    if (((t->size + 0.0)/ t->arr_size) > AVG_LEN_MAX) { // +0.0 because of non-integer division
         htab_resize(t, t->size * 2);
     }
 }
@@ -133,7 +133,7 @@ void htab_print_all(htab_t *t, FILE *output)
 
         while (curr != NULL) {
             fprintf(output,"    \'");
-            //key stored as LSBF
+            // key stored as LSBF
             for(int i=strlen(curr->data.key); i >= 0 ;i--) {
                 putc(curr->data.key[i], output);
             }
@@ -165,7 +165,6 @@ void htab_free(htab_t *t)
         htab_clear(t);
         free(t->arr_ptr);
     }
-    
     free(t);
 }
 
