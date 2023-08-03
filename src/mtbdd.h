@@ -159,7 +159,7 @@ TASK_DECL_2(MTBDD, mtbdd_coef_rot1, MTBDD, size_t);
 
 TASK_DECL_2(MTBDD, mtbdd_coef_rot2, MTBDD, size_t);
 /**
- * Computes t * ω² for my custom MTBDD (rotate coefficients twice)
+ * Computes t * ω² for a cnum MTBDD (rotate coefficients twice)
  * 
  * @param t an MTBDD
  * 

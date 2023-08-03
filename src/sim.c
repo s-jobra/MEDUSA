@@ -226,11 +226,11 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
             }
             else if (strcmp(cmd, "y") == 0) {
                 uint32_t qt = get_q_num(in);
-                (opt_symb && is_loop)? error_exit("Gate does not support symbolic simulation") : gate_y(circ, qt); //TODO:
+                (opt_symb && is_loop)? gate_symb_y(&symbc.val, qt) : gate_y(circ, qt);
             }
             else if (strcmp(cmd, "z") == 0) {
                 uint32_t qt = get_q_num(in);
-                (opt_symb && is_loop)? error_exit("Gate does not support symbolic simulation") : gate_z(circ, qt); //TODO:
+                (opt_symb && is_loop)? gate_symb_z(&symbc.val, qt) : gate_z(circ, qt);
             }
             else if (strcmp(cmd, "h") == 0) {
                 uint32_t qt = get_q_num(in);
@@ -238,11 +238,11 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
             }
             else if (strcmp(cmd, "s") == 0) {
                 uint32_t qt = get_q_num(in);
-                (opt_symb && is_loop)? error_exit("Gate does not support symbolic simulation") : gate_s(circ, qt); //TODO:
+                (opt_symb && is_loop)? gate_symb_s(&symbc.val, qt) : gate_s(circ, qt);
             }
             else if (strcmp(cmd, "t") == 0) {
                 uint32_t qt = get_q_num(in);
-                (opt_symb && is_loop)? error_exit("Gate does not support symbolic simulation") : gate_t(circ, qt); //TODO:
+                (opt_symb && is_loop)? gate_symb_t(&symbc.val, qt) : gate_t(circ, qt);
             }
             else if (strcmp(cmd, "rx(pi/2)") == 0) {
                 uint32_t qt = get_q_num(in);
@@ -255,18 +255,18 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
             else if (strcmp(cmd, "cx") == 0) {
                 uint32_t qc = get_q_num(in);
                 uint32_t qt = get_q_num(in);
-                (opt_symb && is_loop)? error_exit("Gate does not support symbolic simulation") : gate_cnot(circ, qt, qc); //TODO:
+                (opt_symb && is_loop)? gate_symb_cnot(&symbc.val, qt, qc) : gate_cnot(circ, qt, qc);
             }
             else if (strcmp(cmd, "cz") == 0) {
                 uint32_t qc = get_q_num(in);
                 uint32_t qt = get_q_num(in);
-                (opt_symb && is_loop)? error_exit("Gate does not support symbolic simulation") : gate_cz(circ, qt, qc); //TODO:
+                (opt_symb && is_loop)? gate_symb_cz(&symbc.val, qt, qc) : gate_cz(circ, qt, qc);
             }
             else if (strcmp(cmd, "ccx") == 0) {
                 uint32_t qc1 = get_q_num(in);
                 uint32_t qc2 = get_q_num(in);
                 uint32_t qt = get_q_num(in);
-                (opt_symb && is_loop)? error_exit("Gate does not support symbolic simulation") : gate_toffoli(circ, qt, qc1, qc2); //TODO:
+                (opt_symb && is_loop)? gate_symb_toffoli(&symbc.val, qt, qc1, qc2) : gate_toffoli(circ, qt, qc1, qc2);
             }
             else if (strcmp(cmd, "cswap") == 0) {
                 uint32_t qc = get_q_num(in);

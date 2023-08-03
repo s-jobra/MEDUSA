@@ -145,6 +145,26 @@ TASK_DECL_2(MTBDD, mtbdd_symb_neg, MTBDD, size_t);
 #define my_mtbdd_symb_neg(t) mtbdd_uapply(t, TASK(mtbdd_symb_neg), 0)
 
 
+TASK_DECL_2(MTBDD, mtbdd_symb_coef_rot1, MTBDD, size_t);
+/**
+ * Computes t * ω a symbolic MTBDD (rotate coefficients)
+ * 
+ * @param t a symbolic value MTBDD
+ * 
+ */
+#define my_mtbdd_symb_coef_rot1(t) mtbdd_uapply(t, TASK(mtbdd_symb_coef_rot1), 0)
+
+
+TASK_DECL_2(MTBDD, mtbdd_symb_coef_rot2, MTBDD, size_t);
+/**
+ * Computes t * ω² a symbolic MTBDD (rotate coefficients twice)
+ * 
+ * @param t a symbolic value MTBDD
+ * 
+ */
+#define my_mtbdd_symb_coef_rot2(t) mtbdd_uapply(t, TASK(mtbdd_symb_coef_rot2), 0)
+
+
 /**
  * Computes projection (Txt) on MTBDD t with target qubit xt (target qubit = 1)
  * 

@@ -3,6 +3,13 @@
 #ifndef GATES_H
 #define GATES_H
 
+//FIXME: func naming, decl placement (move to .c), unite MTBDD param names
+
+/**
+ * Checks if xt shouldn't be root (for permutation based formulae)
+ */
+void check_xt_root_missing(MTBDD *a, uint32_t xt);
+
 /**
  * Permutation based implementation of the X gate on the given MTBDD.
  */

@@ -365,6 +365,57 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_neg, MTBDD, t, size_t, x)
     return mtbdd_invalid; // Recurse deeper
 }
 
+TASK_IMPL_2(MTBDD, mtbdd_symb_coef_rot1, MTBDD, t, size_t, x)
+{
+    (void)x; // extra parameter needed for task - not needed
+
+    // Partial function check
+    if (t == mtbdd_false) return mtbdd_false;
+
+    // Compute coeficient rotation if mtbdd is a leaf
+    if (mtbdd_isleaf(t)) {
+        sl_val_t *ldata = (sl_val_t*) mtbdd_getvalue(t);
+
+        sl_val_t res_data;
+        res_data.a = st_init(ldata->d);
+        res_data.b = st_init(ldata->a);
+        res_data.c = st_init(ldata->b);
+        res_data.d = st_init(ldata->c);
+        st_coef_mul(res_data.d, -1);
+
+        MTBDD res = mtbdd_makeleaf(ltype_symb_expr_id, (uint64_t) &res_data);
+        return res;
+    }
+
+    return mtbdd_invalid; // Recurse deeper
+}
+
+TASK_IMPL_2(MTBDD, mtbdd_symb_coef_rot2, MTBDD, t, size_t, x)
+{
+    (void)x; // extra parameter needed for task - not needed
+
+    // Partial function check
+    if (t == mtbdd_false) return mtbdd_false;
+
+    // Compute coeficient rotation if mtbdd is a leaf
+    if (mtbdd_isleaf(t)) {
+        sl_val_t *ldata = (sl_val_t*) mtbdd_getvalue(t);
+
+        sl_val_t res_data;
+        res_data.a = st_init(ldata->c);
+        res_data.b = st_init(ldata->d);
+        res_data.c = st_init(ldata->a);
+        res_data.d = st_init(ldata->b);
+        st_coef_mul(res_data.a, -1);
+        st_coef_mul(res_data.b, -1);
+
+        MTBDD res = mtbdd_makeleaf(ltype_symb_expr_id, (uint64_t) &res_data);
+        return res;
+    }
+
+    return mtbdd_invalid; // Recurse deeper
+}
+
 TASK_IMPL_2(MTBDD, mtbdd_symb_b_xt_mul, MTBDD*, p_t, MTBDD*, p_b)
 {
     MTBDD t = *p_t;

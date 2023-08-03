@@ -2,6 +2,16 @@
 
 //TODO: change Bxt, Bxt_c create to Bxt * T, Bxt_c * T operations
 
+//FIXME: use this function instead
+void check_xt_root_missing(MTBDD *a, uint32_t xt)
+{
+    if (*a != mtbdd_false) {
+        if (xt < mtbdd_getvar(*a)) {
+            *a = _mtbdd_makenode(xt, *a, *a);
+        }
+    }
+}
+
 prob_t measure(MTBDD *a, uint32_t xt, char *curr_state, int n)
 {
     MTBDD t = create_t_xt(*a, xt);
@@ -360,6 +370,8 @@ void gate_ry_pihalf(MTBDD* p_t, uint32_t xt)
 
     mpz_add_ui(c_k, c_k, 1); // (1/√2) * (Txt_c + Bxt * T - Bxt_c * Txt)
 }
+
+//FIXME: remove unnecessary applies (bracket multiplication)
 
 void gate_cnot(MTBDD *p_t, uint32_t xt, uint32_t xc)
 {
