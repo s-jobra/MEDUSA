@@ -167,7 +167,7 @@ TASK_DECL_2(MTBDD, mtbdd_symb_neg, MTBDD, size_t);
 #define my_mtbdd_symb_t_xt_comp(t, xt) mtbdd_uapply(t, TASK(t_xt_comp_create), xt)
 
 
-TASK_DECL_2(MTBDD, mtbdd_symb_b_xt_mul, MTBDD, uint64_t);
+TASK_DECL_2(MTBDD, mtbdd_symb_b_xt_mul, MTBDD*, MTBDD*);
 MTBDD mtbdd_symb_b_xt_mul_wrapper(MTBDD t, uint32_t xt);
 /**
  * Computes restriction (Bxt * T) on a symbolic MTBDD (multiplies target with: low -> 0, high -> 1)
@@ -180,7 +180,6 @@ MTBDD mtbdd_symb_b_xt_mul_wrapper(MTBDD t, uint32_t xt);
 #define my_mtbdd_symb_b_xt_mul(t, xt) mtbdd_symb_b_xt_mul_wrapper(t, xt)
 
 
-TASK_DECL_2(MTBDD, mtbdd_symb_b_xt_comp_mul, MTBDD, uint64_t);
 MTBDD mtbdd_symb_b_xt_comp_mul_wrapper(MTBDD t, uint32_t xt);
 /**
  * Computes restriction (Bxt_complement * T) on a symbolic MTBDD (multiplies target with: low -> 1, high -> 0)

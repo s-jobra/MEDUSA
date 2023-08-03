@@ -349,10 +349,10 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_neg, MTBDD, t, size_t, x)
         sl_val_t *ldata = (sl_val_t*) mtbdd_getvalue(t);
 
         sl_val_t res_data;
-        res_data.a = ldata->a;
-        res_data.b = ldata->b;
-        res_data.c = ldata->c;
-        res_data.d = ldata->d;
+        res_data.a = st_init(ldata->a);
+        res_data.b = st_init(ldata->b);
+        res_data.c = st_init(ldata->c);
+        res_data.d = st_init(ldata->d);
         st_coef_mul(res_data.a, -1);
         st_coef_mul(res_data.b, -1);
         st_coef_mul(res_data.c, -1);
@@ -365,64 +365,31 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_neg, MTBDD, t, size_t, x)
     return mtbdd_invalid; // Recurse deeper
 }
 
-TASK_IMPL_2(MTBDD, mtbdd_symb_b_xt_mul, MTBDD, t, uint64_t, xt)
+TASK_IMPL_2(MTBDD, mtbdd_symb_b_xt_mul, MTBDD*, p_t, MTBDD*, p_b)
 {
-    // Partial function check
-    if (t == mtbdd_false) return mtbdd_false;
+    MTBDD t = *p_t;
+    MTBDD b = *p_b;
 
-    // If xt, ground the low edge
-    if (mtbdd_isnode(t)) {
-        if (mtbdd_getvar(t) == (uint32_t)xt) { // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
-            MTBDD res = mtbdd_makenode(xt, (MTBDD)NULL, mtbdd_gethigh(t));
-            return res;
-        }
-    }
-    // Else copy if mtbdd is leaf
-    else {
-        return t;
-    }
+    // Partial function check
+    if (b == mtbdd_true) return t;
+    if (b == mtbdd_false || t == mtbdd_false) return mtbdd_false;
 
     return mtbdd_invalid; // Recurse deeper
 }
 
 MTBDD mtbdd_symb_b_xt_mul_wrapper(MTBDD t, uint32_t xt)
 {
-    if (t != mtbdd_false) { // check if xt shouldn't be root
-        if (xt < mtbdd_getvar(t)) {
-            t = _mtbdd_makenode(xt, t, t);
-        }
-    }
-    return mtbdd_uapply(t, TASK(mtbdd_symb_b_xt_mul), xt);
+    MTBDD b_xt = sylvan_ithvar(xt);
+
+    return mtbdd_apply(t, b_xt, TASK(mtbdd_symb_b_xt_mul));
 }
 
-TASK_IMPL_2(MTBDD, mtbdd_symb_b_xt_comp_mul, MTBDD, t, uint64_t, xt)
-{
-    // Partial function check
-    if (t == mtbdd_false) return mtbdd_false;
-
-    // If xt, ground the high edge
-    if (mtbdd_isnode(t)) {
-        if (mtbdd_getvar(t) == (uint32_t)xt) { // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
-            MTBDD res = mtbdd_makenode(xt, mtbdd_getlow(t), (MTBDD)NULL);
-            return res;
-        }
-    }
-    // Else copy if mtbdd is leaf
-    else {
-        return t;
-    }
-
-    return mtbdd_invalid; // Recurse deeper
-}
 
 MTBDD mtbdd_symb_b_xt_comp_mul_wrapper(MTBDD t, uint32_t xt)
 {
-    if (t != mtbdd_false) { // check if xt shouldn't be root
-        if (xt < mtbdd_getvar(t)) {
-            t = _mtbdd_makenode(xt, t, t);
-        }
-    }
-    return mtbdd_uapply(t, TASK(mtbdd_symb_b_xt_comp_mul), xt);
+    MTBDD b_xt_comp = sylvan_nithvar(xt);
+
+    return mtbdd_apply(t, b_xt_comp, TASK(mtbdd_symb_b_xt_mul));
 }
 
 /* end of "mtbdd_symb_val.c" */
