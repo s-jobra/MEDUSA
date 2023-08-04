@@ -116,7 +116,13 @@ static vars_t refine_var_check(vars_t var, stree_t *data, rdata_t *rd)
         return var;
     }
 
-    if (expr_is_equal(data, rd->upd[var], rd->vm->msize)) {
+    if (rd->upd[var] == (void*)1) {
+        // always create new var when not mtbdd_false
+        if (data == (void*)1) {
+            return var;
+        }
+    }
+    else if (expr_is_equal(data, rd->upd[var], rd->vm->msize)) {
         return var;
     }
 
@@ -134,17 +140,27 @@ TASK_IMPL_3(MTBDD, mtbdd_symb_refine, MTBDD*, p_map, MTBDD*, p_val, size_t, rd_r
 
     if (mtbdd_isleaf(map) && mtbdd_isleaf(val)) {
         sl_map_t *mdata = (sl_map_t*) mtbdd_getvalue(map);
-        sl_val_t *vdata = (sl_val_t*) mtbdd_getvalue(val);
+        vars_t new_a, new_b, new_c, new_d;
 
-        vars_t new_a = refine_var_check(mdata->va, vdata->a, rd);
-        vars_t new_b = refine_var_check(mdata->vb, vdata->b, rd);
-        vars_t new_c = refine_var_check(mdata->vc, vdata->c, rd);
-        vars_t new_d = refine_var_check(mdata->vd, vdata->d, rd);
-        
+        if (val == mtbdd_false) {
+            new_a = refine_var_check(mdata->va, (void*)1, rd); //FIXME: is defined behaviour?? ... at least use some macro
+            new_b = refine_var_check(mdata->vb, (void*)1, rd);
+            new_c = refine_var_check(mdata->vc, (void*)1, rd);
+            new_d = refine_var_check(mdata->vd, (void*)1, rd);
+        }
+        else {
+            sl_val_t *vdata = (sl_val_t*) mtbdd_getvalue(val);
+            new_a = refine_var_check(mdata->va, vdata->a, rd);
+            new_b = refine_var_check(mdata->vb, vdata->b, rd);
+            new_c = refine_var_check(mdata->vc, vdata->c, rd);
+            new_d = refine_var_check(mdata->vd, vdata->d, rd);
+        }
+
         if (new_a == mdata->va && new_b == mdata->vb && new_c == mdata->vc && new_d == mdata->vd) {
             return map;
         }
 
+        // new symbolic var needed
         sl_map_t new_data;
         new_data.va = new_a;
         new_data.vb = new_b;

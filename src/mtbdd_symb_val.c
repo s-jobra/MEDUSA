@@ -166,15 +166,15 @@ VOID_TASK_IMPL_4(mtbdd_update_map, MTBDD, mtbdd_map, MTBDD, mtbdd_val, coef_t*, 
 {
     //TODO: gc + cache?
 
-    if (mtbdd_val == mtbdd_false) {
-        sl_map_t *map_data = (sl_map_t*) mtbdd_getvalue(mtbdd_map);
-        mpz_inits(new_map[map_data->va], new_map[map_data->vb], new_map[map_data->vc], new_map[map_data->vd], NULL);
-        return;
-    }
-
     int lmap = mtbdd_isleaf(mtbdd_map);
     int lval = mtbdd_isleaf(mtbdd_val);
     if (lmap && lval) {
+        if (mtbdd_val == mtbdd_false) {
+            sl_map_t *map_data = (sl_map_t*) mtbdd_getvalue(mtbdd_map);
+            mpz_inits(new_map[map_data->va], new_map[map_data->vb], new_map[map_data->vc], new_map[map_data->vd], NULL);
+            return;
+        }
+
         sl_map_t *mdata = (sl_map_t*) mtbdd_getvalue(mtbdd_map);
         sl_val_t *vdata = (sl_val_t*) mtbdd_getvalue(mtbdd_val);
 
@@ -422,7 +422,7 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_b_xt_mul, MTBDD*, p_t, MTBDD*, p_b)
     MTBDD b = *p_b;
 
     // Partial function check
-    if (b == mtbdd_true) return t;
+    if (b == mtbdd_true && mtbdd_isleaf(t)) return t;
     if (b == mtbdd_false || t == mtbdd_false) return mtbdd_false;
 
     return mtbdd_invalid; // Recurse deeper

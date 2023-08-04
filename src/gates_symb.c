@@ -212,7 +212,7 @@ void gate_symb_h(MTBDD *p_t, uint32_t xt)
     res = my_mtbdd_symb_t_xt_comp(t, xt);  // Txt_c
     mtbdd_protect(&res);
 
-    MTBDD t_xt = create_t_xt(t, xt);
+    MTBDD t_xt = my_mtbdd_symb_t_xt(t, xt);
     mtbdd_protect(&t_xt);
     MTBDD inter_res = my_mtbdd_symb_b_xt_comp_mul(t_xt, xt); // Bxt_c * Txt
     mtbdd_protect(&inter_res);
@@ -258,7 +258,7 @@ void gate_symb_cnot(MTBDD *p_t, uint32_t xt, uint32_t xc)
     mtbdd_unprotect(&bracket_right);
     inter_res = my_mtbdd_symb_b_xt_mul(inter_res, xc); // Bxc * (Bxt_c * Txt + Bxt * Txt_c)
 
-    res = my_mtbdd_plus(res, inter_res); // (Bxc_c * T) + (Bxc * (Bxt_c * Txt + Bxt * Txt_c))
+    res = my_mtbdd_symb_plus(res, inter_res); // (Bxc_c * T) + (Bxc * (Bxt_c * Txt + Bxt * Txt_c))
     mtbdd_unprotect(&inter_res);
 
     *p_t = res;
@@ -286,7 +286,7 @@ void gate_symb_cz(MTBDD *p_t, uint32_t xt, uint32_t xc)
     mtbdd_unprotect(&bracket_right);
     inter_res = my_mtbdd_symb_b_xt_mul(inter_res, xc); // Bxc * (Bxt_c * T - Bxt * T)
 
-    res = my_mtbdd_plus(res, inter_res); // (Bxc_c * T) + (Bxc * (Bxt_c * T - Bxt * T))
+    res = my_mtbdd_symb_plus(res, inter_res); // (Bxc_c * T) + (Bxc * (Bxt_c * T - Bxt * T))
     mtbdd_unprotect(&inter_res);
 
     *p_t = res;
@@ -325,7 +325,7 @@ void gate_symb_toffoli(MTBDD *p_t, uint32_t xt, uint32_t xc1, uint32_t xc2)
     mtbdd_unprotect(&bracket_right);
 
     inter_res = my_mtbdd_symb_b_xt_mul(inter_res, xc1); // Bxc * (Bxc'_c * T + Bxc' * (Bxt_c * Txt + Bxt * Txt_c))
-    res = my_mtbdd_plus(res, inter_res); // (Bxc_c * T) + (Bxc * (Bxc'_c * T + Bxc' * (Bxt_c * Txt + Bxt * Txt_c)))
+    res = my_mtbdd_symb_plus(res, inter_res); // (Bxc_c * T) + (Bxc * (Bxc'_c * T + Bxc' * (Bxt_c * Txt + Bxt * Txt_c)))
     mtbdd_unprotect(&inter_res);
 
     *p_t = res;
