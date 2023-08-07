@@ -19,7 +19,7 @@ stree_t* st_init(stree_t *t) {
     new->type = t->type;
 
     if (new->type == ST_VAL) {
-        new->val = my_malloc(sizeof(stnode_val_t));  //FIXME: check if should be realloc
+        new->val = my_malloc(sizeof(stnode_val_t));
         new->val->var = t->val->var;
         mpz_init_set(new->val->coef, t->val->coef);
         new->ls = NULL;
@@ -27,7 +27,7 @@ stree_t* st_init(stree_t *t) {
     }
     else {
         new->val = NULL;
-        new->ls = st_init(t->ls);  //FIXME: copy ptr should probably suffice (check if should be realloc)
+        new->ls = st_init(t->ls);
         new->rs = st_init(t->rs);
     }
 
@@ -38,8 +38,8 @@ stree_t* st_op(stree_t *a, stree_t *b, stnode_t op) {
     stree_t *res = my_malloc(sizeof(stree_t));
     res->val = NULL;
     res->type = op;
-    res->ls = st_init(a); //FIXME: realloc?
-    res->rs = st_init(b);
+    res->ls = a;
+    res->rs = b;
     return res;
 }
 

@@ -119,7 +119,6 @@ uint64_t my_leaf_symb_m_hash(const uint64_t ldata_raw, const uint64_t seed)
     val = MY_HASH_COMB_SYMB(val, ldata->vb);
     val = MY_HASH_COMB_SYMB(val, ldata->vc);
     val = MY_HASH_COMB_SYMB(val, ldata->vd);
-    //FIXME: check performance - needed? val = MY_HASH_COMB_SYMB(val, cs_k);
 
     return val;
 }
