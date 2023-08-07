@@ -237,7 +237,7 @@ void gate_symb_cnot(MTBDD *p_t, uint32_t xt, uint32_t xc)
     mtbdd_protect(&t);
     MTBDD res;
 
-    res = my_mtbdd_symb_b_xt_comp_mul(xc, t); // Bxc_c * T
+    res = my_mtbdd_symb_b_xt_comp_mul(t, xc); // Bxc_c * T
     mtbdd_protect(&res);
 
     MTBDD t_xt = my_mtbdd_symb_t_xt(t, xt);
@@ -248,6 +248,7 @@ void gate_symb_cnot(MTBDD *p_t, uint32_t xt, uint32_t xc)
 
     MTBDD t_xt_comp = my_mtbdd_symb_t_xt_comp(t, xt);
     mtbdd_protect(&t_xt_comp);
+    mtbdd_unprotect(&t);
     MTBDD bracket_right = my_mtbdd_symb_b_xt_mul(t_xt_comp, xt); // Bxt * Txt_c
     mtbdd_protect(&bracket_right);
     mtbdd_unprotect(&t_xt_comp);
@@ -271,7 +272,7 @@ void gate_symb_cz(MTBDD *p_t, uint32_t xt, uint32_t xc)
     mtbdd_protect(&t);
     MTBDD res;
 
-    res = my_mtbdd_symb_b_xt_comp_mul(xc, t); // Bxc_c * T
+    res = my_mtbdd_symb_b_xt_comp_mul(t, xc); // Bxc_c * T
     mtbdd_protect(&res);
 
     MTBDD bracket_left = my_mtbdd_symb_b_xt_comp_mul(t, xt); // Bxt_c * T
@@ -279,6 +280,7 @@ void gate_symb_cz(MTBDD *p_t, uint32_t xt, uint32_t xc)
 
     MTBDD bracket_right = my_mtbdd_symb_b_xt_mul(t, xt); // Bxt * T
     mtbdd_protect(&bracket_right);
+    mtbdd_unprotect(&t);
 
     MTBDD inter_res = my_mtbdd_symb_minus(bracket_left, bracket_right); // (Bxt_c * T) - (Bxt * T)
     mtbdd_protect(&inter_res);
@@ -299,7 +301,7 @@ void gate_symb_toffoli(MTBDD *p_t, uint32_t xt, uint32_t xc1, uint32_t xc2)
     mtbdd_protect(&t);
     MTBDD res;
 
-    res = my_mtbdd_symb_b_xt_comp_mul(xc1, t); // Bxc_c * T
+    res = my_mtbdd_symb_b_xt_comp_mul(t, xc1); // Bxc_c * T
     mtbdd_protect(&res);
 
     MTBDD t_xt = my_mtbdd_symb_t_xt(t, xt);
@@ -319,6 +321,7 @@ void gate_symb_toffoli(MTBDD *p_t, uint32_t xt, uint32_t xc1, uint32_t xc2)
 
     bracket_right = my_mtbdd_symb_b_xt_mul(inter_res, xc2); // Bxc' * (Bxt_c * Txt + Bxt * Txt_c)
     bracket_left = my_mtbdd_symb_b_xt_comp_mul(t, xc2); // Bxc'_c * T
+    mtbdd_unprotect(&t);
     
     inter_res = my_mtbdd_plus(bracket_left, bracket_right); // (Bxc'_c * T) + (Bxc' * (Bxt_c * Txt + Bxt * Txt_c))
     mtbdd_unprotect(&bracket_left);
