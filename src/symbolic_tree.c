@@ -35,7 +35,70 @@ stree_t* st_init(stree_t *t) {
 }
 
 stree_t* st_op(stree_t *a, stree_t *b, stnode_t op) {
-    stree_t *res = my_malloc(sizeof(stree_t));
+    stree_t *res;
+
+    //FIXME: make prettier
+    //FIXME: check more thoroughly?
+    if (a == NULL && b == NULL) {
+        return NULL;
+    }
+    else if (a == NULL || b == NULL) {
+        switch (op) {
+            case ST_ADD:
+                if (a == NULL) {
+                    res = b;
+                }
+                else {
+                    res = a;
+                }
+                break;
+            case ST_SUB:
+                if (a == NULL) {
+                    res = b;
+                    st_coef_mul(res, -1);
+                }
+                else {
+                    res = a;
+                }
+                break;
+            case ST_MUL:
+                res = NULL;
+                break;
+            default:
+                break;
+        }
+        return res;
+    }
+    else if (a->type == ST_VAL && b->type == ST_VAL) {
+        if (a->val->var == b->val->var) {
+            coefs_t temp;
+            mpz_init(temp);
+            switch (op) {
+                case ST_ADD:
+                    mpz_add(temp, a->val->coef, b->val->coef);
+                    break;
+                case ST_SUB:
+                    mpz_sub(temp, a->val->coef, b->val->coef);
+                    break;
+                case ST_MUL:
+                    mpz_mul(temp, a->val->coef, b->val->coef);
+                    break;
+                default:
+                    break;
+            }
+
+            if (!mpz_cmp_si(temp, 0)) {
+                return NULL;
+            }
+
+            res = st_init(a);
+            mpz_set(res->val->coef, temp);
+            mpz_clear(temp);
+            return res;
+        }
+    }
+
+    res = my_malloc(sizeof(stree_t));
     res->val = NULL;
     res->type = op;
     res->ls = a;
@@ -79,7 +142,10 @@ char* st_to_str(stree_t *t) {
     char buf[MAX_ST_TO_STR_LEN] = {0};
     int chars_written;
 
-    if (t->type == ST_VAL) {
+    if (t == NULL) {
+        return "";
+    }
+    else if (t->type == ST_VAL) {
         chars_written = gmp_snprintf(buf, MAX_ST_TO_STR_LEN, "%Zdv[%ld]", t->val->coef, t->val->var);
     }
     else {

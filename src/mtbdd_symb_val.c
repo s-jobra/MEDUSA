@@ -136,23 +136,25 @@ static coef_t* eval_var(stree_t *data,  coef_t* map)
     coef_t *res = malloc(sizeof(mpz_t));
     mpz_init(*res);
 
-    if (data->type == ST_VAL) {
-        if (data->val->coef != 0) {
-            mpz_set(*res, map[data->val->var]);
-            mpz_mul(*res, *res, data->val->coef);
-        }
-    }
-    else {
-        coef_t *l = eval_var(data->ls, map);
-        coef_t *r = eval_var(data->rs, map);
-        if (data->type == ST_ADD) {
-            mpz_add(*res, *l, *r);
-        }
-        else if (data->type == ST_SUB) {
-            mpz_sub(*res, *l, *r);
+    if (data != NULL) {
+        if (data->type == ST_VAL) {
+            if (data->val->coef != 0) {
+                mpz_set(*res, map[data->val->var]);
+                mpz_mul(*res, *res, data->val->coef);
+            }
         }
         else {
-            mpz_mul(*res, *l, *r);
+            coef_t *l = eval_var(data->ls, map);
+            coef_t *r = eval_var(data->rs, map);
+            if (data->type == ST_ADD) {
+                mpz_add(*res, *l, *r);
+            }
+            else if (data->type == ST_SUB) {
+                mpz_sub(*res, *l, *r);
+            }
+            else {
+                mpz_mul(*res, *l, *r);
+            }
         }
     }
 
@@ -260,7 +262,7 @@ TASK_IMPL_2(MTBDD, mtbdd_from_symb, MTBDD, t, size_t, raw_map)
 
         if (!mpz_cmp_si(new_data.a, 0) && !mpz_cmp_si(new_data.b, 0) && !mpz_cmp_si(new_data.c, 0) && !mpz_cmp_si(new_data.d, 0)) {
             mpz_clears(new_data.a, new_data.b, new_data.c, new_data.d, NULL);
-            return (MTBDD)NULL;
+            return mtbdd_false;
         }
         
         MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &new_data);
@@ -292,6 +294,10 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_plus, MTBDD*, p_a, MTBDD*, p_b)
         res_data.b = st_op(a_data->b, b_data->b, ST_ADD);
         res_data.c = st_op(a_data->c, b_data->c, ST_ADD);
         res_data.d = st_op(a_data->d, b_data->d, ST_ADD);
+
+        if (!res_data.a && !res_data.b && !res_data.c && !res_data.d) {
+            return mtbdd_false;
+        }
         
         MTBDD res = mtbdd_makeleaf(ltype_symb_expr_id, (uint64_t) &res_data);
         return res;
@@ -328,6 +334,10 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_minus, MTBDD*, p_a, MTBDD*, p_b)
         res_data.b = st_op(a_data->b, b_data->b, ST_SUB);
         res_data.c = st_op(a_data->c, b_data->c, ST_SUB);
         res_data.d = st_op(a_data->d, b_data->d, ST_SUB);
+
+        if (!res_data.a && !res_data.b && !res_data.c && !res_data.d) {
+            return mtbdd_false;
+        }
         
         MTBDD res = mtbdd_makeleaf(ltype_symb_expr_id, (uint64_t) &res_data);
         return res;

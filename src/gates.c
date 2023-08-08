@@ -1,6 +1,7 @@
 #include "gates.h"
 
 //TODO: change Bxt, Bxt_c create to Bxt * T, Bxt_c * T operations
+//TODO: update gate formulae
 
 //FIXME: use this function instead
 void check_xt_root_missing(MTBDD *a, uint32_t xt)
