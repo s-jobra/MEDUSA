@@ -47,9 +47,10 @@ void htab_clear(htab_t *t);
 void htab_free(htab_t *t);
 
 /**
- * Adds the item with the given st_tree key to the table, else (if already exists) increments its number of references by one
+ * Adds the item with the given st_tree key to the table, else (if already exists) increments its number of references by one.
+ * Returns ptr to the key that will be now present in the table.
  */
-void htab_st_lookup_add(htab_t *t, htab_st_key_t key);
+htab_st_key_t* htab_st_lookup_add(htab_t *t, htab_st_key_t key);
 
 /**
  * Adds the item with the given string key to the table, else (if already exists) increments its value by one

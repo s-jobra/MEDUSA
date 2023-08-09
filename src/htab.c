@@ -129,22 +129,59 @@ static void htab_resize(htab_t *t, size_t newn, size_t (*hash_func)(htab_key_t))
     return;
 }
 
-void htab_st_lookup_add(htab_t *t, htab_st_key_t key)
+/**
+ * Returns whether two symbolic keys are identical
+ */
+bool htab_st_key_cmp(htab_st_key_t a, htab_st_key_t b)
+{
+    bool res = false;
+
+    if (a->type == b->type) {
+        if (a->type == ST_VAL) {
+            if (a->val->var == b->val->var && !mpz_cmp(a->val->coef, b->val->coef)) {
+                res = true;
+            }
+        }
+        else {
+            if (a->ls == b->ls && a->rs == b->rs) {
+                res = true;
+            }
+            else if (a->type != ST_SUB && a->ls == b->rs && a->rs == b->ls) {
+                res = true;
+            }
+        }
+    }
+
+    return res;
+}
+
+htab_st_key_t* htab_st_lookup_add(htab_t *t, htab_st_key_t key)
 {
     htab_item_t *item = t->arr_ptr[htab_st_hash_func((htab_key_t)key) % t->arr_size];
 
     // find the item
     while (item != NULL) {
-        if (htab_get_st_key(item) == key) {
+        if (htab_st_key_cmp(htab_get_st_key(item), key)) {
             item->data.value++;
-            return;
+            return (htab_st_key_t*) item->data.key;
         }
         item = item->next;
     }
 
     item = my_malloc(sizeof(htab_item_t));
     // item init
-    item->data.key = (htab_key_t) key;
+    item->data.key = my_malloc(sizeof(stree_t));
+    ((htab_st_key_t)(item->data.key))->ls = key->ls;
+    ((htab_st_key_t)(item->data.key))->rs = key->rs;
+    ((htab_st_key_t)(item->data.key))->type = key->type;
+    if (key->val == NULL) {
+        ((htab_st_key_t)(item->data.key))->val = NULL;
+    }
+    else {
+        ((htab_st_key_t)(item->data.key))->val = my_malloc(sizeof(stnode_val_t));
+        ((htab_st_key_t)(item->data.key))->val->var = key->val->var;
+        mpz_init_set(((htab_st_key_t)(item->data.key))->val->coef, key->val->coef);
+    }
     item->data.value = 1;
     item->next = NULL;
 
@@ -165,6 +202,7 @@ void htab_st_lookup_add(htab_t *t, htab_st_key_t key)
     if (((t->size + 0.0)/ t->arr_size) > AVG_LEN_MAX) { // +0.0 because of non-integer division
         htab_resize(t, t->size * RESIZE_COEF, htab_st_hash_func);
     }
+    return (htab_st_key_t*) item->data.key;
 }
 
 void htab_m_lookup_add(htab_t *t, htab_m_key_t key)
