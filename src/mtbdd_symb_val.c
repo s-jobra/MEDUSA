@@ -95,10 +95,10 @@ uint64_t my_leaf_symb_v_hash(const uint64_t ldata_raw, const uint64_t seed)
     sl_val_t *ldata = (sl_val_t*) ldata_raw;
 
     uint64_t val = seed;
-    val = MY_HASH_COMB_SYMB(val, ldata->a);
-    val = MY_HASH_COMB_SYMB(val, ldata->b);
-    val = MY_HASH_COMB_SYMB(val, ldata->c);
-    val = MY_HASH_COMB_SYMB(val, ldata->d);
+    val = MY_HASH_COMB(val, ldata->a);
+    val = MY_HASH_COMB(val, ldata->b);
+    val = MY_HASH_COMB(val, ldata->c);
+    val = MY_HASH_COMB(val, ldata->d);
 
     return val;
 }

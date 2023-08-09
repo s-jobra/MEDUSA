@@ -325,9 +325,9 @@ void measure_all(unsigned long samples, FILE *output, MTBDD circ, int n, int *bi
                 norm_coef *= sqrt(1/(1-p_qt_is_one));
             }
         }
-        htab_lookup_add(state_table, curr_state);
+        htab_m_lookup_add(state_table, curr_state);
     }
-    htab_print_all(state_table, output);
+    htab_m_print_all(state_table, output);
     htab_free(state_table);
 }
 

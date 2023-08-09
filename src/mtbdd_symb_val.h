@@ -2,7 +2,7 @@
 #include <gmp.h>
 #include "mtbdd.h"
 #include "mtbdd_symb_map.h"
-#include "leaf_hash.h"
+#include "hash.h"
 #include "symbolic_tree.h"
 #include "error.h"
 

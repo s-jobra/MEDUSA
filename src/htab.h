@@ -1,29 +1,31 @@
 #include <stdlib.h>
 #include <stdint.h>
+#include "symbolic_tree.h"
+#include "hash.h"
 #include "error.h"
 
 #ifndef HTAB_H
 #define HTAB_H
 
-#define AVG_LEN_MAX 2
-
-typedef struct htab {
+typedef struct htab {            // Hash table
     size_t size;                 // number of items in the table
     size_t arr_size;             // bucket count
     struct htab_item **arr_ptr;
 } htab_t;
 
-typedef const char *htab_key_t;
-typedef unsigned htab_value_t;
+typedef void* htab_key_t;        // Universal hash table data key type
+typedef char* htab_m_key_t;      // Key type for measure hash table
+typedef stree_t* htab_st_key_t;  // Key type for symbolic hash table
+typedef unsigned htab_value_t;   // Universal hash table data value type
 
-typedef struct htab_pair {
+typedef struct htab_data {       // Data in a hash table item
     htab_key_t key;
     htab_value_t value;
-} htab_pair_t; 
+} htab_data_t;
 
-typedef struct htab_item {
+typedef struct htab_item {       // Hash table item
     struct htab_item *next;
-    htab_pair_t data;
+    htab_data_t data;
 } htab_item_t;
 
 /**
@@ -35,16 +37,6 @@ typedef struct htab_item {
 htab_t* htab_init(size_t n);
 
 /**
- * Adds the item with the given key to the table, else (if already exists) increments is value by one
- */
-void htab_lookup_add(htab_t *t, htab_key_t key);
-
-/**
- * Prints all hash table items to the given output
- */
-void htab_print_all(htab_t *t, FILE *output);
-
-/**
  * Delete and dealloc all table items
  */
 void htab_clear(htab_t *t);
@@ -53,6 +45,21 @@ void htab_clear(htab_t *t);
  * Deletes the table
  */
 void htab_free(htab_t *t);
+
+/**
+ * Adds the item with the given st_tree key to the table, else (if already exists) increments its number of references by one
+ */
+void htab_st_lookup_add(htab_t *t, htab_st_key_t key);
+
+/**
+ * Adds the item with the given string key to the table, else (if already exists) increments its value by one
+ */
+void htab_m_lookup_add(htab_t *t, htab_m_key_t key);
+
+/**
+ * Prints all hash table items to the given stream (used for measurement output)
+ */
+void htab_m_print_all(htab_t *t, FILE *output);
 
 #endif
 /* end of "htab.h" */

@@ -118,7 +118,6 @@ void st_coef_mul(stree_t *t, int64_t c) {
     }
 }
 
-//TODO: z3?
 bool st_cmp(stree_t *a, stree_t *b) {
     if (a == NULL && b == NULL) {
         return true;
@@ -134,6 +133,8 @@ bool st_cmp(stree_t *a, stree_t *b) {
         }
         return st_cmp(a->ls, b->ls) && st_cmp(a->rs, b->rs);
     }
+
+    //FIXME: z3?
 
     return false;
 }

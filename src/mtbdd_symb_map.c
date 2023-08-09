@@ -115,10 +115,10 @@ uint64_t my_leaf_symb_m_hash(const uint64_t ldata_raw, const uint64_t seed)
     sl_map_t *ldata = (sl_map_t*) ldata_raw;
 
     uint64_t val = seed;
-    val = MY_HASH_COMB_SYMB(val, ldata->va);
-    val = MY_HASH_COMB_SYMB(val, ldata->vb);
-    val = MY_HASH_COMB_SYMB(val, ldata->vc);
-    val = MY_HASH_COMB_SYMB(val, ldata->vd);
+    val = MY_HASH_COMB(val, ldata->va);
+    val = MY_HASH_COMB(val, ldata->vb);
+    val = MY_HASH_COMB(val, ldata->vc);
+    val = MY_HASH_COMB(val, ldata->vd);
 
     return val;
 }
