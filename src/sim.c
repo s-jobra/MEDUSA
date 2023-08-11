@@ -209,7 +209,7 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
                         if (fsetpos(in, &loop_start) != 0) {
                             error_exit("Could not set a new position of the stream.");
                         }
-                        cs_k_reset();
+                        symb_reset();
                     }
                 }
                 continue; // ';' not expected

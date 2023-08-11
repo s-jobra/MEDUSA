@@ -5,7 +5,7 @@
 /**
  * Obtains a properly casted key from the item ptr
  */
-#define htab_get_st_key(item_p) ((htab_st_key_t)(item_p->data.key))
+#define htab_get_st_key(item_p) ((htab_st_key_t)(item_p->data.key)) //FIXME: rename for naming consistency
 /**
  * Obtains a properly casted key from the item ptr
  */
@@ -51,7 +51,7 @@ void htab_free(htab_t *t)
 /**
  * The hash function used when operating with symbolic hash table items
  */
-static size_t htab_st_hash_func(htab_key_t key_raw)
+static size_t htab_st_hash_func(htab_key_t key_raw) //FIXME: is good? (maybe vals and op map to same hash often)
 {
     htab_st_key_t key = (htab_st_key_t) key_raw;
     size_t val = 0;
@@ -61,7 +61,7 @@ static size_t htab_st_hash_func(htab_key_t key_raw)
     }
     else {
         val = MY_HASH_COMB(val, key->ls);
-        val = MY_HASH_COMB(val, (uint64_t) key->type);
+        val = MY_HASH_COMB(val, (uint64_t) key->type); //FIXME: maybe shift first?
         val = MY_HASH_COMB(val, key->rs);
     }
     return val;
@@ -132,7 +132,7 @@ static void htab_resize(htab_t *t, size_t newn, size_t (*hash_func)(htab_key_t))
 /**
  * Returns whether two symbolic keys are identical
  */
-bool htab_st_key_cmp(htab_st_key_t a, htab_st_key_t b)
+static bool htab_st_key_cmp(htab_st_key_t a, htab_st_key_t b)
 {
     bool res = false;
 
@@ -152,10 +152,29 @@ bool htab_st_key_cmp(htab_st_key_t a, htab_st_key_t b)
         }
     }
 
+    //FIXME: maybe needs z3 call?
+
     return res;
 }
 
-htab_st_key_t* htab_st_lookup_add(htab_t *t, htab_st_key_t key)
+htab_value_t htab_st_get_val(htab_t *t, htab_st_key_t key)
+{
+    htab_value_t v = 0;
+
+    htab_item_t *item = t->arr_ptr[htab_st_hash_func((htab_key_t)key) % t->arr_size];
+
+    // find the item
+    while (item != NULL) {
+        if (htab_st_key_cmp(htab_get_st_key(item), key)) {
+            v = item->data.value;
+            break;
+        }
+        item = item->next;
+    }
+    return v;
+}
+
+htab_st_key_t htab_st_lookup_add(htab_t *t, htab_st_key_t key)
 {
     htab_item_t *item = t->arr_ptr[htab_st_hash_func((htab_key_t)key) % t->arr_size];
 
@@ -163,7 +182,7 @@ htab_st_key_t* htab_st_lookup_add(htab_t *t, htab_st_key_t key)
     while (item != NULL) {
         if (htab_st_key_cmp(htab_get_st_key(item), key)) {
             item->data.value++;
-            return (htab_st_key_t*) item->data.key;
+            return htab_get_st_key(item);
         }
         item = item->next;
     }
@@ -171,16 +190,16 @@ htab_st_key_t* htab_st_lookup_add(htab_t *t, htab_st_key_t key)
     item = my_malloc(sizeof(htab_item_t));
     // item init
     item->data.key = my_malloc(sizeof(stree_t));
-    ((htab_st_key_t)(item->data.key))->ls = key->ls;
-    ((htab_st_key_t)(item->data.key))->rs = key->rs;
-    ((htab_st_key_t)(item->data.key))->type = key->type;
+    htab_get_st_key(item)->ls = key->ls;
+    htab_get_st_key(item)->rs = key->rs;
+    htab_get_st_key(item)->type = key->type;
     if (key->val == NULL) {
-        ((htab_st_key_t)(item->data.key))->val = NULL;
+        htab_get_st_key(item)->val = NULL;
     }
     else {
-        ((htab_st_key_t)(item->data.key))->val = my_malloc(sizeof(stnode_val_t));
-        ((htab_st_key_t)(item->data.key))->val->var = key->val->var;
-        mpz_init_set(((htab_st_key_t)(item->data.key))->val->coef, key->val->coef);
+        htab_get_st_key(item)->val = my_malloc(sizeof(stnode_val_t));
+        htab_get_st_key(item)->val->var = key->val->var;
+        mpz_init_set(htab_get_st_key(item)->val->coef, key->val->coef);
     }
     item->data.value = 1;
     item->next = NULL;
@@ -202,7 +221,38 @@ htab_st_key_t* htab_st_lookup_add(htab_t *t, htab_st_key_t key)
     if (((t->size + 0.0)/ t->arr_size) > AVG_LEN_MAX) { // +0.0 because of non-integer division
         htab_resize(t, t->size * RESIZE_COEF, htab_st_hash_func);
     }
-    return (htab_st_key_t*) item->data.key;
+    return htab_get_st_key(item);
+}
+
+void htab_st_lookup_remove(htab_t *t, htab_st_key_t key)
+{
+    htab_item_t *item = t->arr_ptr[htab_st_hash_func((htab_key_t)key) % t->arr_size];
+    htab_item_t *prev = NULL;
+
+    // find the item
+    while (item != NULL) {
+        if (htab_st_key_cmp(htab_get_st_key(item), key)) {
+            item->data.value--;
+            if (!item->data.value) {
+                if (!htab_get_st_key(item)->ls) {
+                    htab_st_lookup_remove(t, htab_get_st_key(item)->ls);
+                }
+                if (!htab_get_st_key(item)->rs) {
+                    htab_st_lookup_remove(t, htab_get_st_key(item)->rs);
+                }
+                if (!htab_get_st_key(item)->val) {
+                    free(htab_get_st_key(item)->val);
+                }
+                if (!prev) {
+                    prev->next = item->next;
+                }
+                free(item);
+            }
+            break;
+        }
+        prev = item;
+        item = item->next;
+    }
 }
 
 void htab_m_lookup_add(htab_t *t, htab_m_key_t key)

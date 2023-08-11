@@ -1,41 +1,62 @@
 #include "symbolic_tree.h"
 
+//FIXME: should be global?
+static htab_t *st_table; // Global symbolic hash table
+
+
+void st_htab_init(size_t size)
+{
+    st_table = htab_init(size);
+}
+
+void st_htab_clear()
+{
+    htab_clear(st_table);
+}
+
+void st_htab_delete()
+{
+    htab_free(st_table);
+}
+
 stree_t* st_create_val(vars_t v) {
-    stree_t *new = my_malloc(sizeof(stree_t));
+    stree_t new;
+    stnode_val_t new_val;
 
-    new->val = my_malloc(sizeof(stnode_val_t));
-    mpz_init_set_ui(new->val->coef, 1);
-    new->val->var = v;
+    mpz_init_set_ui(new_val.coef, 1);
+    new_val.var = v;
 
-    new->type = ST_VAL;
-    new->ls = NULL;
-    new->rs = NULL;
+    new.val = &new_val;
+    new.type = ST_VAL;
+    new.ls = NULL;
+    new.rs = NULL;
 
-    return new;
+    return htab_st_lookup_add(st_table, &new);
 }
 
 stree_t* st_init(stree_t *t) {
-    stree_t *new = my_malloc(sizeof(stree_t));
-    new->type = t->type;
+    stree_t new;
+    new.type = t->type; //FIXME: check if can't be NULL
 
-    if (new->type == ST_VAL) {
-        new->val = my_malloc(sizeof(stnode_val_t));
-        new->val->var = t->val->var;
-        mpz_init_set(new->val->coef, t->val->coef);
-        new->ls = NULL;
-        new->rs = NULL;
+    if (new.type == ST_VAL) {
+        stnode_val_t new_val;
+        new_val.var = t->val->var;
+        mpz_init_set(new_val.coef, t->val->coef);
+        new.val = &new_val;
+        new.ls = NULL;
+        new.rs = NULL;
     }
     else {
-        new->val = NULL;
-        new->ls = st_init(t->ls);
-        new->rs = st_init(t->rs);
+        new.val = NULL;
+        new.ls = st_init(t->ls);
+        new.rs = st_init(t->rs);
     }
 
-    return new;
+    return htab_st_lookup_add(st_table, &new);
 }
 
 stree_t* st_op(stree_t *a, stree_t *b, stnode_t op) {
-    stree_t *res;
+    stree_t res;
 
     //FIXME: make prettier
     //FIXME: check more thoroughly?
@@ -46,97 +67,95 @@ stree_t* st_op(stree_t *a, stree_t *b, stnode_t op) {
         switch (op) {
             case ST_ADD:
                 if (a == NULL) {
-                    res = b;
+                    res = *b; //FIXME: does add & remove htab reference?
                 }
                 else {
-                    res = a;
+                    res = *a;
                 }
                 break;
             case ST_SUB:
                 if (a == NULL) {
-                    res = b;
-                    st_coef_mul(res, -1);
+                    res = *b;
+                    st_coef_mul(&res, -1); //FIXME: wrong
                 }
                 else {
-                    res = a;
+                    res = *a;
                 }
                 break;
-            case ST_MUL:
-                res = NULL;
-                break;
-            default:
-                break;
         }
-        return res;
+        return htab_st_lookup_add(st_table, &res); //TODO: FIXME: use st_init or this??
     }
     else if (a->type == ST_VAL && b->type == ST_VAL) {
         if (a->val->var == b->val->var) {
-            coefs_t temp;
-            mpz_init(temp);
+            stnode_val_t temp;
+            mpz_init(temp.coef);
+            temp.var = a->val->var;
             switch (op) {
                 case ST_ADD:
-                    mpz_add(temp, a->val->coef, b->val->coef);
+                    mpz_add(temp.coef, a->val->coef, b->val->coef);
                     break;
                 case ST_SUB:
-                    mpz_sub(temp, a->val->coef, b->val->coef);
+                    mpz_sub(temp.coef, a->val->coef, b->val->coef);
                     break;
                 case ST_MUL:
-                    mpz_mul(temp, a->val->coef, b->val->coef);
+                    mpz_mul(temp.coef, a->val->coef, b->val->coef);
                     break;
                 default:
                     break;
             }
 
-            if (!mpz_cmp_si(temp, 0)) {
+            if (!mpz_cmp_si(temp.coef, 0)) {
                 return NULL;
             }
 
-            res = st_init(a);
-            mpz_set(res->val->coef, temp);
-            mpz_clear(temp);
-            return res;
+            //res = st_init(a);
+            res.ls = NULL;
+            res.rs = NULL;
+            res.type = ST_VAL;
+            res.val = &temp;
+
+            //mpz_clear(temp); FIXME: where clear? + add clear to other st alloc functions
+            return htab_st_lookup_add(st_table, &res); //TODO: FIXME: use st_init or this??
         }
     }
 
-    res = my_malloc(sizeof(stree_t));
-    res->val = NULL;
-    res->type = op;
-    res->ls = a;
-    res->rs = b;
-    return res;
+    //res = my_malloc(sizeof(stree_t));
+    res.val = NULL;
+    res.type = op;
+    res.ls = a;
+    res.rs = b;
+
+    return htab_st_lookup_add(st_table, &res); //TODO: FIXME: use st_init or this??
 }
 
 void st_coef_mul(stree_t *t, int64_t c) {
+    //TODO: FIXME: change so that minus is put in front of the expression
+    //         ... add NULL as a possible rs value ?
+    
     if (t != NULL) {
         if (t->type != ST_VAL) {
             st_coef_mul(t->ls, c);
             st_coef_mul(t->rs, c);
         }
         else {
-            mpz_mul_si(t->val->coef, t->val->coef, (long int)c);
+            if (htab_st_get_val(st_table, t) == 1) {
+                mpz_mul_si(t->val->coef, t->val->coef, (long int)c);
+            }
+            else {
+                //FIXME: now doesn't work properly (just a copy)
+                stree_t copy;
+                copy.ls = t->ls;
+                copy.rs = t->rs;
+                copy.val = t->val; // not ST_VAL
+                copy.type = t->type;
+                htab_st_lookup_add(st_table, &copy);
+            }
         }
     }
 }
 
 bool st_cmp(stree_t *a, stree_t *b) {
-    if (a == NULL && b == NULL) {
-        return true;
-    }
-
-    if (a == NULL || b == NULL) {
-        return false;
-    }
-
-    if (a->type == b->type) {
-        if (a->type == ST_VAL) {
-            return (mpz_cmp(a->val->coef, b->val->coef) == 0) && (a->val->var == b->val->var);
-        }
-        return st_cmp(a->ls, b->ls) && st_cmp(a->rs, b->rs);
-    }
-
-    //FIXME: z3?
-
-    return false;
+    return (a == b)? true : false;
 }
 
 char* st_to_str(stree_t *t) {
@@ -182,10 +201,7 @@ char* st_to_str(stree_t *t) {
 
 void st_delete(stree_t *t) {
     if (t != NULL) {
-        st_delete(t->ls);
-        st_delete(t->rs);
-        free(t->val);
-        free(t);
+        htab_st_lookup_remove(st_table, t);
     }
 }
 

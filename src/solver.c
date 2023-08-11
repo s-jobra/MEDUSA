@@ -4,7 +4,29 @@
 // Z3 interface:
 // =============
 
-void solver_data_init(solver_data_t *sd, size_t nvars)
+/**
+ * Type for encapsulating solver data needed by all functions working with the solver
+ */
+typedef struct solver_data {
+    Z3_ast *vars;
+    Z3_context ctx;
+    Z3_sort sort;
+} solver_data_t;
+
+/**
+ * Type for the solver's internal representation of expressions
+ */
+typedef Z3_ast solver_exp_t;
+
+/**
+ * Type for a solver instance
+ */
+typedef Z3_solver solver_t;
+
+/**
+ * Initializes the given solver_data structure
+ */
+static void solver_data_init(solver_data_t *sd, size_t nvars)
 {
     sd->vars = my_malloc(sizeof(Z3_ast) * nvars);
     memset(sd->vars, 0, sizeof(Z3_ast) * nvars);
@@ -16,7 +38,10 @@ void solver_data_init(solver_data_t *sd, size_t nvars)
     sd->sort = Z3_mk_int_sort(sd->ctx);
 }
 
-void solver_data_delete(solver_data_t *sd)
+/**
+ * Deletes the solver_data structure
+ */
+static void solver_data_delete(solver_data_t *sd)
 {
     free(sd->vars);
     Z3_del_context(sd->ctx);
@@ -80,14 +105,20 @@ static bool solver_assert(solver_t s, solver_data_t *sdata, solver_exp_t query)
     return res;
 }
 
-solver_exp_t solver_create_neq(solver_data_t *sdata, solver_exp_t a, solver_exp_t b)
+/**
+ * Creates a != b
+ */
+static solver_exp_t solver_create_neq(solver_data_t *sdata, solver_exp_t a, solver_exp_t b)
 {
     solver_exp_t eq = Z3_mk_eq(sdata->ctx, a, b);
     solver_exp_t neq = Z3_mk_not(sdata->ctx, eq);
     return neq;
 }
 
-solver_exp_t parse_stree(stree_t *t, solver_data_t *sdata)
+/**
+ * Converts the symbolic tree to solver's internal tree
+ */
+static solver_exp_t parse_stree(stree_t *t, solver_data_t *sdata)
 {
     solver_exp_t res;
 
@@ -116,12 +147,31 @@ solver_exp_t parse_stree(stree_t *t, solver_data_t *sdata)
 
 // =======================================================
 
-bool solve(solver_data_t *sdata, solver_exp_t query)
+/**
+ * Returns whether the given query is solvable
+ */
+static bool solve(solver_data_t *sdata, solver_exp_t query)
 {
     solver_t s = solver_create(sdata);
     bool res = solver_assert(s, sdata, query);
     solver_delete(sdata, s);
     return res;
+}
+
+bool expr_is_equal(stree_t *t_a, stree_t *t_b, size_t nvars)
+{
+    solver_data_t sdata;
+    solver_data_init(&sdata, nvars);
+
+    solver_exp_t res_a = parse_stree(t_a, &sdata);
+    solver_exp_t res_b = parse_stree(t_b, &sdata);
+    solver_exp_t query = solver_create_neq(&sdata, res_a, res_b);
+
+    bool is_equal = solve(&sdata, query);
+
+    solver_data_delete(&sdata);
+
+    return is_equal;
 }
 
 /* end of "solver.c" */

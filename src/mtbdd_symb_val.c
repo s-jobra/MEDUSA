@@ -12,6 +12,11 @@ coefs_k_t cs_k; // coefficient k common for all MTBDD leaf values for symbolic r
 #define MAX_SYMB_LEAF_STR_LEN MAX_ST_TO_STR_LEN * 5
 
 
+void cs_k_reset()
+{
+    mpz_set_ui(cs_k, 0);
+}
+
 /* SETUP */
 void init_my_leaf_symb_val()
 {

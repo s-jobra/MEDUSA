@@ -1,53 +1,32 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <gmp.h>
+#include "symbolic_tree_types.h"
+#include "htab.h"
 #include "error.h"
 
 #ifndef SYMBOLIC_TREE_H
 #define SYMBOLIC_TREE_H
 
 /**
- * Type for symbolic variables' coefficients
- */
-typedef mpz_t coefs_t;
-
-/**
- * Type for symbolic variables
- */
-typedef uint64_t vars_t;
-
-/**
- * Type for symbolic tree node type
- */
-typedef enum {
-    ST_ADD,
-    ST_SUB,
-    ST_MUL,
-    ST_VAL
-} stnode_t;
-
-/**
- * Type for symbolic tree node value
- */
-typedef struct stnode_val {
-    coefs_t coef;
-    vars_t var;
-} stnode_val_t;
-
-/**
- * Type for symbolic tree node
- */
-typedef struct stree {
-    stnode_val_t *val;
-    stnode_t type;
-    struct stree *ls;
-    struct stree *rs;
-} stree_t;
-
-/**
  * Max. string size when converting expression from tree to string
  */
 #define MAX_ST_TO_STR_LEN 2000
+
+/**
+ * Initializes the symbolic hash table - must be initialized before any symbolic value MTBDD can be initialized!
+ */
+void st_htab_init();
+
+/**
+ * Clears the symbolic hash table - deletes all items (the array size is not changed)
+ */
+void st_htab_clear();
+
+/**
+ * Deletes the symbolic hash table
+ */
+void st_htab_delete();
 
 /**
  * Creates a new tree for the given complex number coefficient variable

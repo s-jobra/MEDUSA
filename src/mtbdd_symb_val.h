@@ -34,6 +34,11 @@ typedef mpz_t coefs_k_t;
  */
 extern coefs_k_t cs_k;
 
+/**
+ * Sets symbolic coefficient k's value to 0
+ */
+void cs_k_reset();
+
 /* SETUP */
 /**
  * Function for my custom symbolic expression leaf setup in Sylvan.

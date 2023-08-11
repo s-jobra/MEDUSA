@@ -3,7 +3,6 @@
 #include "mtbdd.h"
 #include "mtbdd_symb_map.h"
 #include "mtbdd_symb_val.h"
-#include "symbolic_tree.h"
 #include "solver.h"
 
 #ifndef SYMB_UTILS_H
@@ -34,9 +33,9 @@ bool symb_refine(mtbdd_symb_t *symbc);
 void symb_eval(MTBDD *circ,  mtbdd_symb_t *symbc, uint32_t iters);
 
 /**
- * Sets symbolic coefficient k's value to 0
+ * Resets symbolic simulation (for a new circuit simulation iteration)
  */
-void cs_k_reset();
+void symb_reset();
 
 #endif
 /* end of "symb_utils.h" */

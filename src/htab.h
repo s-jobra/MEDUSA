@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdint.h>
-#include "symbolic_tree.h"
+#include <stdbool.h>
+#include "symbolic_tree_types.h"
 #include "hash.h"
 #include "error.h"
 
@@ -47,10 +48,21 @@ void htab_clear(htab_t *t);
 void htab_free(htab_t *t);
 
 /**
+ * Returns the number of references to the given key (its value). Returns 0 if the key is not found.
+ */
+htab_value_t htab_st_get_val(htab_t *t, htab_st_key_t key);
+
+/**
  * Adds the item with the given st_tree key to the table, else (if already exists) increments its number of references by one.
  * Returns ptr to the key that will be now present in the table.
  */
-htab_st_key_t* htab_st_lookup_add(htab_t *t, htab_st_key_t key);
+htab_st_key_t htab_st_lookup_add(htab_t *t, htab_st_key_t key);
+
+/**
+ * Decrements the number of references on the given key. If the number of references reaches 0, it also deallocates the item.
+ * If the key is not found, the function doesn't do anything.
+ */
+void htab_st_lookup_remove(htab_t *t, htab_st_key_t key);
 
 /**
  * Adds the item with the given string key to the table, else (if already exists) increments its value by one

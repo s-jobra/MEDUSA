@@ -88,25 +88,6 @@ static void rdata_add(rdata_t *rd, vars_t old, vars_t new, stree_t *data)
 }
 
 /**
- * Returns true if the two expressions are equal
- */
-static inline bool expr_is_equal(stree_t *t_a, stree_t *t_b, size_t nvars)
-{
-    solver_data_t sdata;
-    solver_data_init(&sdata, nvars);
-
-    solver_exp_t res_a = parse_stree(t_a, &sdata);
-    solver_exp_t res_b = parse_stree(t_b, &sdata);
-    solver_exp_t query = solver_create_neq(&sdata, res_a, res_b);
-
-    bool is_equal = solve(&sdata, query);
-
-    solver_data_delete(&sdata);
-
-    return is_equal;
-}
-
-/**
  * Returns the refined variable for the given data
  */
 static vars_t refine_var_check(vars_t var, stree_t *data, rdata_t *rd)
@@ -198,6 +179,8 @@ void symb_init(MTBDD *circ, mtbdd_symb_t *symbc)
 
     symbc->map = my_mtbdd_to_symb_map(*circ, symbc->vm);
     mtbdd_protect(&(symbc->map));
+    //FIXME: size?
+    st_htab_init(msize * 10); // has to be initialized before mtbdd val
     symbc->val = my_mtbdd_map_to_symb_val(symbc->map);
     mtbdd_protect(&(symbc->val));
 
@@ -248,17 +231,24 @@ void symb_eval(MTBDD *circ,  mtbdd_symb_t *symbc, uint32_t iters)
     mpz_mul_ui(cs_k, cs_k, (unsigned long)iters);
     mpz_add(c_k, c_k, cs_k);
 
+    // dealloc aux variable
     for (int i = 0; i < symbc->vm->msize; i++) {
         mpz_clear(new_map[i]);
     }
     free(new_map);
+
+    // symbolic clean up
     vmap_delete(symbc->vm);
+    mtbdd_unprotect(&(symbc->map));
+    mtbdd_unprotect(&(symbc->val));
     mpz_clear(cs_k);
+    st_htab_delete();
 }
 
-void cs_k_reset()
+void symb_reset()
 {
-    mpz_set_ui(cs_k, 0);
+    st_htab_clear();
+    cs_k_reset();
 }
 
 /* end of "symb_utils.c" */
