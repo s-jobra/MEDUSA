@@ -32,10 +32,5 @@ bool symb_refine(mtbdd_symb_t *symbc);
  */
 void symb_eval(MTBDD *circ,  mtbdd_symb_t *symbc, uint32_t iters);
 
-/**
- * Resets symbolic simulation (for a new circuit simulation iteration)
- */
-void symb_reset();
-
 #endif
 /* end of "symb_utils.h" */

@@ -20,6 +20,7 @@ void st_htab_delete()
 }
 
 stree_t* st_create_val(vars_t v) {
+    stree_t *res;
     stree_t new;
     stnode_val_t new_val;
 
@@ -31,127 +32,82 @@ stree_t* st_create_val(vars_t v) {
     new.ls = NULL;
     new.rs = NULL;
 
-    return htab_st_lookup_add(st_table, &new);
+    res = htab_st_lookup_add(st_table, &new);
+    mpz_clear(new_val.coef);
+    return res;
 }
 
 stree_t* st_init(stree_t *t) {
-    stree_t new;
-    new.type = t->type; //FIXME: check if can't be NULL
-
-    if (new.type == ST_VAL) {
-        stnode_val_t new_val;
-        new_val.var = t->val->var;
-        mpz_init_set(new_val.coef, t->val->coef);
-        new.val = &new_val;
-        new.ls = NULL;
-        new.rs = NULL;
+    if (!t) {
+        return NULL;
     }
-    else {
-        new.val = NULL;
-        new.ls = st_init(t->ls);
-        new.rs = st_init(t->rs);
-    }
-
-    return htab_st_lookup_add(st_table, &new);
+    return htab_st_lookup_add(st_table, t);
 }
 
 stree_t* st_op(stree_t *a, stree_t *b, stnode_t op) {
-    stree_t res;
+    stree_t* res;
+    stree_t new;
+    stnode_val_t new_val;
 
-    //FIXME: make prettier
     //FIXME: check more thoroughly?
     if (a == NULL && b == NULL) {
         return NULL;
     }
-    else if (a == NULL || b == NULL) {
+    // Special binary operation case
+    else if (a == NULL || b == NULL && op != ST_NEG) { 
+        if (op == ST_ADD) {
+            new = (!a)? *b : *a; //FIXME: does add/remove htab reference?
+        }
+        else { // ST_SUB
+            if (!a) {
+                return st_op(b, NULL, ST_NEG);
+            }
+            new = *a; //FIXME: does add/remove htab reference?
+        }
+    }
+    // Terminal operation case
+    else if (a->type == ST_VAL && (op == ST_NEG || \
+                                   (b->type == ST_VAL && a->val->var == b->val->var))) {
+        mpz_init(new_val.coef);
+        new_val.var = a->val->var;
+
+        new.ls = NULL;
+        new.rs = NULL;
+        new.type = ST_VAL;
+        new.val = &new_val;
+
         switch (op) {
+            case ST_NEG:
+                mpz_neg(new_val.coef, a->val->coef);
+                break;
             case ST_ADD:
-                if (a == NULL) {
-                    res = *b; //FIXME: does add & remove htab reference?
-                }
-                else {
-                    res = *a;
-                }
+                mpz_add(new_val.coef, a->val->coef, b->val->coef);
                 break;
             case ST_SUB:
-                if (a == NULL) {
-                    res = *b;
-                    st_coef_mul(&res, -1); //FIXME: wrong
-                }
-                else {
-                    res = *a;
-                }
+                mpz_sub(new_val.coef, a->val->coef, b->val->coef);
                 break;
         }
-        return htab_st_lookup_add(st_table, &res); //TODO: FIXME: use st_init or this??
-    }
-    else if (a->type == ST_VAL && b->type == ST_VAL) {
-        if (a->val->var == b->val->var) {
-            stnode_val_t temp;
-            mpz_init(temp.coef);
-            temp.var = a->val->var;
-            switch (op) {
-                case ST_ADD:
-                    mpz_add(temp.coef, a->val->coef, b->val->coef);
-                    break;
-                case ST_SUB:
-                    mpz_sub(temp.coef, a->val->coef, b->val->coef);
-                    break;
-                case ST_MUL:
-                    mpz_mul(temp.coef, a->val->coef, b->val->coef);
-                    break;
-                default:
-                    break;
-            }
+        //FIXME: does add/remove htab reference?
 
-            if (!mpz_cmp_si(temp.coef, 0)) {
-                return NULL;
-            }
-
-            //res = st_init(a);
-            res.ls = NULL;
-            res.rs = NULL;
-            res.type = ST_VAL;
-            res.val = &temp;
-
-            //mpz_clear(temp); FIXME: where clear? + add clear to other st alloc functions
-            return htab_st_lookup_add(st_table, &res); //TODO: FIXME: use st_init or this??
+        if (!mpz_cmp_si(new_val.coef, 0)) {
+            mpz_clear(new_val.coef);
+            return NULL;
         }
     }
-
-    //res = my_malloc(sizeof(stree_t));
-    res.val = NULL;
-    res.type = op;
-    res.ls = a;
-    res.rs = b;
-
-    return htab_st_lookup_add(st_table, &res); //TODO: FIXME: use st_init or this??
-}
-
-void st_coef_mul(stree_t *t, int64_t c) {
-    //TODO: FIXME: change so that minus is put in front of the expression
-    //         ... add NULL as a possible rs value ?
-    
-    if (t != NULL) {
-        if (t->type != ST_VAL) {
-            st_coef_mul(t->ls, c);
-            st_coef_mul(t->rs, c);
-        }
-        else {
-            if (htab_st_get_val(st_table, t) == 1) {
-                mpz_mul_si(t->val->coef, t->val->coef, (long int)c);
-            }
-            else {
-                //FIXME: now doesn't work properly (just a copy)
-                stree_t copy;
-                copy.ls = t->ls;
-                copy.rs = t->rs;
-                copy.val = t->val; // not ST_VAL
-                copy.type = t->type;
-                htab_st_lookup_add(st_table, &copy);
-            }
-        }
+    // Regular non-terminal operation case
+    else {
+        new.val = NULL;
+        new.type = op;
+        new.ls = a;
+        new.rs = b;
+        //FIXME: does add/remove htab reference?
     }
+
+    res = htab_st_lookup_add(st_table, &new);
+    if (new.type == ST_VAL) {
+        mpz_clear(new_val.coef);
+    }
+    return res;
 }
 
 bool st_cmp(stree_t *a, stree_t *b) {
@@ -169,7 +125,10 @@ char* st_to_str(stree_t *t) {
         chars_written = gmp_snprintf(buf, MAX_ST_TO_STR_LEN, "%Zdv[%ld]", t->val->coef, t->val->var);
     }
     else {
-        char *l = st_to_str(t->ls);
+        char *l = NULL;
+        if (t->type != ST_NEG) {
+            l = st_to_str(t->ls);
+        }
         char *r = st_to_str(t->rs);
 
         if (t->type == ST_ADD) {
@@ -178,10 +137,13 @@ char* st_to_str(stree_t *t) {
         else if (t->type == ST_SUB) {
             chars_written = snprintf(buf, MAX_ST_TO_STR_LEN, "(%s - %s)", l, r);
         }
-        else { // ST_MUL
-            chars_written = snprintf(buf, MAX_ST_TO_STR_LEN, "(%s * %s)", l, r);
+        else { // ST_NEG
+            chars_written = snprintf(buf, MAX_ST_TO_STR_LEN, "-(%s)", r);
         }
-        free(l);
+        
+        if (!l) {
+            free(l);
+        }
         free(r);
     }
 

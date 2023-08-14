@@ -128,7 +128,9 @@ static solver_exp_t parse_stree(stree_t *t, solver_data_t *sdata)
     else {
         solver_exp_t args[2];
         args[0] = parse_stree(t->ls, sdata);
-        args[1] = parse_stree(t->rs, sdata);
+        if (t->type != ST_NEG) {
+            args[1] = parse_stree(t->rs, sdata);
+        }
 
         switch (t->type) {
             case ST_ADD:
@@ -137,8 +139,8 @@ static solver_exp_t parse_stree(stree_t *t, solver_data_t *sdata)
             case ST_SUB:
                 res = Z3_mk_sub(sdata->ctx, 2, args);
                 break;
-            case ST_MUL:
-                res = Z3_mk_mul(sdata->ctx, 2, args);
+            case ST_NEG:
+                res = Z3_mk_unary_minus(sdata->ctx, args[0]);
                 break;
         }
     }

@@ -1,5 +1,7 @@
 #include "symb_utils.h"
 
+#define ST_NULL (void*)1 // Value for distinguishing between uninitialized expression and NULL expression
+
 // =================
 // Refine internal:
 // =================
@@ -92,14 +94,18 @@ static void rdata_add(rdata_t *rd, vars_t old, vars_t new, stree_t *data)
  */
 static vars_t refine_var_check(vars_t var, stree_t *data, rdata_t *rd)
 {
+    if (data == NULL) {
+        data = ST_NULL;
+    }
+
     if (rd->upd[var] == NULL) {
         rd->upd[var] = data;
         return var;
     }
 
-    if (rd->upd[var] == (void*)1) {
-        // always create new var when not mtbdd_false
-        if (data == (void*)1) {
+    if (rd->upd[var] == ST_NULL) {
+        // always create new var when not NULL
+        if (data == ST_NULL) {
             return var;
         }
     }
@@ -124,10 +130,10 @@ TASK_IMPL_3(MTBDD, mtbdd_symb_refine, MTBDD*, p_map, MTBDD*, p_val, size_t, rd_r
         vars_t new_a, new_b, new_c, new_d;
 
         if (val == mtbdd_false) {
-            new_a = refine_var_check(mdata->va, (void*)1, rd); //FIXME: is defined behaviour?? ... at least use some macro
-            new_b = refine_var_check(mdata->vb, (void*)1, rd);
-            new_c = refine_var_check(mdata->vc, (void*)1, rd);
-            new_d = refine_var_check(mdata->vd, (void*)1, rd);
+            new_a = refine_var_check(mdata->va, NULL, rd);
+            new_b = refine_var_check(mdata->vb, NULL, rd);
+            new_c = refine_var_check(mdata->vc, NULL, rd);
+            new_d = refine_var_check(mdata->vd, NULL, rd);
         }
         else {
             sl_val_t *vdata = (sl_val_t*) mtbdd_getvalue(val);
@@ -179,7 +185,7 @@ void symb_init(MTBDD *circ, mtbdd_symb_t *symbc)
 
     symbc->map = my_mtbdd_to_symb_map(*circ, symbc->vm);
     mtbdd_protect(&(symbc->map));
-    //FIXME: size?
+    //TODO: initial size?
     st_htab_init(msize * 10); // has to be initialized before mtbdd val
     symbc->val = my_mtbdd_map_to_symb_val(symbc->map);
     mtbdd_protect(&(symbc->val));
@@ -195,11 +201,14 @@ bool symb_refine(mtbdd_symb_t *symbc)
     mtbdd_protect(&refined);
     bool is_finished = (rdata->ref->first == NULL);
     if (!is_finished) {
+        // reset symbolic simulation
+        //st_htab_clear(); //FIXME: causes segfault
+        cs_k_reset();
         symbc->map = refined;
         symbc->val = my_mtbdd_map_to_symb_val(refined);
-        mtbdd_unprotect(&refined);
     }
 
+    mtbdd_unprotect(&refined);
     rdata_delete(rdata);
     return is_finished;
 }
@@ -212,7 +221,7 @@ void symb_eval(MTBDD *circ,  mtbdd_symb_t *symbc, uint32_t iters)
     }
     coef_t *temp_map;
 
-    //TODO: FIXME:
+    // FIXME:
     // FILE *out = fopen("res.dot", "w");
     // mtbdd_fprintdot(out, symbc->val);
     // fclose(out);
@@ -243,12 +252,6 @@ void symb_eval(MTBDD *circ,  mtbdd_symb_t *symbc, uint32_t iters)
     mtbdd_unprotect(&(symbc->val));
     mpz_clear(cs_k);
     st_htab_delete();
-}
-
-void symb_reset()
-{
-    st_htab_clear();
-    cs_k_reset();
 }
 
 /* end of "symb_utils.c" */

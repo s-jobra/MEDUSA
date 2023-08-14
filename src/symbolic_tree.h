@@ -44,11 +44,6 @@ stree_t* st_init(stree_t *t);
 stree_t* st_op(stree_t *a, stree_t *b, stnode_t op);
 
 /**
- * Performs multiplication of the tree leaf values
- */
-void st_coef_mul(stree_t *t, int64_t c);
-
-/**
  * Returns true if the two trees are equal
  */
 bool st_cmp(stree_t *a, stree_t *b);

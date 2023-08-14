@@ -22,7 +22,7 @@ typedef uint64_t vars_t;
 typedef enum {
     ST_ADD, // binary operations:
     ST_SUB,
-    ST_MUL, // unary operation
+    ST_NEG, // unary operation
     ST_VAL  // represents leaf node - just a variable with its coefficient
 } stnode_t;
 
@@ -38,10 +38,10 @@ typedef struct stnode_val {
  * Type for symbolic tree node
  */
 typedef struct stree {
-    stnode_val_t *val;
+    stnode_val_t *val; // NULL when the type is some operation
     stnode_t type;
-    struct stree *ls; //FIXME: maybe change to union? (coef/ls, var/rs)
-    struct stree *rs;
+    struct stree *ls;  // NULL when the type is value, FIXME: maybe change to union? (coef/ls, var/rs)
+    struct stree *rs;  // NULL when the type is value or an unary operation
 } stree_t;
 
 #endif
