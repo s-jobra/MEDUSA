@@ -113,8 +113,7 @@ TASK_IMPL_2(MTBDD, mtbdd_map_to_symb_val, MTBDD, t, size_t, x)
 {
     (void) x; // needed for TASK_IMPL_2
 
-    // Partial function check
-    if (t == mtbdd_false) return mtbdd_false;
+    // Partial function check not needed, 4 variables were assigned to every base vector
 
     if (mtbdd_isleaf(t)) {
         sl_map_t *t_data = (sl_map_t*) mtbdd_getvalue(t);

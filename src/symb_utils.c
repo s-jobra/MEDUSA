@@ -1,5 +1,8 @@
 #include "symb_utils.h"
 
+static uint64_t apply_mtbdd_symb_refine_id; // Opid for mtbdd_symb_refine (needed for mtbdd_applyp)
+
+
 #define ST_NULL (void*)1 // Value for distinguishing between uninitialized expression and NULL expression
 
 // =================
@@ -172,10 +175,17 @@ TASK_IMPL_3(MTBDD, mtbdd_symb_refine, MTBDD*, p_map, MTBDD*, p_val, size_t, rd_r
  * @param opid opid needed for the Sylvan's apply
  * 
  */
-#define my_mtbdd_symb_refine(p_map, p_val, rdata, opid) \
-        mtbdd_applyp(p_map, p_val, (size_t)rdata, TASK(mtbdd_symb_refine), opid)
+#define my_mtbdd_symb_refine(p_map, p_val, rdata) \
+        mtbdd_applyp(p_map, p_val, (size_t)rdata, TASK(mtbdd_symb_refine), apply_mtbdd_symb_refine_id)
 
 // ========================================
+
+void init_sylvan_symb()
+{
+    init_my_leaf_symb_val();
+    init_my_leaf_symb_map();
+    apply_mtbdd_symb_refine_id = cache_next_opid();
+}
 
 void symb_init(MTBDD *circ, mtbdd_symb_t *symbc)
 {
@@ -196,15 +206,15 @@ void symb_init(MTBDD *circ, mtbdd_symb_t *symbc)
 bool symb_refine(mtbdd_symb_t *symbc)
 {
     rdata_t *rdata = rdata_create(symbc->vm);
-
-    MTBDD refined = my_mtbdd_symb_refine(symbc->map, symbc->val, rdata, cache_next_opid());
+    MTBDD refined = my_mtbdd_symb_refine(symbc->map, symbc->val, rdata);
     mtbdd_protect(&refined);
     bool is_finished = (rdata->ref->first == NULL);
     if (!is_finished) {
-        // reset symbolic simulation
-        //st_htab_clear(); //FIXME: causes segfault
+        // Reset symbolic simulation
+        st_htab_clear();
         cs_k_reset();
         symbc->map = refined;
+        cache_clear(); // Needed because the following apply is cached with the expressions from the cleared htab
         symbc->val = my_mtbdd_map_to_symb_val(refined);
     }
 

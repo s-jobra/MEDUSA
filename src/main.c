@@ -86,8 +86,7 @@ int main(int argc, char *argv[])
     init_sylvan();
     init_my_leaf();
     if (opt_symbolic) {
-        init_my_leaf_symb_val();
-        init_my_leaf_symb_map();
+        init_sylvan_symb();
     }
     FILE *out = fopen(OUT_FILE".dot", "w");
     if (out == NULL) {

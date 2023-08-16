@@ -11,13 +11,18 @@ void st_htab_init(size_t size)
 
 void st_htab_clear()
 {
-    htab_clear(st_table);
+    htab_st_clear(st_table);
 }
 
 void st_htab_delete()
 {
-    htab_free(st_table);
+    htab_st_free(st_table);
 }
+
+//TODO: FIXME: all functions creating new st: now adding st to htab twice (once here, once in make_leaf)
+//              A) add to htab only after leaf has been created -> then here malloc and in mtbdd_symb_val free data
+//                                                         (or init local variable in mtbdd_symb_val and set its value here)
+//              B) idk -> make_leaf does not interact with htab? (not sure if possible/correct)
 
 stree_t* st_create_val(vars_t v) {
     stree_t *res;

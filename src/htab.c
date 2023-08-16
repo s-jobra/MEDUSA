@@ -24,36 +24,85 @@ htab_t* htab_init(size_t n)
     return t;
 }
 
-void htab_clear(htab_t *t)
+/**
+ * Symbolic table item dealloc
+ */
+static void htab_st_del_item(htab_item_t *i)
+{
+    htab_st_key_t key = htab_st_get_key(i);
+    if (key->val) {
+        mpz_clear(key->val->coef);
+        free(key->val);
+    }
+    free(key);
+    free(i);
+}
+
+/**
+ * Measure table item dealloc
+ */
+static void htab_m_del_item(htab_item_t *i)
+{
+    free(i->data.key);
+    free(i);
+}
+
+/**
+ * Deletes all table items
+ */
+static void htab_clear(htab_t *t, void (*del_item_func)(htab_item_t*))
 {
     htab_item_t *curr;
+    htab_st_key_t key;
 
     for (size_t i = 0; i < t->arr_size; i++) {
         while (t->arr_ptr[i] != NULL) {
             curr = t->arr_ptr[i];
             t->arr_ptr[i] = t->arr_ptr[i]->next;
-
-            //FIXME: st needs more complex dealloc
-            free(curr->data.key);
-            free(curr);
+            del_item_func(curr);
         }
     }
+    t->size = 0;
 }
 
-void htab_free(htab_t *t)
+/**
+ * Deletes the whole table
+ */
+static void htab_free(htab_t *t, void (*del_item_func)(htab_item_t*))
 {
     if (t->arr_ptr != NULL) {
-        htab_clear(t);
+        htab_clear(t, del_item_func);
         free(t->arr_ptr);
     }
     free(t);
 }
 
+void htab_st_clear(htab_t *t)
+{
+    htab_clear(t, htab_st_del_item);
+}
+
+void htab_st_free(htab_t *t)
+{
+    htab_free(t, htab_st_del_item);
+}
+
+void htab_m_clear(htab_t *t)
+{
+    htab_clear(t, htab_m_del_item);
+}
+
+void htab_m_free(htab_t *t)
+{
+    htab_clear(t, htab_m_del_item);
+}
+
 /**
  * The hash function used when operating with symbolic hash table items
  */
-static size_t htab_st_hash_func(htab_key_t key_raw) //FIXME: is good? (maybe vals and op map to the same hash often)
+static size_t htab_st_hash_func(htab_key_t key_raw)
 {
+    //FIXME: is good? (maybe vals and op map to the same hash often) - base constant to differentiate between these cases
     htab_st_key_t key = (htab_st_key_t) key_raw;
     size_t val = 0;
     if (key->type == ST_VAL) {
@@ -76,19 +125,11 @@ static size_t htab_m_hash_func(htab_key_t key_raw) {
 }
 
 /**
- * Changes the size of the table's array and moves items from the original lists.
- * If the new size is 0, deletes the array.
+ * Changes the size of the table's array and moves items from the original lists (size must be >0)
  */
 static void htab_resize(htab_t *t, size_t newn, size_t (*hash_func)(htab_key_t))
 {
-    if (newn == 0) {
-        htab_clear(t);
-        free(t->arr_ptr);
-        t->arr_size = 0;
-        t->size = 0;
-        t->arr_ptr = NULL;
-        return;
-    }
+    assert(newn != 0);
 
     // alloc and init new array
     htab_item_t **new_arr_ptr;

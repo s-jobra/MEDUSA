@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <assert.h>
 #include "symbolic_tree_types.h"
 #include "hash.h"
 #include "error.h"
@@ -38,16 +39,6 @@ typedef struct htab_item {       // Hash table item
 htab_t* htab_init(size_t n);
 
 /**
- * Delete and dealloc all table items
- */
-void htab_clear(htab_t *t);
-
-/**
- * Deletes the table
- */
-void htab_free(htab_t *t);
-
-/**
  * Returns the number of references to the given key (its value). Returns 0 if the key is not found.
  */
 htab_value_t htab_st_get_val(htab_t *t, htab_st_key_t key);
@@ -65,6 +56,16 @@ htab_st_key_t htab_st_lookup_add(htab_t *t, htab_st_key_t key);
 void htab_st_lookup_remove(htab_t *t, htab_st_key_t key);
 
 /**
+ * Deletes and deallocates all symbolic table items
+ */
+void htab_st_clear(htab_t *t);
+
+/**
+ * Deletes the symbolic table
+ */
+void htab_st_free(htab_t *t);
+
+/**
  * Adds the item with the given string key to the table, else (if already exists) increments its value by one
  */
 void htab_m_lookup_add(htab_t *t, htab_m_key_t key);
@@ -73,6 +74,16 @@ void htab_m_lookup_add(htab_t *t, htab_m_key_t key);
  * Prints all hash table items to the given stream (used for measurement output)
  */
 void htab_m_print_all(htab_t *t, FILE *output);
+
+/**
+ * Deletes and deallocates all measure table items
+ */
+void htab_m_clear(htab_t *t);
+
+/**
+ * Deletes the measure table
+ */
+void htab_m_free(htab_t *t);
 
 #endif
 /* end of "htab.h" */

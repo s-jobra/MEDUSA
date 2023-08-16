@@ -18,6 +18,11 @@ typedef struct mtbdd_symb {
 } mtbdd_symb_t;
 
 /**
+ * Function for Sylvan setup for symbolic simulation.
+ */
+void init_sylvan_symb();
+
+/**
  * Creates an symbolic MTBDD from the given MTBDD and returns the mapping of variables to their values
  */
 void symb_init(MTBDD *circ, mtbdd_symb_t *symbc);

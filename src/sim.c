@@ -327,7 +327,7 @@ void measure_all(unsigned long samples, FILE *output, MTBDD circ, int n, int *bi
         htab_m_lookup_add(state_table, curr_state);
     }
     htab_m_print_all(state_table, output);
-    htab_free(state_table);
+    htab_m_free(state_table);
 }
 
 /* end of "sim.c" */
