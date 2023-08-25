@@ -3,7 +3,6 @@
 //TODO: change Bxt, Bxt_c create to Bxt * T, Bxt_c * T operations
 //TODO: update gate formulae
 
-//FIXME: use this function instead
 void check_xt_root_missing(MTBDD *a, uint32_t xt)
 {
     if (*a != mtbdd_false) {
@@ -225,46 +224,31 @@ TASK_IMPL_2(MTBDD, m_gate_t, MTBDD, a, uint64_t, xt)
 
 void gate_x(MTBDD *a, uint32_t xt)
 {
+    // Check if xt is a missing root not needed -> swap is identical with the original MTBDD
     *a = mtbdd_uapply(*a, TASK(m_gate_x), xt);
 }
 
 void gate_y(MTBDD *a, uint32_t xt)
 {
-    if (*a != mtbdd_false) { // check if xt shouldn't be root
-        if (xt < mtbdd_getvar(*a)) {
-            *a = _mtbdd_makenode(xt, *a, *a);
-        }
-    }
+    check_xt_root_missing(a, xt);
     *a = mtbdd_uapply(*a, TASK(m_gate_y), xt);
 }
 
 void gate_z(MTBDD *a, uint32_t xt)
 {
-    if (*a != mtbdd_false) {  // check if xt shouldn't be root
-        if (xt < mtbdd_getvar(*a)) {
-            *a = _mtbdd_makenode(xt, *a, *a);
-        }
-    }
+    check_xt_root_missing(a, xt);
     *a = mtbdd_uapply(*a, TASK(m_gate_z), xt);
 }
 
 void gate_s(MTBDD *a, uint32_t xt)
 {
-    if (*a != mtbdd_false) {  // check if xt shouldnt' be root
-        if (xt < mtbdd_getvar(*a)) {
-            *a = _mtbdd_makenode(xt, *a, *a);
-        }
-    }
+    check_xt_root_missing(a, xt);
     *a = mtbdd_uapply(*a, TASK(m_gate_s), xt);
 }
 
 void gate_t(MTBDD *a, uint32_t xt)
 {
-    if (*a != mtbdd_false) { // check if xt shouldnt' be root
-        if (xt < mtbdd_getvar(*a)) {
-            *a = _mtbdd_makenode(xt, *a, *a);
-        }
-    }
+    check_xt_root_missing(a, xt);
     *a = mtbdd_uapply(*a, TASK(m_gate_t), xt);
 }
 
