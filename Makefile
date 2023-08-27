@@ -97,7 +97,7 @@ clean: clean-artifacts
 clean-all: clean-artifacts clean-deps clean-benchmark
 
 clean-artifacts:
-	rm -rf $(BIN_DIR)/$(EXEC) $(F_OUT_NAME).dot $(F_OUT_NAME).$(OF_TYPE) $(OBJ_DIR)
+	rm -rf $(EXEC) $(F_OUT_NAME).dot $(F_OUT_NAME).$(OF_TYPE) $(OBJ_DIR)
 
 clean-deps:
 	rm -rf $(LIB_DIR)

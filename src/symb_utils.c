@@ -97,22 +97,13 @@ static void rdata_add(rdata_t *rd, vars_t old, vars_t new, stree_t *data)
  */
 static vars_t refine_var_check(vars_t var, stree_t *data, rdata_t *rd)
 {
-    if (data == NULL) {
-        data = ST_NULL;
-    }
-
     if (rd->upd[var] == NULL) {
         rd->upd[var] = data;
         return var;
     }
 
-    if (rd->upd[var] == ST_NULL) {
-        // always create new var when not NULL
-        if (data == ST_NULL) {
-            return var;
-        }
-    }
-    else if (expr_is_equal(data, rd->upd[var], rd->vm->msize)) {
+    if ((data == ST_NULL && rd->upd[var] == ST_NULL) ||
+        (data != ST_NULL && expr_is_equal(data, rd->upd[var], rd->vm->msize))) {
         return var;
     }
 
@@ -133,10 +124,10 @@ TASK_IMPL_3(MTBDD, mtbdd_symb_refine, MTBDD*, p_map, MTBDD*, p_val, size_t, rd_r
         vars_t new_a, new_b, new_c, new_d;
 
         if (val == mtbdd_false) {
-            new_a = refine_var_check(mdata->va, NULL, rd);
-            new_b = refine_var_check(mdata->vb, NULL, rd);
-            new_c = refine_var_check(mdata->vc, NULL, rd);
-            new_d = refine_var_check(mdata->vd, NULL, rd);
+            new_a = refine_var_check(mdata->va, ST_NULL, rd);
+            new_b = refine_var_check(mdata->vb, ST_NULL, rd);
+            new_c = refine_var_check(mdata->vc, ST_NULL, rd);
+            new_d = refine_var_check(mdata->vd, ST_NULL, rd);
         }
         else {
             sl_val_t *vdata = (sl_val_t*) mtbdd_getvalue(val);
@@ -214,8 +205,15 @@ bool symb_refine(mtbdd_symb_t *symbc)
         st_htab_clear();
         cs_k_reset();
         symbc->map = refined;
-        cache_clear(); // Needed because the following apply is cached with the expressions from the cleared htab
+
+        // sylvan_clear_cache(); // Clears the operation cache, needed because the following apply is cached with the expressions from the cleared htab
+        // sylvan_clear_and_mark();
+        // sylvan_rehash_all();
+        //mtbdd_unprotect(&symbc->val); FIXME: why not needed?
+        //symbc->val = mtbdd_false; //FIXME: use this instead?
+        sylvan_gc(); // Clears both operation cache and node cache
         symbc->val = my_mtbdd_map_to_symb_val(refined);
+        //mtbdd_protect(&symbc->val);
     }
 
     mtbdd_unprotect(&refined);
@@ -258,10 +256,10 @@ void symb_eval(MTBDD *circ,  mtbdd_symb_t *symbc, uint32_t iters)
 
     // symbolic clean up
     vmap_delete(symbc->vm);
+    st_htab_delete();
     mtbdd_unprotect(&(symbc->map));
     mtbdd_unprotect(&(symbc->val));
     mpz_clear(cs_k);
-    st_htab_delete();
 }
 
 /* end of "symb_utils.c" */

@@ -28,20 +28,23 @@ void st_htab_clear();
  */
 void st_htab_delete();
 
-/**
+/** FIXME: update comment
  * Creates a new tree for the given complex number coefficient variable
  */
-stree_t* st_create_val(vars_t v);
+void st_init_val(stree_t *new_st, stnode_val_t *new_val, vars_t v);
 
-/**
+/** FIXME: update comment
  * Creates a new tree and initializes it from the data provided
  */
-stree_t* st_init(stree_t *t);
+void st_init(stree_t *new, stree_t *src);
 
-/**
+//FIXME: comment
+stree_t* st_htab_add(stree_t *t);
+
+/** FIXME: update comment
  * Performs the given operation on the two trees (a op b) and returns the result
  */
-stree_t* st_op(stree_t *a, stree_t *b, stnode_t op);
+void st_op(stree_t **res, stnode_val_t *res_val, stree_t *a, stree_t *b, stnode_t op);
 
 /**
  * Returns true if the two trees are equal
