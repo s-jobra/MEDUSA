@@ -37,10 +37,10 @@ void my_leaf_symb_v_create(uint64_t *ldata_p_raw)
     sl_val_t* orig_ldata = *ldata_p;
     sl_val_t* new_ldata = (sl_val_t*)my_malloc(sizeof(sl_val_t));
 
-    new_ldata->a = st_htab_add(orig_ldata->a);
-    new_ldata->b = st_htab_add(orig_ldata->b);
-    new_ldata->c = st_htab_add(orig_ldata->c);
-    new_ldata->d = st_htab_add(orig_ldata->d);
+    new_ldata->a = orig_ldata->a;
+    new_ldata->b = orig_ldata->b;
+    new_ldata->c = orig_ldata->c;
+    new_ldata->d = orig_ldata->d;
 
     *ldata_p = new_ldata;
 }
@@ -115,19 +115,11 @@ TASK_IMPL_2(MTBDD, mtbdd_map_to_symb_val, MTBDD, t, size_t, x)
     if (mtbdd_isleaf(t)) {
         sl_map_t *t_data = (sl_map_t*) mtbdd_getvalue(t);
         sl_val_t new_data;
-        stree_t ta, tb, tc, td;
-        stnode_val_t val_a, val_b, val_c, val_d;
-        new_data.a = &ta;
-        new_data.b = &tb;
-        new_data.c = &tc;
-        new_data.d = &td;
-        st_init_val(new_data.a, &val_a, t_data->va);
-        st_init_val(new_data.b, &val_b, t_data->vb);
-        st_init_val(new_data.c, &val_c, t_data->vc);
-        st_init_val(new_data.d, &val_d, t_data->vd);
-
+        new_data.a = st_create_val(t_data->va);
+        new_data.b = st_create_val(t_data->vb);
+        new_data.c = st_create_val(t_data->vc);
+        new_data.d = st_create_val(t_data->vd);
         MTBDD res = mtbdd_makeleaf(ltype_symb_expr_id, (uint64_t) &new_data);
-
         return res;
     }
 
@@ -305,16 +297,10 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_plus, MTBDD*, p_a, MTBDD*, p_b)
         sl_val_t *b_data = (sl_val_t*) mtbdd_getvalue(b);
 
         sl_val_t res_data;
-        stree_t ta, tb, tc, td;
-        stnode_val_t val_a, val_b, val_c, val_d;
-        res_data.a = &ta;
-        res_data.b = &tb;
-        res_data.c = &tc;
-        res_data.d = &td;
-        st_op(&res_data.a, &val_a, a_data->a, b_data->a, ST_ADD);
-        st_op(&res_data.b, &val_b, a_data->b, b_data->b, ST_ADD);
-        st_op(&res_data.c, &val_c, a_data->c, b_data->c, ST_ADD);
-        st_op(&res_data.d, &val_d, a_data->d, b_data->d, ST_ADD);
+        res_data.a = st_op(a_data->a, b_data->a, ST_ADD);
+        res_data.b = st_op(a_data->b, b_data->b, ST_ADD);
+        res_data.c = st_op(a_data->c, b_data->c, ST_ADD);
+        res_data.d = st_op(a_data->d, b_data->d, ST_ADD);
 
         if (!res_data.a && !res_data.b && !res_data.c && !res_data.d) {
             return mtbdd_false;
@@ -351,16 +337,10 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_minus, MTBDD*, p_a, MTBDD*, p_b)
         sl_val_t *b_data = (sl_val_t*) mtbdd_getvalue(b);
         
         sl_val_t res_data;
-        stree_t ta, tb, tc, td;
-        stnode_val_t val_a, val_b, val_c, val_d;
-        res_data.a = &ta;
-        res_data.b = &tb;
-        res_data.c = &tc;
-        res_data.d = &td;
-        st_op(&res_data.a, &val_a, a_data->a, b_data->a, ST_SUB);
-        st_op(&res_data.b, &val_b, a_data->b, b_data->b, ST_SUB);
-        st_op(&res_data.c, &val_c, a_data->c, b_data->c, ST_SUB);
-        st_op(&res_data.d, &val_d, a_data->d, b_data->d, ST_SUB);
+        res_data.a = st_op(a_data->a, b_data->a, ST_SUB);
+        res_data.b = st_op(a_data->b, b_data->b, ST_SUB);
+        res_data.c = st_op(a_data->c, b_data->c, ST_SUB);
+        res_data.d = st_op(a_data->d, b_data->d, ST_SUB);
 
         if (!res_data.a && !res_data.b && !res_data.c && !res_data.d) {
             return mtbdd_false;
@@ -385,16 +365,10 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_neg, MTBDD, t, size_t, x)
         sl_val_t *ldata = (sl_val_t*) mtbdd_getvalue(t);
 
         sl_val_t res_data;
-        stree_t ta, tb, tc, td;
-        stnode_val_t val_a, val_b, val_c, val_d;
-        res_data.a = &ta;
-        res_data.b = &tb;
-        res_data.c = &tc;
-        res_data.d = &td;
-        st_op(&res_data.a, &val_a, ldata->a, NULL, ST_NEG);
-        st_op(&res_data.b, &val_b, ldata->b, NULL, ST_NEG);
-        st_op(&res_data.c, &val_c, ldata->c, NULL, ST_NEG);
-        st_op(&res_data.d, &val_d, ldata->d, NULL, ST_NEG);
+        res_data.a = st_op(ldata->a, NULL, ST_NEG);
+        res_data.b = st_op(ldata->b, NULL, ST_NEG);
+        res_data.c = st_op(ldata->c, NULL, ST_NEG);
+        res_data.d = st_op(ldata->d, NULL, ST_NEG);
 
         MTBDD res = mtbdd_makeleaf(ltype_symb_expr_id, (uint64_t) &res_data);
         return res;
@@ -415,16 +389,10 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_coef_rot1, MTBDD, t, size_t, x)
         sl_val_t *ldata = (sl_val_t*) mtbdd_getvalue(t);
 
         sl_val_t res_data;
-        stree_t ta, tb, tc, td;
-        stnode_val_t val_a;
-        res_data.a = &ta;
-        res_data.b = &tb;
-        res_data.c = &tc;
-        res_data.d = &td;
-        st_op(&res_data.a, &val_a, ldata->d, NULL, ST_NEG);
-        st_init(res_data.b, ldata->a);
-        st_init(res_data.c, ldata->b);
-        st_init(res_data.d, ldata->c);
+        res_data.a = st_op(ldata->d, NULL, ST_NEG);
+        res_data.b = st_htab_add(ldata->a);
+        res_data.c = st_htab_add(ldata->b);
+        res_data.d = st_htab_add(ldata->c);
 
         MTBDD res = mtbdd_makeleaf(ltype_symb_expr_id, (uint64_t) &res_data);
         return res;
@@ -445,16 +413,10 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_coef_rot2, MTBDD, t, size_t, x)
         sl_val_t *ldata = (sl_val_t*) mtbdd_getvalue(t);
 
         sl_val_t res_data;
-        stree_t ta, tb, tc, td;
-        stnode_val_t val_a, val_b;
-        res_data.a = &ta;
-        res_data.b = &tb;
-        res_data.c = &tc;
-        res_data.d = &td;
-        st_op(&res_data.a, &val_a, ldata->c, NULL, ST_NEG);
-        st_op(&res_data.b, &val_b, ldata->d, NULL, ST_NEG);
-        st_init(res_data.c, ldata->a);
-        st_init(res_data.d, ldata->b);
+        res_data.a = st_op(ldata->c, NULL, ST_NEG);
+        res_data.b = st_op(ldata->d, NULL, ST_NEG);
+        res_data.c = st_htab_add(ldata->a);
+        res_data.d = st_htab_add(ldata->b);
 
         MTBDD res = mtbdd_makeleaf(ltype_symb_expr_id, (uint64_t) &res_data);
         return res;

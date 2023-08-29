@@ -206,14 +206,11 @@ bool symb_refine(mtbdd_symb_t *symbc)
         cs_k_reset();
         symbc->map = refined;
 
-        // sylvan_clear_cache(); // Clears the operation cache, needed because the following apply is cached with the expressions from the cleared htab
-        // sylvan_clear_and_mark();
-        // sylvan_rehash_all();
-        //mtbdd_unprotect(&symbc->val); FIXME: why not needed?
-        //symbc->val = mtbdd_false; //FIXME: use this instead?
+        mtbdd_unprotect(&symbc->val);
         sylvan_gc(); // Clears both operation cache and node cache
+                     // (needed because symbolic applies are cached with the expressions from the cleared htab)
         symbc->val = my_mtbdd_map_to_symb_val(refined);
-        //mtbdd_protect(&symbc->val);
+        mtbdd_protect(&symbc->val);
     }
 
     mtbdd_unprotect(&refined);

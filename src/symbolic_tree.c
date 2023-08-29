@@ -19,34 +19,22 @@ void st_htab_delete()
     htab_st_free(st_table);
 }
 
-void st_init_val(stree_t *new_st, stnode_val_t *new_val, vars_t v) {
-    mpz_init_set_ui(new_val->coef, 1);
-    new_val->var = v;
+stree_t* st_create_val(vars_t v) {
+    stree_t *res;
+    stree_t new;
+    stnode_val_t new_val;
 
-    new_st->val = new_val;
-    new_st->type = ST_VAL;
-    new_st->ls = NULL;
-    new_st->rs = NULL;
-}
+    mpz_init_set_ui(new_val.coef, 1);
+    new_val.var = v;
 
-void st_init(stree_t *new, stree_t *src) {
-    if (!src) {
-        new = NULL;
-    }
-    else {
-        new->type = src->type;
-        new->ls = src->ls;
-        new->rs = src->rs;
-        // if (src->val) {
-        //     new->val = my_malloc(sizeof(stnode_val_t)); //FIXME: should be function param just like in st_init_val
-        //     new->val->var = src->val->var;
-        //     mpz_init_set(new->val->coef, src->val->coef);
-        // }
-        // else {
-        //     new->val = NULL;
-        // }
-        new->val = src->val; //FIXME: check if soft copy is enough
-    }
+    new.val = &new_val;
+    new.type = ST_VAL;
+    new.ls = NULL;
+    new.rs = NULL;
+
+    res = htab_st_lookup_add(st_table, &new);
+    mpz_clear(new_val.coef);
+    return res;
 }
 
 stree_t* st_htab_add(stree_t *t) {
@@ -56,62 +44,70 @@ stree_t* st_htab_add(stree_t *t) {
     return htab_st_lookup_add(st_table, t);
 }
 
-void st_op(stree_t **res, stnode_val_t *res_val, stree_t *a, stree_t *b, stnode_t op) {
+stree_t* st_op(stree_t *a, stree_t *b, stnode_t op) {
+    stree_t* res;
+    stree_t new;
+    stnode_val_t new_val;
+
     //FIXME: check more thoroughly?
     if (a == NULL && b == NULL) {
-        *res = NULL;
+        return NULL;
     }
     // Special binary operation case
     else if (a == NULL || b == NULL && op != ST_NEG) { 
         if (op == ST_ADD) {
-            *res = (!a)? b : a; //FIXME: does add/remove htab reference?
+            new = (!a)? *b : *a; //FIXME: does add/remove htab reference?
         }
         else { // ST_SUB
             if (!a) {
-                st_op(res, res_val, b, NULL, ST_NEG);
+                return st_op(b, NULL, ST_NEG);
             }
-            else {
-                *res = a; //FIXME: does add/remove htab reference?
-            }
+            new = *a; //FIXME: does add/remove htab reference?
         }
     }
     // Terminal operation case
     else if (a->type == ST_VAL && (op == ST_NEG || \
                                    (b->type == ST_VAL && a->val->var == b->val->var))) {
-        mpz_init(res_val->coef);
-        res_val->var = a->val->var;
+        mpz_init(new_val.coef);
+        new_val.var = a->val->var;
 
-        (*res)->ls = NULL;
-        (*res)->rs = NULL;
-        (*res)->type = ST_VAL;
-        (*res)->val = res_val;
+        new.ls = NULL;
+        new.rs = NULL;
+        new.type = ST_VAL;
+        new.val = &new_val;
 
         switch (op) {
             case ST_NEG:
-                mpz_neg(res_val->coef, a->val->coef);
+                mpz_neg(new_val.coef, a->val->coef);
                 break;
             case ST_ADD:
-                mpz_add(res_val->coef, a->val->coef, b->val->coef);
+                mpz_add(new_val.coef, a->val->coef, b->val->coef);
                 break;
             case ST_SUB:
-                mpz_sub(res_val->coef, a->val->coef, b->val->coef);
+                mpz_sub(new_val.coef, a->val->coef, b->val->coef);
                 break;
         }
         //FIXME: does add/remove htab reference?
 
-        if (!mpz_cmp_si(res_val->coef, 0)) {
-            mpz_clear(res_val->coef);
-            *res = NULL;
+        if (!mpz_cmp_si(new_val.coef, 0)) {
+            mpz_clear(new_val.coef);
+            return NULL;
         }
     }
     // Regular non-terminal operation case
     else {
-        (*res)->val = NULL;
-        (*res)->type = op;
-        (*res)->ls = a;
-        (*res)->rs = b;
+        new.val = NULL;
+        new.type = op;
+        new.ls = a;
+        new.rs = b;
         //FIXME: does add/remove htab reference?
     }
+
+    res = htab_st_lookup_add(st_table, &new);
+    if (new.type == ST_VAL) {
+        mpz_clear(new_val.coef);
+    }
+    return res;
 }
 
 bool st_cmp(stree_t *a, stree_t *b) {
