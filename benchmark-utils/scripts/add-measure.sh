@@ -1,6 +1,10 @@
 #!/bin/bash
 
-for file in ../benchmarks/*/*/*.qasm; do
+# ======================================================================
+# It is assumed that the script is run from the benchmark's main folder.
+# ======================================================================
+
+for file in ./*/*.qasm; do
     q_cnt=0
 
     while read line; do

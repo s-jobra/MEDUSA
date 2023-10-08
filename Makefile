@@ -18,12 +18,12 @@ F=bell
 OF_TYPE=svg
 F_OUT_NAME=res
 T=BernsteinVazirani/01
-BSCRIPT_PATH=benchmarks/scripts/
+BSCRIPT_PATH=benchmark-utils/scripts/
 TEST_OUT=benchmark.out
 
 .DEFAULT := all
-.PHONY := clean clean-all clean-artifacts clean-deps clean-benchmark run install test benchmark plot plot-log \
-          test-init install make-sylvan make-lace download-sylvan download-lace make-sliqsim get-benchmarks
+.PHONY := clean clean-all clean-artifacts clean-deps clean-benchmark run-my run-b test plot \
+           install-deps make-sylvan make-lace download-sylvan download-lace make-sliqsim
 
 all: $(OBJS) $(LIB_DIR)/sylvan/build/src/libsylvan.a $(LIB_DIR)/lace/build/liblace.a | $(BIN_DIR)
 	$(CC) $(INC_DIRS) $(CFLAGS) -o $(EXEC) $^ $(CLIBS)
@@ -36,13 +36,14 @@ $(BIN_DIR) $(OBJ_DIR):
 
 -include $(OBJ:.o=.d)
 
+#FIXME: remove examples and create one target run just for benchmarks
 run-my:
 	@./$(EXEC) -f ./examples/$(F).qasm -m -s
 	@dot -T$(OF_TYPE) $(F_OUT_NAME).dot -o $(F_OUT_NAME).$(OF_TYPE)
 	@rm $(F_OUT_NAME).dot
 
 run-b:
-	@./$(EXEC) -f ../benchmarks/$(T)/circuit.qasm -m -s
+	@./$(EXEC) -f ./benchmarks/$(T).qasm -m -s
 	@dot -T$(OF_TYPE) $(F_OUT_NAME).dot -o $(F_OUT_NAME).$(OF_TYPE)
 	@rm $(F_OUT_NAME).dot
 
@@ -52,8 +53,7 @@ test:
 plot:
 	@cd ./$(BSCRIPT_PATH)/ && bash ./plot_log.sh
 
-test-init: make-sliqsim get-benchmarks
-
+# BENCHMARK INIT:
 make-sliqsim:
 	cd .. &&\
 	git clone https://github.com/NTU-ALComLab/SliQSim.git || true &&\
@@ -61,11 +61,6 @@ make-sliqsim:
 	./configure --enable-dddmp --enable-obj --enable-shared --enable-static &&\
 	cd .. &&\
 	make
-
-get-benchmarks:
-	cd .. && git clone https://github.com/alan23273850/AutoQ.git || true &&\
-	mv AutoQ/benchmarks . && rm -rf AutoQ
-	@bash ./$(BSCRIPT_PATH)/add-measure.sh
 
 # INIT:
 install-deps: make-sylvan make-lace make-z3
@@ -103,4 +98,4 @@ clean-deps:
 	rm -rf $(LIB_DIR)
 
 clean-benchmark:
-	cd .. && rm -rf benchmarks SliQSim
+	cd .. && rm -rf SliQSim
