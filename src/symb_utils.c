@@ -12,7 +12,7 @@ static uint64_t apply_mtbdd_symb_refine_id; // Opid for mtbdd_symb_refine (neede
 /**
  * Type for elements of the update array
  */
-typedef stree_t* upd_elem_t;
+typedef symexp_list_t* upd_elem_t;
 
 /**
  * Type for elements of the refined list (old_var -> new_var mapping)
@@ -77,7 +77,7 @@ static void rdata_delete(rdata_t *rd)
 /**
  * Adds new variable and its value to the update array, refine list and vmap array
  */
-static void rdata_add(rdata_t *rd, vars_t old, vars_t new, stree_t *data)
+static void rdata_add(rdata_t *rd, vars_t old, vars_t new, symexp_list_t *data)
 {
     ref_elem_t *new_ref_elem = my_malloc(sizeof(ref_elem_t));
     new_ref_elem->old = old;
@@ -95,7 +95,7 @@ static void rdata_add(rdata_t *rd, vars_t old, vars_t new, stree_t *data)
 /**
  * Returns the refined variable for the given data
  */
-static vars_t refine_var_check(vars_t var, stree_t *data, rdata_t *rd)
+static vars_t refine_var_check(vars_t var, symexp_list_t *data, rdata_t *rd)
 {
     if (rd->upd[var] == NULL) {
         rd->upd[var] = data;
@@ -103,7 +103,7 @@ static vars_t refine_var_check(vars_t var, stree_t *data, rdata_t *rd)
     }
 
     if ((data == ST_NULL && rd->upd[var] == ST_NULL) ||
-        (data != ST_NULL && expr_is_equal(data, rd->upd[var], rd->vm->msize))) {
+        (data != ST_NULL && symexp_cmp(data, rd->upd[var]))) {
         return var;
     }
 
@@ -187,7 +187,7 @@ void symb_init(MTBDD *circ, mtbdd_symb_t *symbc)
     symbc->map = my_mtbdd_to_symb_map(*circ, symbc->vm);
     mtbdd_protect(&(symbc->map));
     //TODO: initial size?
-    st_htab_init(msize * 10); // has to be initialized before mtbdd val
+    symexp_htab_init(msize * 10); // has to be initialized before mtbdd val
     symbc->val = my_mtbdd_map_to_symb_val(symbc->map);
     mtbdd_protect(&(symbc->val));
 
@@ -202,12 +202,12 @@ bool symb_refine(mtbdd_symb_t *symbc)
     bool is_finished = (rdata->ref->first == NULL);
     if (!is_finished) {
         // Reset symbolic simulation
-        st_htab_clear();
+        symexp_htab_clear();
         cs_k_reset();
         symbc->map = refined;
 
         mtbdd_unprotect(&symbc->val);
-        sylvan_gc(); // Clears both operation cache and node cache
+        sylvan_gc(); // Clears both the operation cache and the node cache
                      // (needed because symbolic applies are cached with the expressions from the cleared htab)
         symbc->val = my_mtbdd_map_to_symb_val(refined);
         mtbdd_protect(&symbc->val);
@@ -253,7 +253,7 @@ void symb_eval(MTBDD *circ,  mtbdd_symb_t *symbc, uint32_t iters)
 
     // symbolic clean up
     vmap_delete(symbc->vm);
-    st_htab_delete();
+    symexp_htab_delete();
     mtbdd_unprotect(&(symbc->map));
     mtbdd_unprotect(&(symbc->val));
     mpz_clear(cs_k);

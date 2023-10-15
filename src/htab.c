@@ -3,11 +3,11 @@
 #define AVG_LEN_MAX 2 // Max allowed average list length
 #define RESIZE_COEF 2
 /**
- * Obtains a properly casted key from the item ptr
+ * Obtains a properly casted key from the symbolic item ptr
  */
-#define htab_st_get_key(item_p) ((htab_st_key_t)(item_p->data.key))
+#define htab_s_get_key(item_p) ((htab_s_key_t)(item_p->data.key))
 /**
- * Obtains a properly casted key from the item ptr
+ * Obtains a properly casted key from the measure item ptr
  */
 #define htab_m_get_key(item_p) ((htab_m_key_t)(item_p->data.key))
 
@@ -27,14 +27,10 @@ htab_t* htab_init(size_t n)
 /**
  * Symbolic table item dealloc
  */
-static void htab_st_del_item(htab_item_t *i)
+static void htab_s_del_item(htab_item_t *i)
 {
-    htab_st_key_t key = htab_st_get_key(i);
-    if (key->val) {
-        mpz_clear(key->val->coef);
-        free(key->val);
-    }
-    free(key);
+    htab_s_key_t key = htab_s_get_key(i);
+    symexp_list_del(key);
     free(i);
 }
 
@@ -53,7 +49,7 @@ static void htab_m_del_item(htab_item_t *i)
 static void htab_clear(htab_t *t, void (*del_item_func)(htab_item_t*))
 {
     htab_item_t *curr;
-    htab_st_key_t key;
+    htab_s_key_t key;
 
     for (size_t i = 0; i < t->arr_size; i++) {
         while (t->arr_ptr[i] != NULL) {
@@ -77,14 +73,14 @@ static void htab_free(htab_t *t, void (*del_item_func)(htab_item_t*))
     free(t);
 }
 
-void htab_st_clear(htab_t *t)
+void htab_s_clear(htab_t *t)
 {
-    htab_clear(t, htab_st_del_item);
+    htab_clear(t, htab_s_del_item);
 }
 
-void htab_st_free(htab_t *t)
+void htab_s_free(htab_t *t)
 {
-    htab_free(t, htab_st_del_item);
+    htab_free(t, htab_s_del_item);
 }
 
 void htab_m_clear(htab_t *t)
@@ -100,19 +96,16 @@ void htab_m_free(htab_t *t)
 /**
  * The hash function used when operating with symbolic hash table items
  */
-static size_t htab_st_hash_func(htab_key_t key_raw)
+static size_t htab_s_hash_func(htab_key_t key_raw)
 {
-    //FIXME: is good? (maybe vals and op map to the same hash often) - base constant to differentiate between these cases
-    htab_st_key_t key = (htab_st_key_t) key_raw;
+    //FIXME: is good? (maybe vals and op map to the same hash often OR maybe too complex: just first elem + len?)
+    htab_s_key_t key = (htab_s_key_t) key_raw;
     size_t val = 0;
-    if (key->type == ST_VAL) {
-        val = MY_HASH_COMB(val, key->val->var); // var is also uint64_t, so no need to cast
-        val = MY_HASH_COMB_GMP(val, key->val->coef);
-    }
-    else {
-        val = MY_HASH_COMB(val, key->ls);
-        val = MY_HASH_COMB(val, (uint64_t) key->type); //FIXME: maybe shift first?
-        val = MY_HASH_COMB(val, key->rs);
+    symexp_list_first(key);
+    while (key->active) {
+        val = MY_HASH_COMB(val, key->active->data->var);    // var is also uint64_t, so no need to cast
+        val = MY_HASH_COMB_GMP(val, key->active->data->coef);
+        symexp_list_next(key);
     }
     return val;
 }
@@ -174,82 +167,49 @@ static void htab_resize(htab_t *t, size_t newn, size_t (*hash_func)(htab_key_t))
 /**
  * Returns whether two symbolic keys are identical
  */
-static bool htab_st_key_cmp(htab_st_key_t a, htab_st_key_t b)
+static bool htab_s_key_cmp(htab_s_key_t a, htab_s_key_t b)
 {
-    bool res = false;
+    bool res = true;
 
-    if (a->type == b->type) {
-        if (a->type == ST_VAL) {
-            if (a->val->var == b->val->var && !mpz_cmp(a->val->coef, b->val->coef)) {
-                res = true;
-            }
+    symexp_list_first(a);
+    symexp_list_first(b);
+
+    while(a->active && b->active) {    //TODO:FIXME:TODO: create function for getting active element, var & coef
+        if ((a->active->data->var != b->active->data->var) \
+             || mpz_cmp(a->active->data->coef, b->active->data->coef)) {
+                res = false;
+                break;
         }
-        else {
-            if (a->ls == b->ls && a->rs == b->rs) {
-                res = true;
-            }
-            else if (a->type == ST_ADD && a->ls == b->rs && a->rs == b->ls) { // commutative
-                res = true;
-            }
-        }
+        symexp_list_next(a);
+        symexp_list_next(b);
+    }
+    if (a->active != b->active) {    // Check if both NULL
+        res = false;
     }
 
-    //FIXME: maybe needs z3 call?
-
-    return res;
+    return (a == b);
 }
 
-htab_value_t htab_st_get_val(htab_t *t, htab_st_key_t key)
+htab_s_key_t htab_s_lookup_add(htab_t *t, htab_s_key_t key)
 {
-    htab_value_t v = 0;
+    htab_item_t *item = t->arr_ptr[htab_s_hash_func((htab_key_t)key) % t->arr_size];
 
-    htab_item_t *item = t->arr_ptr[htab_st_hash_func((htab_key_t)key) % t->arr_size];
-
-    // find the item
+    // Try to find the item
     while (item != NULL) {
-        if (htab_st_key_cmp(htab_st_get_key(item), key)) {
-            v = item->data.value;
-            break;
-        }
-        item = item->next;
-    }
-    return v;
-}
-
-htab_st_key_t htab_st_lookup_add(htab_t *t, htab_st_key_t key)
-{
-    htab_item_t *item = t->arr_ptr[htab_st_hash_func((htab_key_t)key) % t->arr_size];
-
-    //FIXME: recursively increment indirect children node refs?
-
-    // find the item
-    while (item != NULL) {
-        if (htab_st_key_cmp(htab_st_get_key(item), key)) {
+        if (htab_s_key_cmp(htab_s_get_key(item), key)) {
             item->data.value++;
-            return htab_st_get_key(item);
+            return htab_s_get_key(item);
         }
         item = item->next;
     }
 
+    // Item not found -> init new item
     item = my_malloc(sizeof(htab_item_t));
-    // item init
-    item->data.key = my_malloc(sizeof(stree_t));
-    htab_st_get_key(item)->ls = key->ls;
-    htab_st_get_key(item)->rs = key->rs;
-    htab_st_get_key(item)->type = key->type;
-    if (key->val == NULL) {
-        htab_st_get_key(item)->val = NULL;
-    }
-    else {
-        htab_st_get_key(item)->val = my_malloc(sizeof(stnode_val_t));
-        htab_st_get_key(item)->val->var = key->val->var;
-        mpz_init_set(htab_st_get_key(item)->val->coef, key->val->coef);
-    }
+    item->data.key = key;
     item->data.value = 1;
     item->next = NULL;
-
-    // insert new item into the table
-    size_t new_index = htab_st_hash_func((htab_key_t)key) % t->arr_size;
+    // Insert new item into the table
+    size_t new_index = htab_s_hash_func((htab_key_t)key) % t->arr_size;
     if (t->arr_ptr[new_index] == NULL) {
         t->arr_ptr[new_index] = item;
     }
@@ -260,37 +220,33 @@ htab_st_key_t htab_st_lookup_add(htab_t *t, htab_st_key_t key)
         }
         temp->next = item;
     }
-
+    // Update table size
     t->size++;
     if (((t->size + 0.0)/ t->arr_size) > AVG_LEN_MAX) { // +0.0 because of non-integer division
-        htab_resize(t, t->size * RESIZE_COEF, htab_st_hash_func);
+        htab_resize(t, t->size * RESIZE_COEF, htab_s_hash_func);
     }
-    return htab_st_get_key(item);
+
+    return htab_s_get_key(item);
 }
 
-void htab_st_lookup_remove(htab_t *t, htab_st_key_t key)
+void htab_s_lookup_remove(htab_t *t, htab_s_key_t key)
 {
-    htab_item_t *item = t->arr_ptr[htab_st_hash_func((htab_key_t)key) % t->arr_size];
+    size_t item_index = htab_s_hash_func((htab_key_t)key) % t->arr_size;
+    htab_item_t *item = t->arr_ptr[item_index];
     htab_item_t *prev = NULL;
 
-    // find the item
+    // Find the item
     while (item != NULL) {
-        if (htab_st_key_cmp(htab_st_get_key(item), key)) {
+        if (htab_s_get_key(item) == key) { //TODO:FIXME:TODO: ptr comparison should be enough and I don't need htab_s_key_cmp() CHECK!, 
             item->data.value--;
             if (!item->data.value) {
-                if (!htab_st_get_key(item)->ls) {
-                    htab_st_lookup_remove(t, htab_st_get_key(item)->ls);
-                }
-                if (!htab_st_get_key(item)->rs) {
-                    htab_st_lookup_remove(t, htab_st_get_key(item)->rs);
-                }
-                if (!htab_st_get_key(item)->val) {
-                    free(htab_st_get_key(item)->val);
-                }
-                if (!prev) {
+                if (prev) {
                     prev->next = item->next;
                 }
-                free(item);
+                else {
+                    t->arr_ptr[item_index] = item->next;
+                }
+                htab_s_del_item(item);
             }
             break;
         }

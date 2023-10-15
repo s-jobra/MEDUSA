@@ -57,8 +57,8 @@ int my_leaf_symb_v_equals(const uint64_t ldata_a_raw, const uint64_t ldata_b_raw
     sl_val_t *ldata_a = (sl_val_t *) ldata_a_raw;
     sl_val_t *ldata_b = (sl_val_t *) ldata_b_raw;
 
-    return !st_cmp(ldata_a->a, ldata_b->a) && !st_cmp(ldata_a->b, ldata_b->b) && !st_cmp(ldata_a->c, ldata_b->c) \
-           && !st_cmp(ldata_a->d, ldata_b->d);
+    return !symexp_cmp(ldata_a->a, ldata_b->a) && !symexp_cmp(ldata_a->b, ldata_b->b) && !symexp_cmp(ldata_a->c, ldata_b->c) \
+           && !symexp_cmp(ldata_a->d, ldata_b->d);
 }
 
 char* my_leaf_symb_v_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf, size_t sylvan_bufsize)
@@ -68,8 +68,8 @@ char* my_leaf_symb_v_to_str(int complemented, uint64_t ldata_raw, char *sylvan_b
 
     char ldata_string[MAX_SYMB_LEAF_STR_LEN] = {0};
     
-    int chars_written = gmp_snprintf(ldata_string, MAX_SYMB_LEAF_STR_LEN, "(1/√2)^(%Zd) * (%s + %sω +%sω² + %sω³)", \
-                                     cs_k, st_to_str(ldata->a), st_to_str(ldata->b), st_to_str(ldata->c), st_to_str(ldata->d));
+    int chars_written = gmp_snprintf(ldata_string, MAX_SYMB_LEAF_STR_LEN, "(1/√2)^(%Zd) * ((%s) + (%s)ω + (%s)ω² + (%s)ω³)", \
+                                     cs_k, symexp_to_str(ldata->a), symexp_to_str(ldata->b), symexp_to_str(ldata->c), symexp_to_str(ldata->d));
     // Was string truncated?
     if (chars_written >= MAX_SYMB_LEAF_STR_LEN) {
         error_exit("Allocated string length for leaf value output has not been sufficient.\n");
@@ -115,10 +115,10 @@ TASK_IMPL_2(MTBDD, mtbdd_map_to_symb_val, MTBDD, t, size_t, x)
     if (mtbdd_isleaf(t)) {
         sl_map_t *t_data = (sl_map_t*) mtbdd_getvalue(t);
         sl_val_t new_data;
-        new_data.a = st_create_val(t_data->va);
-        new_data.b = st_create_val(t_data->vb);
-        new_data.c = st_create_val(t_data->vc);
-        new_data.d = st_create_val(t_data->vd);
+        new_data.a = symexp_init(t_data->va);
+        new_data.b = symexp_init(t_data->vb);
+        new_data.c = symexp_init(t_data->vc);
+        new_data.d = symexp_init(t_data->vd);
         MTBDD res = mtbdd_makeleaf(ltype_symb_expr_id, (uint64_t) &new_data);
         return res;
     }
@@ -129,46 +129,25 @@ TASK_IMPL_2(MTBDD, mtbdd_map_to_symb_val, MTBDD, t, size_t, x)
 /**
  * Evaluates the given expression according to the map
  */
-static coef_t* eval_var(stree_t *data,  coef_t* map)
+static coef_t* eval_var(symexp_list_t *expr,  coef_t* map)
 {
-    coef_t *res = malloc(sizeof(mpz_t));
-    mpz_init(*res);
+    coef_t *res = malloc(sizeof(mpz_t)); // mpz_t is an array type (can't return from function)
+    coef_t imm_res;
+    mpz_inits(*res, imm_res, NULL);
 
-    if (data != NULL) {
-        if (data->type == ST_VAL) {
-            if (data->val->coef != 0) {
-                mpz_set(*res, map[data->val->var]);
-                mpz_mul(*res, *res, data->val->coef);
-            }
-        }
-        else {
-            coef_t *l = eval_var(data->ls, map);
-            coef_t *r = NULL;
-            if (data->type != ST_NEG) {
-                r = eval_var(data->rs, map);
-            }
-            
-            if (data->type == ST_ADD) {
-                mpz_add(*res, *l, *r);
-            }
-            else if (data->type == ST_SUB) {
-                mpz_sub(*res, *l, *r);
-            }
-            else {
-                mpz_neg(*res, *l);
-            }
-            
-            free(l);
-            if (!r) {
-                free(r);
-            }
+    if (expr != NULL) {
+        symexp_list_first(expr);
+        while(expr->active) {
+            mpz_set(imm_res, map[expr->active->data->var]);
+            mpz_mul(imm_res, imm_res, expr->active->data->coef);
+            mpz_add(*res, *res, imm_res);
+            symexp_list_next(expr);
         }
     }
 
+    mpz_clear(imm_res);
     return res;
 }
-
-#include <sylvan_int.h>
 
 VOID_TASK_IMPL_4(mtbdd_update_map, MTBDD, mtbdd_map, MTBDD, mtbdd_val, coef_t*, map, coef_t*, new_map)
 {
@@ -297,10 +276,10 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_plus, MTBDD*, p_a, MTBDD*, p_b)
         sl_val_t *b_data = (sl_val_t*) mtbdd_getvalue(b);
 
         sl_val_t res_data;
-        res_data.a = st_op(a_data->a, b_data->a, ST_ADD);
-        res_data.b = st_op(a_data->b, b_data->b, ST_ADD);
-        res_data.c = st_op(a_data->c, b_data->c, ST_ADD);
-        res_data.d = st_op(a_data->d, b_data->d, ST_ADD);
+        res_data.a = symexp_op(a_data->a, b_data->a, SYMEXP_ADD);
+        res_data.b = symexp_op(a_data->b, b_data->b, SYMEXP_ADD);
+        res_data.c = symexp_op(a_data->c, b_data->c, SYMEXP_ADD);
+        res_data.d = symexp_op(a_data->d, b_data->d, SYMEXP_ADD);
 
         if (!res_data.a && !res_data.b && !res_data.c && !res_data.d) {
             return mtbdd_false;
@@ -337,10 +316,10 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_minus, MTBDD*, p_a, MTBDD*, p_b)
         sl_val_t *b_data = (sl_val_t*) mtbdd_getvalue(b);
         
         sl_val_t res_data;
-        res_data.a = st_op(a_data->a, b_data->a, ST_SUB);
-        res_data.b = st_op(a_data->b, b_data->b, ST_SUB);
-        res_data.c = st_op(a_data->c, b_data->c, ST_SUB);
-        res_data.d = st_op(a_data->d, b_data->d, ST_SUB);
+        res_data.a = symexp_op(a_data->a, b_data->a, SYMEXP_SUB);
+        res_data.b = symexp_op(a_data->b, b_data->b, SYMEXP_SUB);
+        res_data.c = symexp_op(a_data->c, b_data->c, SYMEXP_SUB);
+        res_data.d = symexp_op(a_data->d, b_data->d, SYMEXP_SUB);
 
         if (!res_data.a && !res_data.b && !res_data.c && !res_data.d) {
             return mtbdd_false;
@@ -365,10 +344,10 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_neg, MTBDD, t, size_t, x)
         sl_val_t *ldata = (sl_val_t*) mtbdd_getvalue(t);
 
         sl_val_t res_data;
-        res_data.a = st_op(ldata->a, NULL, ST_NEG);
-        res_data.b = st_op(ldata->b, NULL, ST_NEG);
-        res_data.c = st_op(ldata->c, NULL, ST_NEG);
-        res_data.d = st_op(ldata->d, NULL, ST_NEG);
+        res_data.a = symexp_op(NULL, ldata->a, SYMEXP_SUB);
+        res_data.b = symexp_op(NULL, ldata->b, SYMEXP_SUB);
+        res_data.c = symexp_op(NULL, ldata->c, SYMEXP_SUB);
+        res_data.d = symexp_op(NULL, ldata->d, SYMEXP_SUB);
 
         MTBDD res = mtbdd_makeleaf(ltype_symb_expr_id, (uint64_t) &res_data);
         return res;
@@ -389,10 +368,10 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_coef_rot1, MTBDD, t, size_t, x)
         sl_val_t *ldata = (sl_val_t*) mtbdd_getvalue(t);
 
         sl_val_t res_data;
-        res_data.a = st_op(ldata->d, NULL, ST_NEG);
-        res_data.b = st_htab_add(ldata->a);
-        res_data.c = st_htab_add(ldata->b);
-        res_data.d = st_htab_add(ldata->c);
+        res_data.a = symexp_op(NULL, ldata->d, SYMEXP_SUB);
+        res_data.b = ldata->a;
+        res_data.c = ldata->b;
+        res_data.d = ldata->c;
 
         MTBDD res = mtbdd_makeleaf(ltype_symb_expr_id, (uint64_t) &res_data);
         return res;
@@ -413,10 +392,10 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_coef_rot2, MTBDD, t, size_t, x)
         sl_val_t *ldata = (sl_val_t*) mtbdd_getvalue(t);
 
         sl_val_t res_data;
-        res_data.a = st_op(ldata->c, NULL, ST_NEG);
-        res_data.b = st_op(ldata->d, NULL, ST_NEG);
-        res_data.c = st_htab_add(ldata->a);
-        res_data.d = st_htab_add(ldata->b);
+        res_data.a = symexp_op(NULL, ldata->c, SYMEXP_SUB);
+        res_data.b = symexp_op(NULL, ldata->d, SYMEXP_SUB);
+        res_data.c = ldata->a;
+        res_data.d = ldata->b;
 
         MTBDD res = mtbdd_makeleaf(ltype_symb_expr_id, (uint64_t) &res_data);
         return res;

@@ -3,7 +3,6 @@
 #include "mtbdd.h"
 #include "mtbdd_symb_map.h"
 #include "mtbdd_symb_val.h"
-#include "solver.h"
 
 #ifndef SYMB_UTILS_H
 #define SYMB_UTILS_H

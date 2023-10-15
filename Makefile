@@ -38,12 +38,12 @@ $(BIN_DIR) $(OBJ_DIR):
 
 #FIXME: remove examples and create one target run just for benchmarks
 run-my:
-	@./$(EXEC) -f ./examples/$(F).qasm -m -s
+	@./$(EXEC) -f ./examples/$(F).qasm -m -s -t
 	@dot -T$(OF_TYPE) $(F_OUT_NAME).dot -o $(F_OUT_NAME).$(OF_TYPE)
 	@rm $(F_OUT_NAME).dot
 
 run-b:
-	@./$(EXEC) -f ./benchmarks/$(T).qasm -m -s
+	@./$(EXEC) -f ./benchmarks/$(T).qasm -m -s -t
 	@dot -T$(OF_TYPE) $(F_OUT_NAME).dot -o $(F_OUT_NAME).$(OF_TYPE)
 	@rm $(F_OUT_NAME).dot
 

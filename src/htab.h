@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <assert.h>
-#include "symbolic_tree_types.h"
+#include "symexp_list.h"
 #include "hash.h"
 #include "error.h"
 
@@ -10,15 +10,15 @@
 #define HTAB_H
 
 typedef struct htab {            // Hash table
-    size_t size;                 // number of items in the table
-    size_t arr_size;             // bucket count
+    size_t size;                 // Number of items in the table
+    size_t arr_size;             // Bucket count
     struct htab_item **arr_ptr;
 } htab_t;
 
-typedef void* htab_key_t;        // Universal hash table data key type
-typedef char* htab_m_key_t;      // Key type for measure hash table
-typedef stree_t* htab_st_key_t;  // Key type for symbolic hash table
-typedef unsigned htab_value_t;   // Universal hash table data value type
+typedef void* htab_key_t;            // Universal hash table data key type
+typedef char* htab_m_key_t;          // Key type for measure hash table
+typedef symexp_list_t* htab_s_key_t; // Key type for symbolic hash table
+typedef unsigned htab_value_t;       // Universal hash table data value type
 
 typedef struct htab_data {       // Data in a hash table item
     htab_key_t key;
@@ -39,31 +39,26 @@ typedef struct htab_item {       // Hash table item
 htab_t* htab_init(size_t n);
 
 /**
- * Returns the number of references to the given key (its value). Returns 0 if the key is not found.
- */
-htab_value_t htab_st_get_val(htab_t *t, htab_st_key_t key);
-
-/**
- * Adds the item with the given st_tree key to the table, else (if already exists) increments its number of references by one.
+ * Adds the item with the given symbolic key to the table, else (if already exists) increments its number of references by one.
  * Returns ptr to the key that will be now present in the table.
  */
-htab_st_key_t htab_st_lookup_add(htab_t *t, htab_st_key_t key);
+htab_s_key_t htab_s_lookup_add(htab_t *t, htab_s_key_t key);
 
 /**
  * Decrements the number of references on the given key. If the number of references reaches 0, it also deallocates the item.
  * If the key is not found, the function doesn't do anything.
  */
-void htab_st_lookup_remove(htab_t *t, htab_st_key_t key);
+void htab_s_lookup_remove(htab_t *t, htab_s_key_t key);
 
 /**
  * Deletes and deallocates all symbolic table items
  */
-void htab_st_clear(htab_t *t);
+void htab_s_clear(htab_t *t);
 
 /**
  * Deletes the symbolic table
  */
-void htab_st_free(htab_t *t);
+void htab_s_free(htab_t *t);
 
 /**
  * Adds the item with the given string key to the table, else (if already exists) increments its value by one

@@ -1,7 +1,7 @@
 #include <sylvan.h>
 #include "mtbdd.h"
 #include "hash.h"
-#include "symbolic_tree_types.h"
+#include "symexp_list.h"
 
 #ifndef MTBDD_SYMB_MAP_H
 #define MTBDD_SYMB_MAP_H

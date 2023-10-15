@@ -1,9 +1,10 @@
 #include <sylvan.h>
 #include <gmp.h>
+#include <sylvan_int.h>
 #include "mtbdd.h"
 #include "mtbdd_symb_map.h"
 #include "hash.h"
-#include "symbolic_tree.h"
+#include "symexp.h"
 #include "error.h"
 
 #ifndef MTBDD_SYMB_VAL_H
@@ -18,10 +19,10 @@ extern uint32_t ltype_symb_expr_id;
  * MTBDD symbolic leaf value
  */
 typedef struct sl_val {
-    stree_t *a;  // ptr to a tree representing the current expression
-    stree_t *b;
-    stree_t *c;
-    stree_t *d;
+    symexp_list_t *a;  // ptr to a list representing the symbolic expression
+    symexp_list_t *b;
+    symexp_list_t *c;
+    symexp_list_t *d;
 } sl_val_t;
 
 /**
