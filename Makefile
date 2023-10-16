@@ -9,7 +9,7 @@ OBJS:=$(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRCS))
 
 CC:=gcc
 CFLAGS:=-g -O2
-CLIBS=-lgmp -lpthread -lm -lz3
+CLIBS=-lgmp -lpthread -lm
 INC_DIRS:=-I $(LIB_DIR)/sylvan/src/ -I $(LIB_DIR)/lace/src/ -I $(LIB_DIR)/lace/build/
 
 N_JOBS=4
@@ -63,8 +63,8 @@ make-sliqsim:
 	make
 
 # INIT:
-install-deps: make-sylvan make-lace make-z3
-	mkdir $(LIB_DIR) && mv sylvan lace z3 $(LIB_DIR)
+install-deps: make-sylvan make-lace
+	mkdir $(LIB_DIR) && mv sylvan lace $(LIB_DIR)
 
 make-sylvan: download-sylvan
 	cd sylvan;			\
