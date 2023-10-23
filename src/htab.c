@@ -175,7 +175,7 @@ static bool htab_s_key_cmp(htab_s_key_t a, htab_s_key_t b)
     symexp_list_first(b);
 
     while(a->active && b->active) {    //TODO:FIXME:TODO: create function for getting active element, var & coef
-        if ((a->active->data->var != b->active->data->var) \
+        if ((a->active->data->var != b->active->data->var)
              || mpz_cmp(a->active->data->coef, b->active->data->coef)) {
                 res = false;
                 break;
@@ -187,7 +187,7 @@ static bool htab_s_key_cmp(htab_s_key_t a, htab_s_key_t b)
         res = false;
     }
 
-    return (a == b);
+    return res;
 }
 
 htab_s_key_t htab_s_lookup_add(htab_t *t, htab_s_key_t key)
