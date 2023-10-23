@@ -3,7 +3,7 @@
 static uint64_t apply_mtbdd_symb_refine_id; // Opid for mtbdd_symb_refine (needed for mtbdd_applyp)
 
 
-#define ST_NULL (void*)1 // Value for distinguishing between uninitialized expression and NULL expression
+#define SYMEXP_NULL (void*)1 // Value for distinguishing between uninitialized expression and NULL expression
 
 // =================
 // Refine internal:
@@ -92,6 +92,17 @@ static void rdata_add(rdata_t *rd, vars_t old, vars_t new, symexp_list_t *data)
     vmap_add(rd->vm, old);
 }
 
+static void rdata_ref_first(rdata_t *rd)
+{
+
+    rd->ref->cur =  rd->ref->first;
+}
+
+static void rdata_ref_next(rdata_t *rd)
+{
+    rd->ref->cur = (rd->ref->cur)? rd->ref->cur = rd->ref->cur->next : NULL;
+}
+
 /**
  * Returns the refined variable for the given data
  */
@@ -102,9 +113,21 @@ static vars_t refine_var_check(vars_t var, symexp_list_t *data, rdata_t *rd)
         return var;
     }
 
-    if ((data == ST_NULL && rd->upd[var] == ST_NULL) ||
-        (data != ST_NULL && symexp_cmp(data, rd->upd[var]))) {
+    if ((data == SYMEXP_NULL && rd->upd[var] == SYMEXP_NULL) ||
+        (data != SYMEXP_NULL && symexp_cmp(data, rd->upd[var]))) {
         return var;
+    }
+
+    // check if the same update already doesn't exist
+    rdata_ref_first(rd);
+    while(rd->ref->cur) {
+        if ((rd->ref->cur->old == var) && 
+            ((data == SYMEXP_NULL && rd->upd[rd->ref->cur->new] == SYMEXP_NULL) ||
+             (data != SYMEXP_NULL && symexp_cmp(data, rd->upd[rd->ref->cur->new]))
+            )) {
+            return rd->ref->cur->new;
+        }
+        rdata_ref_next(rd);
     }
 
     vars_t new = rd->vm->next_var;
@@ -124,10 +147,10 @@ TASK_IMPL_3(MTBDD, mtbdd_symb_refine, MTBDD*, p_map, MTBDD*, p_val, size_t, rd_r
         vars_t new_a, new_b, new_c, new_d;
 
         if (val == mtbdd_false) {
-            new_a = refine_var_check(mdata->va, ST_NULL, rd);
-            new_b = refine_var_check(mdata->vb, ST_NULL, rd);
-            new_c = refine_var_check(mdata->vc, ST_NULL, rd);
-            new_d = refine_var_check(mdata->vd, ST_NULL, rd);
+            new_a = refine_var_check(mdata->va, SYMEXP_NULL, rd);
+            new_b = refine_var_check(mdata->vb, SYMEXP_NULL, rd);
+            new_c = refine_var_check(mdata->vc, SYMEXP_NULL, rd);
+            new_d = refine_var_check(mdata->vd, SYMEXP_NULL, rd);
         }
         else {
             sl_val_t *vdata = (sl_val_t*) mtbdd_getvalue(val);
