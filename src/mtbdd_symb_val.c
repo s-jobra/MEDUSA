@@ -57,8 +57,8 @@ int my_leaf_symb_v_equals(const uint64_t ldata_a_raw, const uint64_t ldata_b_raw
     sl_val_t *ldata_a = (sl_val_t *) ldata_a_raw;
     sl_val_t *ldata_b = (sl_val_t *) ldata_b_raw;
 
-    return !symexp_cmp(ldata_a->a, ldata_b->a) && !symexp_cmp(ldata_a->b, ldata_b->b) && !symexp_cmp(ldata_a->c, ldata_b->c) \
-           && !symexp_cmp(ldata_a->d, ldata_b->d);
+    return symexp_cmp(ldata_a->a, ldata_b->a) && symexp_cmp(ldata_a->b, ldata_b->b) && symexp_cmp(ldata_a->c, ldata_b->c) \
+           && symexp_cmp(ldata_a->d, ldata_b->d);
 }
 
 char* my_leaf_symb_v_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf, size_t sylvan_bufsize)
