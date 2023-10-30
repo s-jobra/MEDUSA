@@ -211,7 +211,7 @@ void symb_init(MTBDD *circ, mtbdd_symb_t *symbc)
     mtbdd_protect(&(symbc->map));
     //TODO: initial size?
     symexp_htab_init(msize * 10); // has to be initialized before mtbdd val
-    symbc->val = my_mtbdd_map_to_symb_val(symbc->map);
+    symbc->val = my_mtbdd_map_to_symb_val(symbc->map, symbc->vm->map);
     mtbdd_protect(&(symbc->val));
 
     mpz_init(cs_k);
@@ -232,7 +232,7 @@ bool symb_refine(mtbdd_symb_t *symbc)
         mtbdd_unprotect(&symbc->val);
         sylvan_gc(); // Clears both the operation cache and the node cache
                      // (needed because symbolic applies are cached with the expressions from the cleared htab)
-        symbc->val = my_mtbdd_map_to_symb_val(refined);
+        symbc->val = my_mtbdd_map_to_symb_val(refined, symbc->vm->map);
         mtbdd_protect(&symbc->val);
     }
 

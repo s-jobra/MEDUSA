@@ -82,8 +82,10 @@ TASK_DECL_2(MTBDD, mtbdd_map_to_symb_val, MTBDD, size_t);
  * 
  * @param t a regular MTBDD
  * 
+ * @param map array with the variable mapping to their values
+ * 
  */
-#define my_mtbdd_map_to_symb_val(t) mtbdd_uapply(t, TASK(mtbdd_map_to_symb_val), 0)
+#define my_mtbdd_map_to_symb_val(t, map) mtbdd_uapply(t, TASK(mtbdd_map_to_symb_val), (size_t)map)
 
 
 VOID_TASK_DECL_4(mtbdd_update_map, MTBDD, MTBDD, coef_t*, coef_t*);

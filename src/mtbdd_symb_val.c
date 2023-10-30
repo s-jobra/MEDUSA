@@ -106,15 +106,20 @@ uint64_t my_leaf_symb_v_hash(const uint64_t ldata_raw, const uint64_t seed)
 }
 
 /* CUSTOM MTBDD OPERATIONS */
-TASK_IMPL_2(MTBDD, mtbdd_map_to_symb_val, MTBDD, t, size_t, x)
+TASK_IMPL_2(MTBDD, mtbdd_map_to_symb_val, MTBDD, t, size_t, raw_map)
 {
-    (void) x; // needed for TASK_IMPL_2
-
     // Partial function check not needed, 4 variables were assigned to every base vector
 
     if (mtbdd_isleaf(t)) {
+        coef_t* map = (coef_t*) raw_map;
         sl_map_t *t_data = (sl_map_t*) mtbdd_getvalue(t);
         sl_val_t new_data;
+
+        if (!mpz_cmp_si(map[t_data->va], 0) && !mpz_cmp_si(map[t_data->vb], 0) &&
+            !mpz_cmp_si(map[t_data->vc], 0) && !mpz_cmp_si(map[t_data->vd], 0)) {
+            return mtbdd_false;
+        }
+
         new_data.a = symexp_init(t_data->va);
         new_data.b = symexp_init(t_data->vb);
         new_data.c = symexp_init(t_data->vc);
