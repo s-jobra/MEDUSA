@@ -11,6 +11,15 @@ coef_t c_k; // coefficient k common for all MTBDD leaf values
  */
 #define MAX_LEAF_STR_LEN 32000
 
+/**
+ * Formatting string used for leaf printing
+ */
+#define PRINT_FMT_STR "(1/√2)^(%Zd) * (%Zd%+Zdω%+Zdω²%+Zdω³)"
+
+/**
+ * Return min from two numbers
+ */
+#define GET_MIN(a, b) ((a) < (b))? (a) : (b)
 
 /* SETUP */
 void init_sylvan() {
@@ -99,8 +108,40 @@ char* my_leaf_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf, siz
     cnum *ldata = (cnum*) ldata_raw;
 
     char ldata_string[MAX_LEAF_STR_LEN] = {0};
-    
-    int chars_written = gmp_snprintf(ldata_string, MAX_LEAF_STR_LEN, "(1/√2)^(%Zd) * (%Zd%+Zdω%+Zdω²%+Zdω³)", c_k, ldata->a, ldata->b, ldata->c, ldata->d);
+
+    int chars_written;
+    // Result in leaf will be divided by GCD for better clarity
+    if (mpz_even_p(ldata->a) && mpz_even_p(ldata->b) && mpz_even_p(ldata->c) && mpz_even_p(ldata->d)) {
+        mp_bitcnt_t greatest_pow2_a = mpz_scan1(ldata->a, 0);
+        mp_bitcnt_t greatest_pow2_b = mpz_scan1(ldata->b, 0);
+        mp_bitcnt_t greatest_pow2_c = mpz_scan1(ldata->c, 0);
+        mp_bitcnt_t greatest_pow2_d = mpz_scan1(ldata->d, 0);
+
+        mp_bitcnt_t greatest_pow2 = GET_MIN(GET_MIN(GET_MIN(greatest_pow2_a, greatest_pow2_b), greatest_pow2_c), greatest_pow2_d);
+
+        // Get the power of 2, by which the result will be divided
+        // Will be k/2 for even k and (k-1)/2 for odd k
+        mp_bitcnt_t pow2 = mpz_get_ui(c_k) >> 1; //TODO: should add overflow check?
+
+        mp_bitcnt_t shift_cnt = GET_MIN(greatest_pow2, pow2);
+
+        mpz_t a,b,c,d,k;
+        mpz_inits(a, b, c, d, k, NULL);
+        mpz_fdiv_q_2exp(a, ldata->a, shift_cnt);
+        mpz_fdiv_q_2exp(b, ldata->b, shift_cnt);
+        mpz_fdiv_q_2exp(c, ldata->c, shift_cnt);
+        mpz_fdiv_q_2exp(d, ldata->d, shift_cnt);
+        unsigned long k_decrement = shift_cnt << 1; // need to subtract 2*shift_cnt from c_k
+        mpz_sub_ui(k, c_k, k_decrement);
+
+        chars_written = gmp_snprintf(ldata_string, MAX_LEAF_STR_LEN, PRINT_FMT_STR, k, a, b, c, d);
+
+        mpz_clears(a, b, c, d, k, NULL);
+    }
+    else {
+        chars_written = gmp_snprintf(ldata_string, MAX_LEAF_STR_LEN, PRINT_FMT_STR, c_k, ldata->a, ldata->b, ldata->c, ldata->d);
+    }
+
     // Was string truncated?
     if (chars_written >= MAX_LEAF_STR_LEN) {
         error_exit("Allocated string length for leaf value output has not been sufficient.\n");
@@ -458,7 +499,7 @@ static inline prob_t calculate_prob(cnum* prob)
     }
     // k odd, k+1 even
     else {
-        shift_cnt = (shift_cnt - 1) >> 1;
+        shift_cnt = (shift_cnt - 1) >> 1; //FIXME: can remove -1: will get rid of this extra 1 when shifted
 
         mpf_div_2exp(a, a, shift_cnt); // k-1/2 right shifts
         mpf_div_2exp(b, b, shift_cnt + 1); // k+1/2 right shifts
