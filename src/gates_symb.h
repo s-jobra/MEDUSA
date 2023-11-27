@@ -98,5 +98,20 @@ void gate_symb_cz(MTBDD *p_t, uint32_t xt, uint32_t xc);
  */
 void gate_symb_toffoli(MTBDD *p_t, uint32_t xt, uint32_t xc1, uint32_t xc2);
 
+/**
+ * Apply CCCNOT gate on the symbolic state vector.
+ * 
+ * @param p_t pointer to a symbolic value MTBDD
+ * 
+ * @param xt target qubit index
+ * 
+ * @param xc1 first control qubit index
+ * 
+ * @param xc2 second control qubit index
+ * 
+ * @param xc3 third control qubit index
+ */
+void gate_symb_cccnot(MTBDD *p_t, uint32_t xt, uint32_t xc1, uint32_t xc2, uint32_t xc3);
+
 #endif
 /* end of "gates_symb.h" */

@@ -267,6 +267,23 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
                 uint32_t qt = get_q_num(in);
                 (opt_symb && is_loop)? gate_symb_toffoli(&symbc.val, qt, qc1, qc2) : gate_toffoli(circ, qt, qc1, qc2);
             }
+            else if (strcasecmp(cmd, "mcx") == 0) { // supports 2 and 3 control qubits
+                uint32_t qc1 = get_q_num(in);
+                uint32_t qc2 = get_q_num(in);
+                uint32_t qt = get_q_num(in);
+                while (isspace(c)) {
+                    c = fgetc(in);
+                }
+                if (c == ';') {
+                    (opt_symb && is_loop)? gate_symb_toffoli(&symbc.val, qt, qc1, qc2) : gate_toffoli(circ, qt, qc1, qc2);
+                    return; // ';' already encountered
+                }
+                else {
+                    uint32_t qc3 = qt; // actually not qt
+                    qt = get_q_num(in);
+                    (opt_symb && is_loop)? gate_symb_cccnot(&symbc.val, qt, qc1, qc2, qc3) : error_exit("Gate does not support non-symbolic simulation");
+                }
+            }
             else if (strcasecmp(cmd, "cswap") == 0) {
                 uint32_t qc = get_q_num(in);
                 uint32_t qt1 = get_q_num(in);
