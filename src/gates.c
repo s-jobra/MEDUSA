@@ -565,4 +565,72 @@ void gate_fredkin(MTBDD *p_t, uint32_t xt1, uint32_t xt2, uint32_t xc)
     *p_t = res;
     mtbdd_unprotect(&res);
 }
+
+void gate_cccnot(MTBDD *p_t, uint32_t xt, uint32_t xc1, uint32_t xc2, uint32_t xc3)
+{
+    MTBDD t = *p_t;
+    mtbdd_protect(&t);
+    MTBDD res;
+
+    MTBDD b_xc1_comp = create_b_xt_comp(xc1);
+    mtbdd_protect(&b_xc1_comp);
+    res = my_mtbdd_times(b_xc1_comp, t); // Bxc_c * T
+    mtbdd_protect(&res);
+    mtbdd_unprotect(&b_xc1_comp);
+
+    MTBDD t_xt = create_t_xt(t, xt);
+    mtbdd_protect(&t_xt);
+    MTBDD b_xt_comp = create_b_xt_comp(xt);
+    mtbdd_protect(&b_xt_comp);
+    MTBDD bracket_left = my_mtbdd_times(b_xt_comp, t_xt); // Bxt_c * Txt
+    mtbdd_protect(&bracket_left);
+    mtbdd_unprotect(&t_xt);
+    mtbdd_unprotect(&b_xt_comp);
+
+
+    MTBDD t_xt_comp = create_t_xt_comp(t, xt);
+    mtbdd_protect(&t_xt_comp);
+    MTBDD b_xt = create_b_xt(xt);
+    mtbdd_protect(&b_xt);
+    MTBDD bracket_right = my_mtbdd_times(b_xt, t_xt_comp); // Bxt * Txt_c
+    mtbdd_protect(&bracket_right);
+    mtbdd_unprotect(&t_xt_comp);
+    mtbdd_unprotect(&b_xt);
+
+    MTBDD inter_res = my_mtbdd_plus(bracket_left, bracket_right); // (Bxt_c * Txt) + (Bxt * Txt_c)
+    mtbdd_protect(&inter_res);
+
+    MTBDD b_xc3 = create_b_xt(xc3);
+    mtbdd_protect(&b_xc3);
+    bracket_right = my_mtbdd_times(b_xc3, inter_res); // Bxc'' * (Bxt_c * Txt + Bxt * Txt_c)
+    mtbdd_unprotect(&b_xc3);
+    MTBDD b_xc3_comp = create_b_xt_comp(xc3);
+    mtbdd_protect(&b_xc3_comp);
+    bracket_left = my_mtbdd_times(b_xc3_comp, t); // Bxc''_c * T
+    mtbdd_unprotect(&b_xc3_comp);
+    inter_res = my_mtbdd_plus(bracket_left, bracket_right); // (Bxc''_c * T) + (Bxc'' * (Bxt_c * Txt + Bxt * Txt_c))
+
+    MTBDD b_xc2 = create_b_xt(xc2);
+    mtbdd_protect(&b_xc2);
+    bracket_right = my_mtbdd_times(b_xc2, inter_res); // Bxc' * (Bxc''_c * T + Bxc'' * (Bxt_c * Txt + Bxt * Txt_c))
+    mtbdd_unprotect(&b_xc2);
+    MTBDD b_xc2_comp = create_b_xt_comp(xc2);
+    mtbdd_protect(&b_xc2_comp);
+    bracket_left = my_mtbdd_times(b_xc2_comp, t); // Bxc'_c * T
+    mtbdd_unprotect(&b_xc2_comp);
+    mtbdd_unprotect(&t);
+    inter_res = my_mtbdd_plus(bracket_left, bracket_right); // (Bxc'_c * T) + (Bxc' * (Bxc''_c * T + Bxc'' * (Bxt_c * Txt + Bxt * Txt_c)))
+    mtbdd_unprotect(&bracket_left);
+    mtbdd_unprotect(&bracket_right);
+
+    MTBDD b_xc1 = create_b_xt(xc1);
+    mtbdd_protect(&b_xc1);
+    inter_res = my_mtbdd_times(b_xc1, inter_res); // Bxc * (Bxc'_c * T + Bxc' * (Bxc''_c * T + Bxc'' * (Bxt_c * Txt + Bxt * Txt_c)))
+    mtbdd_unprotect(&b_xc1);
+    res = my_mtbdd_plus(res, inter_res); // (Bxc_c * T) + (Bxc * (Bxc'_c * T + Bxc' * (Bxc''_c * T + Bxc'' * (Bxt_c * Txt + Bxt * Txt_c))))
+    mtbdd_unprotect(&inter_res);
+
+    *p_t = res;
+    mtbdd_unprotect(&res);
+}
 /* end of "gates.c" */

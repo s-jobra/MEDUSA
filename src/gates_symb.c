@@ -323,7 +323,7 @@ void gate_symb_toffoli(MTBDD *p_t, uint32_t xt, uint32_t xc1, uint32_t xc2)
     bracket_left = my_mtbdd_symb_b_xt_comp_mul(t, xc2); // Bxc'_c * T
     mtbdd_unprotect(&t);
     
-    inter_res = my_mtbdd_plus(bracket_left, bracket_right); // (Bxc'_c * T) + (Bxc' * (Bxt_c * Txt + Bxt * Txt_c))
+    inter_res = my_mtbdd_symb_plus(bracket_left, bracket_right); // (Bxc'_c * T) + (Bxc' * (Bxt_c * Txt + Bxt * Txt_c))
     mtbdd_unprotect(&bracket_left);
     mtbdd_unprotect(&bracket_right);
 
@@ -361,12 +361,12 @@ void gate_symb_cccnot(MTBDD *p_t, uint32_t xt, uint32_t xc1, uint32_t xc2, uint3
 
     bracket_right = my_mtbdd_symb_b_xt_mul(inter_res, xc3); // Bxc'' * (Bxt_c * Txt + Bxt * Txt_c)
     bracket_left = my_mtbdd_symb_b_xt_comp_mul(t, xc3); // Bxc''_c * T
-    inter_res = my_mtbdd_plus(bracket_left, bracket_right); // (Bxc''_c * T) + (Bxc'' * (Bxt_c * Txt + Bxt * Txt_c))
+    inter_res = my_mtbdd_symb_plus(bracket_left, bracket_right); // (Bxc''_c * T) + (Bxc'' * (Bxt_c * Txt + Bxt * Txt_c))
 
     bracket_right = my_mtbdd_symb_b_xt_mul(inter_res, xc2); // Bxc' * (Bxc''_c * T + Bxc'' * (Bxt_c * Txt + Bxt * Txt_c))
     bracket_left = my_mtbdd_symb_b_xt_comp_mul(t, xc2); // Bxc'_c * T
     mtbdd_unprotect(&t);
-    inter_res = my_mtbdd_plus(bracket_left, bracket_right); // (Bxc'_c * T) + (Bxc' * (Bxc''_c * T + Bxc'' * (Bxt_c * Txt + Bxt * Txt_c)))
+    inter_res = my_mtbdd_symb_plus(bracket_left, bracket_right); // (Bxc'_c * T) + (Bxc' * (Bxc''_c * T + Bxc'' * (Bxt_c * Txt + Bxt * Txt_c)))
     mtbdd_unprotect(&bracket_left);
     mtbdd_unprotect(&bracket_right);
 

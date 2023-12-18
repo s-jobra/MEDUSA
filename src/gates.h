@@ -175,5 +175,21 @@ void gate_toffoli(MTBDD *p_t, uint32_t xt, uint32_t xc1, uint32_t xc2);
  */
 void gate_fredkin(MTBDD *p_t, uint32_t xt1, uint32_t xt2, uint32_t xc);
 
+/**
+ * Function implementing quantum Toffoli gate for a given MTBDD.
+ * 
+ * @param p_t custom MTBDD
+ * 
+ * @param xt target qubit index
+ * 
+ * @param xc1 first control qubit index
+ * 
+ * @param xc2 second control qubit index
+ * 
+ * @param xc3 third control qubit index
+ * 
+ */
+void gate_cccnot(MTBDD *p_t, uint32_t xt, uint32_t xc1, uint32_t xc2, uint32_t xc3);
+
 #endif
 /* end of "gates.h" */

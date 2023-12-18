@@ -72,9 +72,10 @@ static uint32_t get_iters(FILE *in)
         }
     }
 
+    //FIXME: support also spaces and only [start:end] syntax as well
     start = parse_num(in, ':');
     end = parse_num(in, ':');
-    step = parse_num(in, ']'); //TODO: support floats?
+    step = parse_num(in, ']');
 
     iters = (end + 1 - start) / step;
     if (iters > UINT32_MAX || iters < 0) {
@@ -87,6 +88,7 @@ static uint32_t get_iters(FILE *in)
 void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool *is_measure, bool opt_symb)
 {
     //TODO: refactoring
+    int line_cnt = 0;
     int c;
     char cmd[CMD_MAX_LEN];
     bool init = false;
@@ -276,12 +278,12 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
                 }
                 if (c == ';') {
                     (opt_symb && is_loop)? gate_symb_toffoli(&symbc.val, qt, qc1, qc2) : gate_toffoli(circ, qt, qc1, qc2);
-                    return; // ';' already encountered
+                    continue; // ';' already encountered
                 }
                 else {
                     uint32_t qc3 = qt; // actually not qt
                     qt = get_q_num(in);
-                    (opt_symb && is_loop)? gate_symb_cccnot(&symbc.val, qt, qc1, qc2, qc3) : error_exit("Gate does not support non-symbolic simulation");
+                    (opt_symb && is_loop)? gate_symb_cccnot(&symbc.val, qt, qc1, qc2, qc3) : gate_cccnot(circ, qt, qc1, qc2, qc3);
                 }
             }
             else if (strcasecmp(cmd, "cswap") == 0) {
