@@ -22,40 +22,40 @@ def get_oracle_string(ctrl_qubit, oracle_data, n_reg1, n_reg2):
     oracle_string = ''
     for (pos_ctrl, neg_ctrl) in oracle_data:
         for ith_qubit in neg_ctrl:
-            oracle_string += '  x q[%d];\n' % (n_reg1 + ith_qubit)
+            oracle_string += 'x q[%d];\n' % (n_reg1 + ith_qubit)
 
-        oracle_string += '  mcx q[%d], %s;\n' % (ctrl_qubit, ', '.join(map(lambda ith_qubit:'q[%d]'%(n_reg1 + ith_qubit), pos_ctrl + neg_ctrl + [n_reg2])))
+        oracle_string += 'mcx q[%d], %s;\n' % (ctrl_qubit, ', '.join(map(lambda ith_qubit:'q[%d]'%(n_reg1 + ith_qubit), pos_ctrl + neg_ctrl + [n_reg2])))
                                                   
         for ith_qubit in neg_ctrl:
-            oracle_string += '  x q[%d];\n' % (n_reg1 + ith_qubit)
+            oracle_string += 'x q[%d];\n' % (n_reg1 + ith_qubit)
     return oracle_string
 
 def get_grover_string(ctrl_qubit, oracle_data, n_reg1, n_reg2):
     grover_string = get_oracle_string(ctrl_qubit, oracle_data, n_reg1, n_reg2)
     for ith_qubit in range(n_reg1, n_reg1 + n_reg2):        
         # C-H
-        grover_string += '  h q[%d];\n' % ith_qubit
+        grover_string += 'h q[%d];\n' % ith_qubit
         
     for ith_qubit in range(n_reg1, n_reg1 + n_reg2):
         # C-X
-        grover_string += '  x q[%d];\n' % ith_qubit
+        grover_string += 'x q[%d];\n' % ith_qubit
 
     # C-H
-    grover_string += '  h q[%d];\n' % (n_reg1 + n_reg2 - 1)
+    grover_string += 'h q[%d];\n' % (n_reg1 + n_reg2 - 1)
 
     # MCX
-    grover_string += '  mcx q[%d], %s;\n' % (ctrl_qubit, ', '.join(map(lambda ith_qubit:'q[%d]'%(n_reg1 + ith_qubit), range(n_reg2))))
+    grover_string += 'mcx q[%d], %s;\n' % (ctrl_qubit, ', '.join(map(lambda ith_qubit:'q[%d]'%(n_reg1 + ith_qubit), range(n_reg2))))
 
     # C-H
-    grover_string += '  h q[%d];\n' % (n_reg1 + n_reg2 - 1)
+    grover_string += 'h q[%d];\n' % (n_reg1 + n_reg2 - 1)
 
     for ith_qubit in range(n_reg1, n_reg1 + n_reg2):
         # C-X
-        grover_string += '  x q[%d];\n' % ith_qubit
+        grover_string += 'x q[%d];\n' % ith_qubit
 
     for ith_qubit in range(n_reg1, n_reg1 + n_reg2):
         # C-H
-        grover_string += '  h q[%d];\n' % ith_qubit
+        grover_string += 'h q[%d];\n' % ith_qubit
 
     return grover_string
                 
@@ -81,7 +81,8 @@ if __name__ == '__main__':
     with open(file_name, 'w') as file:
         file.write('OPENQASM 2.0;\n')
         file.write('include "qelib1.inc";\n')
-        file.write('qreg q[%d];\n' % (n_reg1 + n_reg2 + 1))        
+        file.write('qreg q[%d];\n' % (n_reg1 + n_reg2 + 1))
+        file.write('qreg c[%d];\n' % (n_reg1 + n_reg2 + 1))
         for ith_qubit in range(n_reg1 + n_reg2):
             file.write('h q[%d];\n' % ith_qubit)
         file.write('x q[%d];\n' % (n_reg1 + n_reg2))
@@ -89,7 +90,8 @@ if __name__ == '__main__':
 
         # double "for" loop here; one unrolled and one with explicit *for* loops
         for i in range(n_reg1):           
-            file.write("for j in [0:%d:1] {\n" % (2**i - 1))        
-            file.write(get_grover_string(i, oracle_data, n_reg1, n_reg2))
-            file.write("}\n")
-                
+            for j in range(2**i):
+                file.write(get_grover_string(i, oracle_data, n_reg1, n_reg2))
+        
+        # for i in range(n_reg1 + n_reg2 + 1):
+        #     file.write("measure qubits["+str(i)+"] -> c["+str(i)+"];\n")
