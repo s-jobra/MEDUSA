@@ -335,44 +335,45 @@ void gate_symb_toffoli(MTBDD *p_t, uint32_t xt, uint32_t xc1, uint32_t xc2)
     mtbdd_unprotect(&res);
 }
 
-void gate_symb_cccnot(MTBDD *p_t, uint32_t xt, uint32_t xc1, uint32_t xc2, uint32_t xc3)
+void gate_symb_mcx(MTBDD *p_t, qparam_list_t *qparams)
 {
+    // Assumes indices in qparams are in the reverse order of the input file! (target qubit first, qc1 last)
+
     MTBDD t = *p_t;
     mtbdd_protect(&t);
     MTBDD res;
 
-    res = my_mtbdd_symb_b_xt_comp_mul(t, xc1); // Bxc_c * T
-    mtbdd_protect(&res);
+    qparam_list_first(qparams);
 
-    MTBDD t_xt = my_mtbdd_symb_t_xt(t, xt);
+    // Target qubit part
+    MTBDD t_xt = my_mtbdd_symb_t_xt(t, qparams->active->q_index);
     mtbdd_protect(&t_xt);
-    MTBDD bracket_left = my_mtbdd_symb_b_xt_comp_mul(t_xt, xt); // Bxt_c * Txt
+    MTBDD bracket_left = my_mtbdd_symb_b_xt_comp_mul(t_xt, qparams->active->q_index); // Bxt_c * Txt
     mtbdd_protect(&bracket_left);
     mtbdd_unprotect(&t_xt);
 
-    MTBDD t_xt_comp = my_mtbdd_symb_t_xt_comp(t, xt);
+    MTBDD t_xt_comp = my_mtbdd_symb_t_xt_comp(t, qparams->active->q_index);
     mtbdd_protect(&t_xt_comp);
-    MTBDD bracket_right = my_mtbdd_symb_b_xt_mul(t_xt_comp, xt); // Bxt * Txt_c
+    MTBDD bracket_right = my_mtbdd_symb_b_xt_mul(t_xt_comp, qparams->active->q_index); // Bxt * Txt_c
     mtbdd_protect(&bracket_right);
     mtbdd_unprotect(&t_xt_comp);
 
-    MTBDD inter_res = my_mtbdd_symb_plus(bracket_left, bracket_right); // (Bxt_c * Txt) + (Bxt * Txt_c)
-    mtbdd_protect(&inter_res);
+    res = my_mtbdd_symb_plus(bracket_left, bracket_right); // (Bxt_c * Txt) + (Bxt * Txt_c)
+    mtbdd_protect(&res);
 
-    bracket_right = my_mtbdd_symb_b_xt_mul(inter_res, xc3); // Bxc'' * (Bxt_c * Txt + Bxt * Txt_c)
-    bracket_left = my_mtbdd_symb_b_xt_comp_mul(t, xc3); // Bxc''_c * T
-    inter_res = my_mtbdd_symb_plus(bracket_left, bracket_right); // (Bxc''_c * T) + (Bxc'' * (Bxt_c * Txt + Bxt * Txt_c))
+    // Get the last control qubit
+    qparam_list_next(qparams);
 
-    bracket_right = my_mtbdd_symb_b_xt_mul(inter_res, xc2); // Bxc' * (Bxc''_c * T + Bxc'' * (Bxt_c * Txt + Bxt * Txt_c))
-    bracket_left = my_mtbdd_symb_b_xt_comp_mul(t, xc2); // Bxc'_c * T
+    // Handling the control qubits
+    while (qparams->active) {
+        bracket_right = my_mtbdd_symb_b_xt_mul(res, qparams->active->q_index);   // BxcN * (result so far)
+        bracket_left = my_mtbdd_symb_b_xt_comp_mul(t, qparams->active->q_index); // BxcN_c * T
+        res = my_mtbdd_symb_plus(bracket_left, bracket_right);                   // (BxcN_c * T) + (BxcN * (result so far))
+        qparam_list_next(qparams);  // move to the next control qubit
+    }
     mtbdd_unprotect(&t);
-    inter_res = my_mtbdd_symb_plus(bracket_left, bracket_right); // (Bxc'_c * T) + (Bxc' * (Bxc''_c * T + Bxc'' * (Bxt_c * Txt + Bxt * Txt_c)))
     mtbdd_unprotect(&bracket_left);
     mtbdd_unprotect(&bracket_right);
-
-    inter_res = my_mtbdd_symb_b_xt_mul(inter_res, xc1); // Bxc * (Bxc'_c * T + Bxc' * (Bxc''_c * T + Bxc'' * (Bxt_c * Txt + Bxt * Txt_c)))
-    res = my_mtbdd_symb_plus(res, inter_res); // (Bxc_c * T) + (Bxc * (Bxc'_c * T + Bxc' * (Bxc''_c * T + Bxc'' * (Bxt_c * Txt + Bxt * Txt_c))))
-    mtbdd_unprotect(&inter_res);
 
     *p_t = res;
     mtbdd_unprotect(&res);

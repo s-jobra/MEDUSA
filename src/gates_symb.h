@@ -1,5 +1,6 @@
 #include "mtbdd_symb_val.h"
 #include "gates.h"
+#include "qparam.h"
 
 #ifndef GATES_SYMB_H
 #define GATES_SYMB_H
@@ -103,15 +104,9 @@ void gate_symb_toffoli(MTBDD *p_t, uint32_t xt, uint32_t xc1, uint32_t xc2);
  * 
  * @param p_t pointer to a symbolic value MTBDD
  * 
- * @param xt target qubit index
- * 
- * @param xc1 first control qubit index
- * 
- * @param xc2 second control qubit index
- * 
- * @param xc3 third control qubit index
+ * @param qparams list of all the target + control qubit indices (first index is assumed to be the target index)
  */
-void gate_symb_cccnot(MTBDD *p_t, uint32_t xt, uint32_t xc1, uint32_t xc2, uint32_t xc3);
+void gate_symb_mcx(MTBDD *p_t, qparam_list_t *qparams);
 
 #endif
 /* end of "gates_symb.h" */

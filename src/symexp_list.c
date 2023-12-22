@@ -5,6 +5,7 @@ symexp_list_t* symexp_list_create()
     symexp_list_t *res = my_malloc(sizeof(symexp_list_t));
     res->active = NULL;
     res->first = NULL;
+    return res;
 }
 
 void symexp_list_first(symexp_list_t *l)

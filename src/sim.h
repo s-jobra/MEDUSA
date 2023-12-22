@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <errno.h>
 
+#include "qparam.h"
 #include "mtbdd.h"
 #include "gates.h"
 #include "mtbdd_symb_val.h"

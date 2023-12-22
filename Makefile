@@ -18,7 +18,7 @@ F=bell
 OF_TYPE=svg
 F_OUT_NAME=res
 T=BernsteinVazirani/01
-BSCRIPT_PATH=benchmark-utils/scripts/
+BSCRIPT_PATH=benchmark-utils/scripts
 TEST_OUT=benchmark.out
 
 .DEFAULT := all

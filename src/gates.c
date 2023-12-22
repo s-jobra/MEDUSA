@@ -566,6 +566,7 @@ void gate_fredkin(MTBDD *p_t, uint32_t xt1, uint32_t xt2, uint32_t xc)
     mtbdd_unprotect(&res);
 }
 
+//TODO: change to general mcx gate
 void gate_cccnot(MTBDD *p_t, uint32_t xt, uint32_t xc1, uint32_t xc2, uint32_t xc3)
 {
     MTBDD t = *p_t;
