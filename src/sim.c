@@ -179,7 +179,9 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
                     }
                 }
                 is_loop = true; // TODO: allow nested loops?
-                symb_init(circ, &symbc);
+                if (opt_symb) {
+                    symb_init(circ, &symbc);
+                }
                 if (fgetpos(in, &loop_start) != 0) {
                     error_exit("Could not get the current position of the stream.");
                 }
@@ -290,7 +292,7 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
                     }
                 }
 
-                (opt_symb && is_loop)? gate_symb_mcx(&symbc.val, qparams) : error_exit("Gate does not support nonsymbolic simulation yet"); //FIXME:TODO:FIXME:
+                (opt_symb && is_loop)? gate_symb_mcx(&symbc.val, qparams) : gate_mcx(circ, qparams);
                 
                 qparam_list_del(qparams);
                 continue; // ';' already encountered

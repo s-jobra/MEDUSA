@@ -39,7 +39,7 @@ void qparam_list_del(qparam_list_t *l)
         qparam_list_first(l);
         while (l->active) {
             tmp = l->active;
-            symexp_list_next(l);
+            qparam_list_next(l);
             // Dealloc:
             free(tmp);
         }

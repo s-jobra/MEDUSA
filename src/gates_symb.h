@@ -100,7 +100,7 @@ void gate_symb_cz(MTBDD *p_t, uint32_t xt, uint32_t xc);
 void gate_symb_toffoli(MTBDD *p_t, uint32_t xt, uint32_t xc1, uint32_t xc2);
 
 /**
- * Apply CCCNOT gate on the symbolic state vector.
+ * Apply Multicontrol NOT gate on the symbolic state vector.
  * 
  * @param p_t pointer to a symbolic value MTBDD
  * 
