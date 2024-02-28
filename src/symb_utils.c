@@ -263,19 +263,26 @@ void symb_eval(MTBDD *circ,  mtbdd_symb_t *symbc, uint32_t iters)
         new_map = temp_map;
     }
 
+    //FIXME: segfault bug
+    mtbdd_unprotect(circ);
+    sylvan_gc();
+    /////
     *circ = my_mtbdd_from_symb(symbc->map, symbc->vm->map);
+    /////
+    mtbdd_protect(circ);
 
     mpz_mul_ui(cs_k, cs_k, (unsigned long)iters);
     mpz_add(c_k, c_k, cs_k);
 
+    //FIXME: segfault bug
     // dealloc aux variable
-    for (int i = 0; i < symbc->vm->msize; i++) {
-        mpz_clear(new_map[i]);
-    }
-    free(new_map);
+    // for (int i = 0; i < symbc->vm->msize; i++) {
+    //     mpz_clear(new_map[i]);
+    // }
+    // free(new_map);
 
-    // symbolic clean up
-    vmap_delete(symbc->vm);
+    // Symbolic clean up
+    //vmap_delete(symbc->vm); FIXME:  segfault bug
     symexp_htab_delete();
     mtbdd_unprotect(&(symbc->map));
     mtbdd_unprotect(&(symbc->val));
