@@ -1,7 +1,13 @@
 #include <stdint.h>
+#include <gmp.h>
 
 #ifndef HASH_H
 #define HASH_H
+
+/**
+ * Hash function for GMP integers (combines all GMP limbs)
+ */
+uint64_t combine_mpz_t(mpz_t x);
 
 /**
  * Hash function for 64bit integers
@@ -22,7 +28,8 @@ uint64_t my_str_hash(const char *str);
  * 
  * Taken from: http://www.boost.org/doc/libs/1_64_0/boost/functional/hash/hash.hpp
  */
-#define MY_HASH_COMB_GMP(val, data) ( (val) ^ (my_int_hash((uint64_t)(mpz_getlimbn(data, mpz_size(data)-1))) + 0x9e3779b9 + ((val)<<6) + ((val)>>2)) )
+#define MY_HASH_COMB_GMP(val, data) ( (val) ^ (my_int_hash(combine_mpz_t(data)) + 0x9e3779b9 + ((val)<<6) + ((val)>>2)) )
+//FIXME: keep int_hash? or add some op into combine_mpz_t?
 
 /**
  * Hash value and combine it with an already existing hash for symbolic representation (works with all ptrs universally)
