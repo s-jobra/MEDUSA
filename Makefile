@@ -25,7 +25,7 @@ TEST_OUT=benchmark.out
 .PHONY := clean clean-all clean-artifacts clean-deps clean-benchmark run-my run-b test plot \
            install-deps make-sylvan make-lace download-sylvan download-lace make-sliqsim
 
-all: $(OBJS) $(LIB_DIR)/sylvan/build/src/libsylvan.a $(LIB_DIR)/lace/build/liblace.a | $(BIN_DIR)
+all: $(OBJS) $(LIB_DIR)/sylvan/build/src/lib/libsylvan.a $(LIB_DIR)/lace/build/lib/liblace.a | $(BIN_DIR)
 	$(CC) $(INC_DIRS) $(CFLAGS) -o $(EXEC) $^ $(CLIBS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)

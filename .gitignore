@@ -1,8 +1,17 @@
+/.vscode
+
+# Libraries
+/lib
+
+# Build files
 sim
+/obj
+
+# Program output
 *.svg
 *.pdf
 *.dot
+
+# For debug purposes
 gmon.out
-/lib
-/obj
-/.vscode
+/logs
