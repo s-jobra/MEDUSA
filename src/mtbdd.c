@@ -170,13 +170,10 @@ uint64_t my_leaf_hash(const uint64_t ldata_raw, const uint64_t seed)
 
     uint64_t val = seed;
     
-    val = MY_HASH_COMB_GMP(val, ldata->b);
-    val = MY_HASH_COMB_GMP(val, ldata->c);
     val = MY_HASH_COMB_GMP(val, ldata->d);
-    val = MY_HASH_COMB_GMP(val, c_k);
-
+    val = MY_HASH_COMB_GMP(val, ldata->c);
+    val = MY_HASH_COMB_GMP(val, ldata->b);
     val = MY_HASH_COMB_GMP(val, ldata->a);
-    //FIXME: test without k, reverse order...
 
     return val;
 }
