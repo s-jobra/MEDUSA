@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 
 #ifndef ERROR_H
 #define ERROR_H
@@ -11,9 +12,9 @@
 /**
  * Function that handles program exiting in case of error.
  * 
- * @param error Error message.
+ * @param error Error message format.
 */
-void error_exit(const char *error);
+void error_exit(const char *error, ...);
 
 /**
  * Custom malloc function including error handling.

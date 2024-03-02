@@ -34,7 +34,7 @@ bool symb_refine(mtbdd_symb_t *symbc);
 /**
  * Updates the circuits MTBDD according to the symbolic MTBDD, variable mapping and the number of iterations
  */
-void symb_eval(MTBDD *circ,  mtbdd_symb_t *symbc, uint32_t iters);
+void symb_eval(MTBDD *circ,  mtbdd_symb_t *symbc, uint64_t iters);
 
 #endif
 /* end of "symb_utils.h" */

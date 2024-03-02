@@ -241,7 +241,7 @@ bool symb_refine(mtbdd_symb_t *symbc)
     return is_finished;
 }
 
-void symb_eval(MTBDD *circ,  mtbdd_symb_t *symbc, uint32_t iters)
+void symb_eval(MTBDD *circ,  mtbdd_symb_t *symbc, uint64_t iters)
 {
     coef_t *new_map = my_malloc(sizeof(coef_t) * symbc->vm->msize);
     for (int i; i < symbc->vm->msize; i++) {
@@ -254,7 +254,7 @@ void symb_eval(MTBDD *circ,  mtbdd_symb_t *symbc, uint32_t iters)
     // mtbdd_fprintdot(out, symbc->val);
     // fclose(out);
 
-    for (uint32_t i = 0; i < iters; i++) {
+    for (uint64_t i = 0; i < iters; i++) {
         my_mtbdd_update_map(symbc->map, symbc->val, symbc->vm->map, new_map);
 
         // swap maps

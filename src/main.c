@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
                 opt_infile = true;
                 input = fopen(optarg, "r");
                 if (input == NULL) {
-                    error_exit("Invalid input file.");
+                    error_exit("Invalid input file '%s'.\n", optarg);
                 }
                 break;
             case 'm':
@@ -65,14 +65,14 @@ int main(int argc, char *argv[])
                     optarg = argv[optind++];
                     measure_output = fopen(optarg, "w");
                     if (measure_output == NULL) {
-                        error_exit("Invalid output file.");
+                        error_exit("Invalid output file '%s'.\n", optarg);
                     }
                 }
                 break;
             case 'n':
                 samples = strtoul(optarg, &endptr, 10);
                 if (*endptr != '\0') {
-                    error_exit("Invalid number of samples.");
+                    error_exit("Invalid number of samples.\n");
                 }
                 break;
             case 's':
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
     }
     FILE *out = fopen(OUT_FILE".dot", "w");
     if (out == NULL) {
-        error_exit("Cannot open output file.");
+        error_exit("Cannot open the output file.\n");
     }
     MTBDD circ;
     int *bits_to_measure;
