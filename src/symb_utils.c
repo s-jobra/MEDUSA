@@ -203,8 +203,8 @@ void init_sylvan_symb()
 
 void symb_init(MTBDD *circ, mtbdd_symb_t *symbc)
 {
-    size_t msize = 4 * (mtbdd_leafcount(*circ) + 1); // does not count F, multiplied because one var \
-                                                        is needed for every coefficient
+    size_t msize = 4 * (mtbdd_leafcount(*circ)); // multiplied because one var is needed for every coefficient
+                                                 // !doesn't count F ... needs to be allocated manually
     vmap_init(&(symbc->vm), msize);
 
     symbc->map = my_mtbdd_to_symb_map(*circ, symbc->vm);
@@ -244,15 +244,10 @@ bool symb_refine(mtbdd_symb_t *symbc)
 void symb_eval(MTBDD *circ,  mtbdd_symb_t *symbc, uint64_t iters)
 {
     coef_t *new_map = my_malloc(sizeof(coef_t) * symbc->vm->msize);
-    for (int i; i < symbc->vm->msize; i++) {
+    for (int i = 0; i < symbc->vm->msize; i++) {
         mpz_init(new_map[i]);
     }
     coef_t *temp_map;
-
-    // FIXME:
-    // FILE *out = fopen("res.dot", "w");
-    // mtbdd_fprintdot(out, symbc->val);
-    // fclose(out);
 
     for (uint64_t i = 0; i < iters; i++) {
         my_mtbdd_update_map(symbc->map, symbc->val, symbc->vm->map, new_map);
@@ -274,15 +269,14 @@ void symb_eval(MTBDD *circ,  mtbdd_symb_t *symbc, uint64_t iters)
     mpz_mul_ui(cs_k, cs_k, (unsigned long)iters);
     mpz_add(c_k, c_k, cs_k);
 
-    //FIXME: segfault bug
     // dealloc aux variable
-    // for (int i = 0; i < symbc->vm->msize; i++) {
-    //     mpz_clear(new_map[i]);
-    // }
-    // free(new_map);
+    for (int i = 0; i < symbc->vm->msize; i++) {
+        mpz_clear(new_map[i]);
+    }
+    free(new_map);
 
     // Symbolic clean up
-    //vmap_delete(symbc->vm); FIXME:  segfault bug
+    vmap_delete(symbc->vm);
     symexp_htab_delete();
     mtbdd_unprotect(&(symbc->map));
     mtbdd_unprotect(&(symbc->val));

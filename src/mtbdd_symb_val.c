@@ -163,13 +163,17 @@ VOID_TASK_IMPL_4(mtbdd_update_map, MTBDD, mtbdd_map, MTBDD, mtbdd_val, coef_t*, 
     if (lmap && lval) {
         if (mtbdd_val == mtbdd_false) {
             sl_map_t *map_data = (sl_map_t*) mtbdd_getvalue(mtbdd_map);
-            mpz_inits(new_map[map_data->va], new_map[map_data->vb], new_map[map_data->vc], new_map[map_data->vd], NULL);
+            mpz_set_ui(new_map[map_data->va], 0);
+            mpz_set_ui(new_map[map_data->vb], 0);
+            mpz_set_ui(new_map[map_data->vc], 0);
+            mpz_set_ui(new_map[map_data->vd], 0);
             return;
         }
 
         sl_map_t *mdata = (sl_map_t*) mtbdd_getvalue(mtbdd_map);
         sl_val_t *vdata = (sl_val_t*) mtbdd_getvalue(mtbdd_val);
 
+        //TODO: clear new_map beforehand and only eval_var() if not 0?
         coef_t *res_a = eval_var(vdata->a, map);
         coef_t *res_b = eval_var(vdata->b, map);
         coef_t *res_c = eval_var(vdata->c, map);
