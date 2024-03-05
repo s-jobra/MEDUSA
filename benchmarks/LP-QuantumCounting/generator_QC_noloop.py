@@ -82,7 +82,7 @@ if __name__ == '__main__':
         file.write('OPENQASM 2.0;\n')
         file.write('include "qelib1.inc";\n')
         file.write('qreg q[%d];\n' % (n_reg1 + n_reg2 + 1))
-        file.write('qreg c[%d];\n' % (n_reg1 + n_reg2 + 1))
+        file.write('creg c[%d];\n' % (n_reg1 + n_reg2 + 1))
         for ith_qubit in range(n_reg1 + n_reg2):
             file.write('h q[%d];\n' % ith_qubit)
         file.write('x q[%d];\n' % (n_reg1 + n_reg2))
@@ -93,5 +93,5 @@ if __name__ == '__main__':
             for j in range(2**i):
                 file.write(get_grover_string(i, oracle_data, n_reg1, n_reg2))
         
-        # for i in range(n_reg1 + n_reg2 + 1):
-        #     file.write("measure qubits["+str(i)+"] -> c["+str(i)+"];\n")
+        for i in range(n_reg1 + n_reg2 + 1):
+            file.write("measure qubits["+str(i)+"] -> c["+str(i)+"];\n")
