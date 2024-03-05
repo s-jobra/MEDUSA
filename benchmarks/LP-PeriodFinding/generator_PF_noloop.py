@@ -26,12 +26,12 @@ def get_oracle_string(ctrl_qubit, oracle_data, n_reg1):
     oracle_string = ''
     for (pos_ctrl, neg_ctrl, target_qubit) in oracle_data:
         for ith_qubit in neg_ctrl:
-            oracle_string += '  x q[%d];\n' % (n_reg1 + ith_qubit)
+            oracle_string += 'x q[%d];\n' % (n_reg1 + ith_qubit)
 
-        oracle_string += '  mcx q[%d], %s;\n' % (ctrl_qubit, ', '.join(map(lambda ith_qubit:'q[%d]'%(n_reg1 + ith_qubit), pos_ctrl + neg_ctrl + [target_qubit])))
+        oracle_string += 'mcx q[%d], %s;\n' % (ctrl_qubit, ', '.join(map(lambda ith_qubit:'q[%d]'%(n_reg1 + ith_qubit), pos_ctrl + neg_ctrl + [target_qubit])))
                                                   
         for ith_qubit in neg_ctrl:
-            oracle_string += '  x q[%d];\n' % (n_reg1 + ith_qubit)
+            oracle_string += 'x q[%d];\n' % (n_reg1 + ith_qubit)
     return oracle_string
 
 
