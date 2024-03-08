@@ -1,9 +1,12 @@
 #include <time.h>
 #include <getopt.h>
 #include "sim.h"
+#include "mtbdd_out.h"
 #include "error.h"
 
-#define OUT_FILE "res" // Name of the output .dot file
+#define OUT_FILE "res"                    // Name of the output .dot file
+#define LONG_NUMS_OUT_FILE "res-vars.txt" // Name of the output file with the large numbers
+#define LONG_NUMS_MAP_INIT_SIZE 5         // Initial size of array for the separate output of large numbers
 #define HELP_MSG \
 " Usage: sim [options] \n\
 \n\
@@ -42,7 +45,6 @@ int main(int argc, char *argv[])
         {"symbolic", no_argument,        0, 's'},
         {0, 0, 0, 0}
     };
-
     char *endptr;
     while((opt = getopt_long(argc, argv, "htf:m::n:s", long_options, 0)) != -1) {
         switch(opt) {
@@ -83,6 +85,7 @@ int main(int argc, char *argv[])
         }
     }
 
+    // Init:
     init_sylvan();
     init_my_leaf();
     if (opt_symbolic) {
@@ -97,6 +100,7 @@ int main(int argc, char *argv[])
     bool is_measure = false;
     int n_qubits;
 
+    // Sim:
     struct timespec t_start, t_finish;
     double t_el;
     clock_gettime(CLOCK_MONOTONIC, &t_start); // Start the timer
@@ -109,19 +113,31 @@ int main(int argc, char *argv[])
 
     clock_gettime(CLOCK_MONOTONIC, &t_finish); // End the timer
     
+    // Output:
+    lnum_map_init(LONG_NUMS_MAP_INIT_SIZE);
     mtbdd_fprintdot(out, circ);
+    // Check if there are any large numbers outputted only as variables in the .dot file
+    if (!lnum_map_is_empty()) {
+        FILE *lnums_out = fopen(LONG_NUMS_OUT_FILE, "w");
+        if (lnums_out == NULL) {
+            error_exit("Cannot open the output file for the separate output for large numbers.\n");
+        }
+        lnum_map_print(lnums_out);
+        fclose(lnums_out);
+    }
+    lnum_map_clear();
 
+    t_el = t_finish.tv_sec - t_start.tv_sec + (t_finish.tv_nsec - t_start.tv_nsec) * 1.0e-9;
+    if (opt_time) {
+        printf("Time=%.3gs\n", t_el);
+    }
+
+    // Finish:
     circuit_delete(&circ);
     stop_sylvan();
     fclose(out);
     if (opt_infile) {
         fclose(input);
-    }
-
-    t_el = t_finish.tv_sec - t_start.tv_sec + (t_finish.tv_nsec - t_start.tv_nsec) * 1.0e-9;
-
-    if (opt_time) {
-        printf("Time=%.3gs\n", t_el);
     }
 
     return 0;
