@@ -70,7 +70,11 @@ sim_file() {
         filename=$(basename "$file")
         new_filename="NL_$filename"
 
-        file="$directory/$new_filename"
+        if [ -f "$directory/$new_filename" ]; then
+            file="$directory/$new_filename"
+        else
+            echo "Missing file $directory/$new_filename" >&2
+        fi
     fi
 
     # MEDUSA NORMAL
