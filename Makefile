@@ -14,15 +14,12 @@ INC_DIRS:=-I $(LIB_DIR)/sylvan/src/ -I $(LIB_DIR)/lace/src/ -I $(LIB_DIR)/lace/b
 
 N_JOBS=4
 
-F=bell
 OF_TYPE=svg
 F_OUT_NAME=res
-T=BernsteinVazirani/01
 BSCRIPT_PATH=benchmark-utils/scripts
-TEST_OUT=benchmark.out
 
-.DEFAULT := all
-.PHONY := clean clean-all clean-artifacts clean-deps clean-benchmark run-my run-b test plot \
+.DEFAULT : all
+.PHONY : clean clean-all clean-artifacts clean-deps clean-benchmark plot benchmarks results-plot \
            install-deps make-sylvan make-lace download-sylvan download-lace make-sliqsim
 
 all: $(OBJS) $(LIB_DIR)/sylvan/build/src/lib/libsylvan.a $(LIB_DIR)/lace/build/lib/liblace.a | $(BIN_DIR)
@@ -36,21 +33,13 @@ $(BIN_DIR) $(OBJ_DIR):
 
 -include $(OBJ:.o=.d)
 
-#FIXME: remove examples and create one target run just for benchmarks
-run-my:
-	@./$(EXEC) -f ./examples/$(F).qasm -m -s -t
-	@dot -T$(OF_TYPE) $(F_OUT_NAME).dot -o $(F_OUT_NAME).$(OF_TYPE)
-	@rm $(F_OUT_NAME).dot
-
-run-b:
-	@./$(EXEC) -f ./benchmarks/$(T).qasm -m -s -t
-	@dot -T$(OF_TYPE) $(F_OUT_NAME).dot -o $(F_OUT_NAME).$(OF_TYPE)
-	@rm $(F_OUT_NAME).dot
-
-test:
-	@bash ./$(BSCRIPT_PATH)/test-all.sh
-
 plot:
+	@dot -T$(OF_TYPE) $(F_OUT_NAME).dot -o $(F_OUT_NAME).$(OF_TYPE)
+
+benchmarks:
+	@bash ./$(BSCRIPT_PATH)/run-benchmarks.sh
+
+results-plot:
 	@cd ./$(BSCRIPT_PATH)/ && bash ./plot_log.sh
 
 # BENCHMARK INIT:
