@@ -258,13 +258,7 @@ void symb_eval(MTBDD *circ,  mtbdd_symb_t *symbc, uint64_t iters)
         new_map = temp_map;
     }
 
-    //FIXME: segfault bug
-    mtbdd_unprotect(circ);
-    sylvan_gc();
-    /////
     *circ = my_mtbdd_from_symb(symbc->map, symbc->vm->map);
-    /////
-    mtbdd_protect(circ);
 
     mpz_mul_ui(cs_k, cs_k, (unsigned long)iters);
     mpz_add(c_k, c_k, cs_k);
@@ -281,6 +275,7 @@ void symb_eval(MTBDD *circ,  mtbdd_symb_t *symbc, uint64_t iters)
     mtbdd_unprotect(&(symbc->map));
     mtbdd_unprotect(&(symbc->val));
     mpz_clear(cs_k);
+    sylvan_gc(); // Clears both the operation cache and the node cache, needed as some expressions may reappear again
 }
 
 /* end of "symb_utils.c" */
