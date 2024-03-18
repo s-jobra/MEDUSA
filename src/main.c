@@ -1,13 +1,7 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <time.h>
-
-#if defined(__unix__) || defined(__APPLE__)
 #include <sys/resource.h>
-#elif defined(_WIN32)
-#include <windows.h>
-#endif
-
 #include "sim.h"
 #include "mtbdd_out.h"
 #include "error.h"
