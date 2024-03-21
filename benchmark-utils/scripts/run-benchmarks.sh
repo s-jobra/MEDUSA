@@ -53,7 +53,7 @@ sim_file() {
     if [[ $medusa_symb_fail = false ]]; then
         for i in $(eval echo "{1..$REPS}"); do
             medusa_symb_output=$($TIMEOUT $MEDUSA_EXEC $medusa_run_symb_opt <$file /dev/null 2>/dev/null | grep -E 'Time=|Peak Memory Usage=')
-            medusa_symb_time_cur=$(echo "$medusa_symb_output" | grep -oP '(?<=Time=)[0-9.]+' | awk '{printf "%.4f", $1}')
+            medusa_symb_time_cur=$(echo "$medusa_symb_output" | grep -oP '(?<=Time=)[0-9.eE+-]+' | awk '{printf "%.4f", $1}')
             medusa_symb_mem_cur=$(echo "$medusa_symb_output" | grep -oP '(?<=Peak Memory Usage=)[0-9]+' | awk '{printf "%.2f", $1 / 1024}')
             if [[ -z $medusa_symb_time_cur ]]; then
                 medusa_symb_time_avg=$FAILED
@@ -82,7 +82,8 @@ sim_file() {
 
         if [ -f "$directory/$new_filename" ]; then
             file="$directory/$new_filename"
-        else
+        elif [[ $sliqsim_fail = false ]]; then
+            # SliQSim won't parse the circuit
             echo "Missing file $directory/$new_filename" >&2
         fi
     fi
@@ -91,7 +92,7 @@ sim_file() {
     if [[ $medusa_fail = false ]]; then
         for i in $(eval echo "{1..$REPS}"); do
             medusa_output=$($TIMEOUT $MEDUSA_EXEC $medusa_run_opt <$file /dev/null 2>/dev/null | grep -E 'Time=|Peak Memory Usage=')
-            medusa_time_cur=$(echo "$medusa_output" | grep -oP '(?<=Time=)[0-9.]+' | awk '{printf "%.4f", $1}')
+            medusa_time_cur=$(echo "$medusa_output" | grep -oP '(?<=Time=)[0-9.eE+-]+' | awk '{printf "%.4f", $1}')
             medusa_mem_cur=$(echo "$medusa_output" | grep -oP '(?<=Peak Memory Usage=)[0-9]+' | awk '{printf "%.2f", $1 / 1024}')
             if [[ -z $medusa_time_cur ]]; then
                 medusa_time_avg=$FAILED
@@ -194,6 +195,9 @@ run_benchmarks() {
                     medusa_fail=false
                     sliqsim_fail=false
                 fi
+                if [[ ( $medusa_symb_fail = true ) && ( $medusa_fail = true ) && ( $sliqsim_fail = true ) ]]; then
+                    break;
+                fi
             done
         else
             # Circuits with a loop variant
@@ -201,6 +205,9 @@ run_benchmarks() {
                 # To avoid an invalid iteration when no file matches the criteria
                 if [ -f "$file" ]; then
                     run_benchmark_file $file true
+                fi
+                if [[ ( $medusa_symb_fail = true ) && ( $medusa_fail = true ) && ( $sliqsim_fail = true ) ]]; then
+                    break;
                 fi
             done
         fi
