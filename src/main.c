@@ -14,7 +14,7 @@
 \n\
  Options with no argument:\n\
  --help,     -h          show this message\n\
- --info,     -t          measure the simulation runtime and peak memory usage\n\
+ --info,     -i          measure the simulation runtime and peak memory usage\n\
  --symbolic, -s          perform symbolic simulation if possible\n\
  \n\
  Options with a required argument:\n\
