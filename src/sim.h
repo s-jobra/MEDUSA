@@ -40,6 +40,8 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
  * 
  * @param samples the total number of samples
  * 
+ * @param output stream for the output of results
+ * 
  * @param circ MTBDD representation of the end circuit state
  * 
  * @param n number of qubits in the circuit

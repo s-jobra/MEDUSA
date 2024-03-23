@@ -49,7 +49,6 @@ static void htab_m_del_item(htab_item_t *i)
 static void htab_clear(htab_t *t, void (*del_item_func)(htab_item_t*))
 {
     htab_item_t *curr;
-    htab_s_key_t key;
 
     for (size_t i = 0; i < t->arr_size; i++) {
         while (t->arr_ptr[i] != NULL) {
