@@ -26,7 +26,7 @@ def call_generator_script(param2, param3, param4, param5):
     subprocess.run(command)
 
 if __name__ == "__main__":
-    param2_values = list(range(7, 50, 3))
+    param2_values = list(range(7, 16))
     param4_values = [5, 10, 15]
     param5_values = [0]
 
