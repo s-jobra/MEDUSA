@@ -33,103 +33,90 @@ TIMEOUT="timeout 1h"   # for no timeout: ""
 # Output settings
 SEP=","
 NO_RUN="---"
-FAILED="Failed"
+ERROR="Error"
+TO="TO"
 
 #####################################################################################
 # Functions:
 
-sim_file() {
-    medusa_symb_time_sum=0.0
-    medusa_time_sum=0.0
-    sliqsim_time_sum=0.0
-
-    medusa_symb_mem_sum=0.0
-    medusa_mem_sum=0.0
-    sliqsim_mem_sum=0.0
+# Runs a single circuit with the MEDUSA executable with the specified simulation type. Saves the results in the given variables.
+sim_file_medusa() {
+    local symb_opt="$1"
+    local var_time_name="$2"
+    local var_mem_name="$3"
+    local var_fail_name="$4"
     
-    #TODO: change MEDUSA call to 1 function call, change vars to arrays
+    local fail="${!var_fail_name}"
+    local time_sum=0.0
+    local mem_sum=0.0
+    local output
+    local time_cur
+    local mem_cur
 
-    # MEDUSA SYMBOLIC
-    if [[ $medusa_symb_fail = false ]]; then
+    if [[ $fail = false ]]; then
         for i in $(eval echo "{1..$REPS}"); do
-            medusa_symb_output=$($TIMEOUT $MEDUSA_EXEC $medusa_run_symb_opt <$file /dev/null 2>/dev/null | grep -E 'Time=|Peak Memory Usage=')
-            medusa_symb_time_cur=$(echo "$medusa_symb_output" | grep -oP '(?<=Time=)[0-9.eE+-]+' | awk '{printf "%.4f", $1}')
-            medusa_symb_mem_cur=$(echo "$medusa_symb_output" | grep -oP '(?<=Peak Memory Usage=)[0-9]+' | awk '{printf "%.2f", $1 / 1024}')
-            if [[ -z $medusa_symb_time_cur ]]; then
-                medusa_symb_time_avg=$FAILED
-                medusa_symb_mem_avg=$FAILED
-                medusa_symb_fail=true
+            output=$($TIMEOUT $MEDUSA_EXEC $medusa_run_opt $symb_opt <$file /dev/null 2>/dev/null | grep -E 'Time=|Peak Memory Usage=')
+            if [[ $? -eq 124 ]]; then
+                time_avg=$TO
+                mem_avg=$TO
+                fail=true
+                break;
+            elif [[ -z $output ]]; then
+                time_avg=$ERROR
+                mem_avg=$ERROR
+                fail=true
                 break;
             else
-                medusa_symb_time_sum=$(echo "scale=4; $medusa_symb_time_sum + $medusa_symb_time_cur" | bc)
-                medusa_symb_mem_sum=$(echo "scale=2; $medusa_symb_mem_sum + $medusa_symb_mem_cur" | bc)
+                time_cur=$(echo "$output" | grep -oP '(?<=Time=)[0-9.eE+-]+' | awk '{printf "%.4f", $1}')
+                mem_cur=$(echo "$output" | grep -oP '(?<=Peak Memory Usage=)[0-9]+' | awk '{printf "%.2f", $1 / 1024}')
+
+                time_sum=$(echo "scale=4; $time_sum + $time_cur" | bc)
+                mem_sum=$(echo "scale=2; $mem_sum + $mem_cur" | bc)
             fi
         done
-        if [[ $medusa_symb_fail = false ]]; then
-            medusa_symb_time_avg=$(echo "scale=4; $medusa_symb_time_sum / $REPS.0" | bc)
-            medusa_symb_mem_avg=$(echo "scale=2; $medusa_symb_mem_sum / $REPS.0" | bc)
+
+        if [[ $fail = false ]]; then
+            time_avg=$(echo "scale=4; $time_sum / $REPS.0" | bc)
+            mem_avg=$(echo "scale=2; $mem_sum / $REPS.0" | bc)
         fi
     else
-        medusa_symb_time_avg=$NO_RUN
-        medusa_symb_mem_avg=$NO_RUN
+        time_avg=$NO_RUN
+        mem_avg=$NO_RUN
     fi
 
-    # Change to file without loops for normal simulation if in loop directory
-    if [[ $is_loop = true ]]; then
-        directory=$(dirname "$file")
-        filename=$(basename "$file")
-        new_filename="NL_$filename"
+    eval "$var_time_name"=$time_avg
+    eval "$var_mem_name"=$mem_avg
+    eval "$var_fail_name"=$fail
+}
 
-        if [ -f "$directory/$new_filename" ]; then
-            file="$directory/$new_filename"
-        elif [[ $sliqsim_fail = false ]]; then
-            # SliQSim won't parse the circuit
-            echo "Missing file $directory/$new_filename" >&2
-        fi
-    fi
+# Runs a single circuit with the SliQSim executable.
+sim_file_sliqsim() {
+    sliqsim_time_sum=0.0
+    sliqsim_mem_sum=0.0
 
-    # MEDUSA NORMAL
-    if [[ $medusa_fail = false ]]; then
-        for i in $(eval echo "{1..$REPS}"); do
-            medusa_output=$($TIMEOUT $MEDUSA_EXEC $medusa_run_opt <$file /dev/null 2>/dev/null | grep -E 'Time=|Peak Memory Usage=')
-            medusa_time_cur=$(echo "$medusa_output" | grep -oP '(?<=Time=)[0-9.eE+-]+' | awk '{printf "%.4f", $1}')
-            medusa_mem_cur=$(echo "$medusa_output" | grep -oP '(?<=Peak Memory Usage=)[0-9]+' | awk '{printf "%.2f", $1 / 1024}')
-            if [[ -z $medusa_time_cur ]]; then
-                medusa_time_avg=$FAILED
-                medusa_mem_avg=$FAILED
-                medusa_fail=true
-                break;
-            else
-                medusa_time_sum=$(echo "scale=4; $medusa_time_sum + $medusa_time_cur" | bc)
-                medusa_mem_sum=$(echo "scale=2; $medusa_mem_sum + $medusa_mem_cur" | bc)
-            fi
-        done
-        if [[ $medusa_fail = false ]]; then
-            medusa_time_avg=$(echo "scale=4; $medusa_time_sum / $REPS.0" | bc)
-            medusa_mem_avg=$(echo "scale=2; $medusa_mem_sum / $REPS.0" | bc)
-        fi
-    else
-        medusa_time_avg=$NO_RUN
-        medusa_mem_avg=$NO_RUN
-    fi
-
-    # SLIQSIM NORMAL
     if [[ $sliqsim_fail = false ]]; then
         for i in $(eval echo "{1..$REPS}"); do
             sliqsim_output=$($TIMEOUT $sliqsim_run_exec --sim_qasm $file $sliqsim_run_opt 2>/dev/null | \
                              grep -E 'Runtime:|Peak memory usage:')
-            sliqsim_time_cur=$(echo "$sliqsim_output" | grep -oP '(?<=Runtime: )[0-9.]+' | awk '{printf "%.4f", $1}')
-            sliqsim_mem_cur=$(echo "$sliqsim_output" | grep -oP '(?<=Peak memory usage: )[0-9]+' | awk '{printf "%.2f", $1 / (1024 * 1024)}')
-            if [[ -z $sliqsim_time_cur ]]; then
-                sliqsim_time_avg=$FAILED
-                sliqsim_mem_avg=$FAILED
+            if [[ $? -eq 124 ]]; then
+                sliqsim_time_avg=$TO
+                sliqsim_mem_avg=$TO
+                sliqsim_fail=true
+                break;
+            elif [[ -z $sliqsim_output ]]; then
+                sliqsim_time_avg=$ERROR
+                sliqsim_mem_avg=$ERROR
                 sliqsim_fail=true
                 break;
             else
+                sliqsim_time_cur=$(echo "$sliqsim_output" | grep -oP '(?<=Runtime: )[0-9.]+' | awk '{printf "%.4f", $1}')
+                sliqsim_mem_cur=$(echo "$sliqsim_output" | grep -oP '(?<=Peak memory usage: )[0-9]+' | awk '{printf "%.2f", $1 / (1024 * 1024)}')
+
                 sliqsim_time_sum=$(echo "scale=4; $sliqsim_time_sum + $sliqsim_time_cur" | bc)
                 sliqsim_mem_sum=$(echo "scale=2; $sliqsim_mem_sum + $sliqsim_mem_cur" | bc)
             fi
         done
+
         if [[ $sliqsim_fail = false ]]; then
             sliqsim_time_avg=$(echo "scale=4; $sliqsim_time_sum / $REPS.0" | bc)
             sliqsim_mem_avg=$(echo "scale=2; $sliqsim_mem_sum / $REPS.0" | bc)
@@ -146,7 +133,24 @@ run_benchmark_file() {
     local is_loop=$2
 
     benchmark_name=$(echo "$file" | cut -d'/' -f4-)
-    sim_file
+
+    sim_file_medusa $MEDUSA_SYMB_OPT "medusa_symb_time_avg" "medusa_symb_mem_avg" "medusa_symb_fail"
+    # Change to file without loops for normal simulation if in loop directory
+    if [[ $is_loop = true ]]; then
+        directory=$(dirname "$file")
+        filename=$(basename "$file")
+        new_filename="NL_$filename"
+
+        if [ -f "$directory/$new_filename" ]; then
+            file="$directory/$new_filename"
+        elif [[ $sliqsim_fail = false ]]; then
+            # SliQSim won't parse the circuit
+            echo "Missing file $directory/$new_filename" >&2
+        fi
+    fi
+    sim_file_medusa "" "medusa_time_avg" "medusa_mem_avg" "medusa_fail"
+    sim_file_sliqsim
+
     printf "%s$SEP%s$SEP%s$SEP%s$SEP%s$SEP%s$SEP%s\n" "${benchmark_name%.qasm}" "$medusa_symb_time_avg" "$medusa_symb_mem_avg" \
            "$medusa_time_avg" "$medusa_mem_avg" "$sliqsim_time_avg" "$sliqsim_mem_avg" \
            >> "$file_out"
@@ -156,14 +160,12 @@ run_benchmarks() {
     # Init
     if [[ $is_measure = true ]]; then
         benchmarks_fd=$BENCH_MEASURE
-        medusa_run_symb_opt="$MEDUSA_BASE_OPT $MEDUSA_SYMB_OPT $MEDUSA_MEASURE_OPT"
         medusa_run_opt="$MEDUSA_BASE_OPT $MEDUSA_MEASURE_OPT"
         sliqsim_run_opt="$SLIQSIM_BASE_OPT $SLIQSIM_MEASURE_OPT"
         sliqsim_run_exec=$SLIQSIM_EXEC_MSR
         file_out=$FILE_OUT_MEASURE
     else
         benchmarks_fd=$BENCH_NO_MEASURE
-        medusa_run_symb_opt="$MEDUSA_BASE_OPT $MEDUSA_SYMB_OPT"
         medusa_run_opt=$MEDUSA_BASE_OPT
         sliqsim_run_opt="$SLIQSIM_BASE_OPT $SLIQSIM_OPT"
         sliqsim_run_exec=$SLIQSIM_EXEC
