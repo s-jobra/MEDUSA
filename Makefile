@@ -39,9 +39,6 @@ plot:
 benchmarks:
 	@bash ./$(BSCRIPT_PATH)/run-benchmarks.sh
 
-results-plot:
-	@cd ./$(BSCRIPT_PATH)/ && bash ./plot_log.sh
-
 # BENCHMARK INIT:
 make-sliqsim:
 	cd .. &&\
