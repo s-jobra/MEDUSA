@@ -55,23 +55,23 @@ sim_file_medusa() {
 
     if [[ $fail = false ]]; then
         for i in $(eval echo "{1..$REPS}"); do
-            output=$($TIMEOUT $MEDUSA_EXEC $medusa_run_opt $symb_opt <$file /dev/null 2>/dev/null | grep -E 'Time=|Peak Memory Usage=')
-            if [[ $? -eq 124 ]]; then
+            output=$($TIMEOUT $MEDUSA_EXEC $medusa_run_opt $symb_opt <$file 2>&1 | grep -v "^ *'")
+            if [[ -z $output ]]; then
                 time_avg=$TO
                 mem_avg=$TO
                 fail=true
                 break;
-            elif [[ -z $output ]]; then
-                time_avg=$ERROR
-                mem_avg=$ERROR
-                fail=true
-                break;
-            else
+            elif grep -q "Time" <<< "$output"; then
                 time_cur=$(echo "$output" | grep -oP '(?<=Time=)[0-9.eE+-]+' | awk '{printf "%.4f", $1}')
                 mem_cur=$(echo "$output" | grep -oP '(?<=Peak Memory Usage=)[0-9]+' | awk '{printf "%.2f", $1 / 1024}')
 
                 time_sum=$(echo "scale=4; $time_sum + $time_cur" | bc)
                 mem_sum=$(echo "scale=2; $mem_sum + $mem_cur" | bc)
+            else
+                time_avg=$ERROR
+                mem_avg=$ERROR
+                fail=true
+                break;
             fi
         done
 
@@ -96,24 +96,24 @@ sim_file_sliqsim() {
 
     if [[ $sliqsim_fail = false ]]; then
         for i in $(eval echo "{1..$REPS}"); do
-            sliqsim_output=$($TIMEOUT $sliqsim_run_exec --sim_qasm $file $sliqsim_run_opt 2>/dev/null | \
-                             grep -E 'Runtime:|Peak memory usage:')
-            if [[ $? -eq 124 ]]; then
+            sliqsim_output=$($TIMEOUT $sliqsim_run_exec --sim_qasm $file $sliqsim_run_opt 2>&1 | \
+                             grep -v '^{ "counts"')
+            if [[ -z $sliqsim_output ]]; then
                 sliqsim_time_avg=$TO
                 sliqsim_mem_avg=$TO
                 sliqsim_fail=true
                 break;
-            elif [[ -z $sliqsim_output ]]; then
-                sliqsim_time_avg=$ERROR
-                sliqsim_mem_avg=$ERROR
-                sliqsim_fail=true
-                break;
-            else
+            elif grep -q "Runtime" <<< "$sliqsim_output"; then
                 sliqsim_time_cur=$(echo "$sliqsim_output" | grep -oP '(?<=Runtime: )[0-9.]+' | awk '{printf "%.4f", $1}')
                 sliqsim_mem_cur=$(echo "$sliqsim_output" | grep -oP '(?<=Peak memory usage: )[0-9]+' | awk '{printf "%.2f", $1 / (1024 * 1024)}')
 
                 sliqsim_time_sum=$(echo "scale=4; $sliqsim_time_sum + $sliqsim_time_cur" | bc)
                 sliqsim_mem_sum=$(echo "scale=2; $sliqsim_mem_sum + $sliqsim_mem_cur" | bc)
+            else
+                sliqsim_time_avg=$ERROR
+                sliqsim_mem_avg=$ERROR
+                sliqsim_fail=true
+                break;
             fi
         done
 
