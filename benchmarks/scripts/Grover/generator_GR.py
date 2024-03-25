@@ -10,7 +10,7 @@ print(f'x q[{n}];')
 for i in range(n):
     print(f'h q[{i}];')
 
-print(f'for int i in [1:{math.floor(math.pi / (4 * math.asin(1 / pow(2, n/2.0))))}:1] ' + '{')
+print(f'for int i in [1:{math.floor(math.pi / (4 * math.asin(1 / pow(2, n/2.0))))}] ' + '{')
 
 for i in range(n):
     if (i % 2 == 0):

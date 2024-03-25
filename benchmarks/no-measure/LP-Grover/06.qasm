@@ -9,7 +9,7 @@ h q[2];
 h q[3];
 h q[4];
 h q[5];
-for int i in [1:6:1] {
+for int i in [1:6] {
 x q[0];
 x q[2];
 x q[4];

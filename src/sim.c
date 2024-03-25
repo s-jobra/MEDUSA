@@ -1,21 +1,38 @@
 #include "sim.h"
 
+#define NO_ALT_END -2
+
 /**
  * Function for number parsing from the input file (reads the number from the input until the end character is encountered)
+ * Checks for two possible end characters. If only one character should be checked agains, set alt_end to NO_ALT_END.
  */
-static long long parse_num(FILE *in, char end)
+static long long parse_num(FILE *in, char end, char alt_end)
 {
-    int c;
+    int c = fgetc(in);
     char num[NUM_MAX_LEN] = {0};
     long long n;
 
+    // Skip leading whitespace
+    while (isspace(c)) {
+        c = fgetc(in);
+    }
+
     // Load number to string
-    while ((c = fgetc(in)) != end) {
+    while ( c != end && c != alt_end) {
         if (c == EOF) {
             error_exit("Invalid format - reached an unexpected end of file when converting a number.\n");
         }
         else if (!isdigit(c) && c != '-') {
-            error_exit("Invalid format - not a valid number (a non-digit character encountered).\n");
+            // Check if isn't just trailing whitespace
+            while (isspace(c)) {
+                c = fgetc(in);
+            }
+            if (c == end || c == alt_end) {
+                break;
+            }
+            else {
+                error_exit("Invalid format - not a valid number (a non-digit character '%c' encountered while parsing a number).\n", c);
+            }
         }
         else if (strlen(num) + 1 < NUM_MAX_LEN) {
             int *temp = &c;
@@ -24,6 +41,7 @@ static long long parse_num(FILE *in, char end)
         else {
             error_exit("Invalid format - not a valid number (too many digits).\n");
         }
+        c = fgetc(in);
     }
 
     // Convert to integer value
@@ -50,7 +68,7 @@ static uint32_t get_q_num(FILE *in)
         }
     }
 
-    n = parse_num(in, ']');
+    n = parse_num(in, ']', NO_ALT_END);
     if (n > UINT32_MAX || n < 0) {
         error_exit("Invalid format - not a valid qubit identifier.\n");
     }
@@ -64,7 +82,9 @@ static uint32_t get_q_num(FILE *in)
 static uint64_t get_iters(FILE *in)
 {
     int c;
-    long long start, end, step;
+    long long start, end;
+    long long step = 1;
+    fpos_t second_num_pos;
     uint64_t iters;
 
     while ((c = fgetc(in)) != '[') {
@@ -73,10 +93,15 @@ static uint64_t get_iters(FILE *in)
         }
     }
 
-    //FIXME: also support spaces and change to [start : (step :)? stop] syntax
-    start = parse_num(in, ':');
-    end = parse_num(in, ':');
-    step = parse_num(in, ']');
+    start = parse_num(in, ':', NO_ALT_END);
+    end = parse_num(in, ']', ':');
+    if (fseek(in, -1, SEEK_CUR) != 0) {
+        error_exit("Error has occured when parsing loop parameters (fseek error).\n");
+    }
+    if ((c = fgetc(in)) == ':') {
+        step = end;
+        end = parse_num(in, ']', NO_ALT_END);
+    }
     
     // Note: expects 64bit long long
     //TODO: better error detection?
@@ -209,7 +234,7 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
                     }
                     else { // next iteration
                         if (fsetpos(in, &loop_start) != 0) {
-                            error_exit("Could not set a new position of the stream.\n");
+                            error_exit("Could not set a new position of the stream to start the next iteration.\n");
                         }
                     }
                 }

@@ -63,7 +63,7 @@ if __name__ == '__main__':
 
         # double "for" loop here; one unrolled and one with explicit *for* loops
         for i in range(n_reg1):
-            file.write("for j in [0:%d:1] {\n" % (2**i - 1))        
+            file.write("for int i in [0:%d] {\n" % (2**i - 1))        
             file.write(get_oracle_string(i, oracle_data, n_reg1))
             file.write("}\n")
 

@@ -34,7 +34,7 @@ h q[26];
 h q[27];
 h q[28];
 h q[29];
-for int i in [1:25735:1] {
+for int i in [1:25735] {
 x q[0];
 x q[2];
 x q[4];

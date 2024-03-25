@@ -19,7 +19,7 @@ h q[13];
 h q[14];
 x q[15];
 h q[15];
-for j in [0:0:1] {
+for int i in [0:0] {
   mcx q[0], q[12], q[14], q[15];
   x q[11];
   x q[13];
@@ -61,7 +61,7 @@ for j in [0:0:1] {
   h q[13];
   h q[14];
 }
-for j in [0:1:1] {
+for int i in [0:1] {
   mcx q[1], q[12], q[14], q[15];
   x q[11];
   x q[13];
@@ -103,7 +103,7 @@ for j in [0:1:1] {
   h q[13];
   h q[14];
 }
-for j in [0:3:1] {
+for int i in [0:3] {
   mcx q[2], q[12], q[14], q[15];
   x q[11];
   x q[13];
@@ -145,7 +145,7 @@ for j in [0:3:1] {
   h q[13];
   h q[14];
 }
-for j in [0:7:1] {
+for int i in [0:7] {
   mcx q[3], q[12], q[14], q[15];
   x q[11];
   x q[13];
@@ -187,7 +187,7 @@ for j in [0:7:1] {
   h q[13];
   h q[14];
 }
-for j in [0:15:1] {
+for int i in [0:15] {
   mcx q[4], q[12], q[14], q[15];
   x q[11];
   x q[13];
@@ -229,7 +229,7 @@ for j in [0:15:1] {
   h q[13];
   h q[14];
 }
-for j in [0:31:1] {
+for int i in [0:31] {
   mcx q[5], q[12], q[14], q[15];
   x q[11];
   x q[13];
@@ -271,7 +271,7 @@ for j in [0:31:1] {
   h q[13];
   h q[14];
 }
-for j in [0:63:1] {
+for int i in [0:63] {
   mcx q[6], q[12], q[14], q[15];
   x q[11];
   x q[13];
@@ -313,7 +313,7 @@ for j in [0:63:1] {
   h q[13];
   h q[14];
 }
-for j in [0:127:1] {
+for int i in [0:127] {
   mcx q[7], q[12], q[14], q[15];
   x q[11];
   x q[13];
@@ -355,7 +355,7 @@ for j in [0:127:1] {
   h q[13];
   h q[14];
 }
-for j in [0:255:1] {
+for int i in [0:255] {
   mcx q[8], q[12], q[14], q[15];
   x q[11];
   x q[13];
@@ -397,7 +397,7 @@ for j in [0:255:1] {
   h q[13];
   h q[14];
 }
-for j in [0:511:1] {
+for int i in [0:511] {
   mcx q[9], q[12], q[14], q[15];
   x q[11];
   x q[13];

@@ -11,7 +11,7 @@ h q[4];
 h q[5];
 h q[6];
 h q[7];
-for int i in [1:12:1] {
+for int i in [1:12] {
 x q[0];
 x q[2];
 x q[4];
