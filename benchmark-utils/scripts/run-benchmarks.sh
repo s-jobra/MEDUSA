@@ -216,10 +216,22 @@ run_benchmarks() {
     done
 }
 
+# Removes 'LP-' from benchmark names and correctly reorders the given csv file.
+format_csv() {
+    local file=$1
+    local tmp_file="tmp.csv"
+
+    sed -i '/^LP-/ s/^LP-//' "$file"
+    { head -n1 "$file"; tail -n+2 "$file" | sort -t, -k1,1; } > "$tmp_file"
+    mv "$tmp_file" "$file"
+}
+
 #####################################################################################
 # Output:
 is_measure=false # global so it can be read from all the functions
 run_benchmarks
+format_csv $FILE_OUT
 
 is_measure=true
 run_benchmarks
+format_csv $FILE_OUT_MEASURE
