@@ -4,7 +4,7 @@
 /lib
 
 # Build files
-sim
+MEDUSA
 /obj
 
 # Program output

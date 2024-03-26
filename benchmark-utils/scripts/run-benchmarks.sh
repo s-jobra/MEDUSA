@@ -11,7 +11,7 @@ FILE_OUT_MEASURE="measure.csv"
 FILE_OUT="no-measure.csv"
 
 # Exec settings
-MEDUSA_EXEC="./sim"
+MEDUSA_EXEC="./MEDUSA"
 SLIQSIM_EXEC="../SliQSim-no-out/SliQSim"
 SLIQSIM_EXEC_MSR="../SliQSim/SliQSim"
 

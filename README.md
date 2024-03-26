@@ -20,10 +20,10 @@ make
 ## Usage
 The simulator accepts path to the circuit file with `OpenQASM` format either as a program argument or from the standard input, such as:
 ```
-./sim --file benchmarks/no-measure/BernsteinVazirani/01.qasm 
+./MEDUSA --file benchmarks/no-measure/BernsteinVazirani/01.qasm 
 ```
 ```
-./sim <benchmarks/no-measure/BernsteinVazirani/01.qasm 
+./MEDUSA <benchmarks/no-measure/BernsteinVazirani/01.qasm 
 ```
 You can also run the simulator with the flag `--info` to print runtime (wall-clock time) and peak physical memory usage to the standard output.
 MEDUSA also supports symbolic loop simulation which can be enabled using `--symbolic`. You can find more information about program options with `--help`.

@@ -4,7 +4,7 @@ BIN_DIR:=.
 LIB_DIR:=lib
 
 SRCS:=$(wildcard $(SRC_DIR)/*.c)
-EXEC:=$(BIN_DIR)/sim
+EXEC:=$(BIN_DIR)/MEDUSA
 OBJS:=$(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRCS))
 
 CC:=gcc
