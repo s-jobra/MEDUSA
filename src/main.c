@@ -10,7 +10,7 @@
 #define LONG_NUMS_OUT_FILE "res-vars.txt" // Name of the output file with the large numbers
 #define LONG_NUMS_MAP_INIT_SIZE 5         // Initial size of array for the separate output of large numbers
 #define HELP_MSG \
-" Usage: sim [options] \n\
+" Usage: MEDUSA [options] \n\
 \n\
  Options with no argument:\n\
  --help,     -h          show this message\n\
