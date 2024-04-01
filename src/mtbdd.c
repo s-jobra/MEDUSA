@@ -564,6 +564,32 @@ static inline prob_t calculate_prob(cnum* prob)
     return prob_re+prob_im;
 }
 
+long get_coef(uint32_t start, uint32_t end, uint32_t target, char *curr_state)
+{
+    long skip;
+    if (end > target && start < target) {
+        skip = 1 << (end - target - 1);
+        for (uint32_t i = start; i < target; i++) {
+            if (curr_state[i] == NOT_MEASURED_CHAR) {
+                skip *= 2;
+            }
+        }
+    }
+    else if (end <= target) {
+        // It is probable that some skipped qubits were measured
+        skip = 1;
+        for (uint32_t i = start; i < target; i++) {
+            if (curr_state[i] == NOT_MEASURED_CHAR) {
+                skip *= 2;
+            }
+        }
+    }
+    else {
+        skip = 1 << (end - start - 1); // -1 as the first skip is done by having both skip_low, skip_high
+    }
+    return skip;
+}
+
 TASK_IMPL_4(prob_t, mtbdd_prob_sum, MTBDD, t, uint32_t, xt, char*, curr_state, int, n)
 {
     // we must immediately convert to float else the skip coefficient will be also squared
@@ -593,7 +619,7 @@ TASK_IMPL_4(prob_t, mtbdd_prob_sum, MTBDD, t, uint32_t, xt, char*, curr_state, i
     else {
         var_high = mtbdd_getvar(high);
     }
-    long skip_high = get_coef(var_a, var_high, xt);
+    long skip_high = get_coef(var_a, var_high, xt, curr_state);
 
     MTBDD low = mtbdd_getlow(t);
     uint32_t var_low;
@@ -603,7 +629,7 @@ TASK_IMPL_4(prob_t, mtbdd_prob_sum, MTBDD, t, uint32_t, xt, char*, curr_state, i
     else {
         var_low = mtbdd_getvar(low);
     }
-    long skip_low = get_coef(var_a, var_low, xt);
+    long skip_low = get_coef(var_a, var_low, xt, curr_state);
 
     // recursion
     if (var_a == xt || curr_state[var_a] == '1') {

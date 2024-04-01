@@ -14,9 +14,6 @@ void check_xt_root_missing(MTBDD *a, uint32_t xt)
 
 prob_t measure(MTBDD *a, uint32_t xt, char *curr_state, int n)
 {
-    MTBDD t = create_t_xt(*a, xt);
-    mtbdd_protect(&t);
-
     uint32_t var_t;
     if (mtbdd_isleaf(*a)) {
         var_t = n;
@@ -29,12 +26,10 @@ prob_t measure(MTBDD *a, uint32_t xt, char *curr_state, int n)
         skip_coef = 1;
     }
     else {
-        skip_coef = 2 * get_coef(0, var_t, xt);
+        skip_coef = get_coef(0, var_t, xt, curr_state);
     }
     prob_t prob = my_mtbdd_prob_sum(*a, xt, curr_state, n);
     prob *= skip_coef;
-
-    mtbdd_unprotect(&t);
     return prob;
 }
 

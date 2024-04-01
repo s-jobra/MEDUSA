@@ -1,6 +1,7 @@
 #include "sim.h"
 
 #define NO_ALT_END -2
+#define EPSILON 0.001
 
 /**
  * Function for number parsing from the input file (reads the number from the input until the end character is encountered)
@@ -370,7 +371,7 @@ void measure_all(unsigned long samples, FILE *output, MTBDD circ, int n, int *bi
     for (unsigned long i=0; i < samples; i++) {
         norm_coef = 1;
         for (int j=0; j < n; j++) {
-            curr_state[j] = 'x';
+            curr_state[j] = NOT_MEASURED_CHAR;
         }
 
         for (int j=0; j < n; j++) {
@@ -380,13 +381,17 @@ void measure_all(unsigned long samples, FILE *output, MTBDD circ, int n, int *bi
             }
 
             p_qt_is_one = measure(&circ, j, curr_state, n) * norm_coef * norm_coef;
+            assert(p_qt_is_one <= (1 + EPSILON) && p_qt_is_one >= (0 - EPSILON));
+            p_qt_is_one = (p_qt_is_one >= 1)? 1 : ((p_qt_is_one <= 0)? 0 : p_qt_is_one); // round
             random = (prob_t)rand() / RAND_MAX;
             if (random <= p_qt_is_one) {
                 curr_state[curr_ct] = '1';
+                assert(p_qt_is_one != 0);
                 norm_coef *= sqrt(1/p_qt_is_one);
             }
             else {
                 curr_state[curr_ct] = '0';
+                assert(p_qt_is_one != 1);
                 norm_coef *= sqrt(1/(1-p_qt_is_one));
             }
         }

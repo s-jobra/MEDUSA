@@ -213,6 +213,8 @@ MTBDD b_xt_comp_create(uint32_t xt);
 // ==========================================
 // Measurement operations:
 
+#define NOT_MEASURED_CHAR 'x'
+
 TASK_DECL_4(prob_t, mtbdd_prob_sum, MTBDD, uint32_t, char*, int);
 /**
  * Computes the sum probability that the target qubit will be 1 in the MTBDD
@@ -239,9 +241,10 @@ TASK_DECL_4(prob_t, mtbdd_prob_sum, MTBDD, uint32_t, char*, int);
  * 
  * @param target target qubit index
  * 
+ * @param curr_state current state vector (determined by previous measurements)
+ * 
  */
-#define get_coef(start, end, target) \
-        (end > target && start < target)? (1 << (end - start - 2)) : (1 << (end - start -1))
+long get_coef(uint32_t start, uint32_t end, uint32_t target, char *curr_state);
 
 #endif
 /* end of "mtbdd.h" */
