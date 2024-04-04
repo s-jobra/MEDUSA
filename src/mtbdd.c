@@ -350,6 +350,34 @@ TASK_IMPL_2(MTBDD, mtbdd_times, MTBDD*, p_a, MTBDD*, p_b)
     return mtbdd_invalid; // Recurse deeper
 }
 
+TASK_IMPL_2(MTBDD, mtbdd_times_c, MTBDD, t, size_t, c_raw)
+{
+    // Partial function check
+    if (t == mtbdd_false) return mtbdd_false;
+
+    // Compute c*t if mtbdd is a leaf
+    if (mtbdd_isleaf(t)) {
+        cnum *ldata = (cnum*) mtbdd_getvalue(t);
+        unsigned long c = (unsigned long)c_raw;
+
+        cnum res_data;
+        mpz_init(res_data.a);
+        mpz_init(res_data.b);
+        mpz_init(res_data.c);
+        mpz_init(res_data.d);
+        mpz_mul_ui(res_data.a, ldata->a, c);
+        mpz_mul_ui(res_data.b, ldata->b, c);
+        mpz_mul_ui(res_data.c, ldata->c, c);
+        mpz_mul_ui(res_data.d, ldata->d, c);
+        
+        MTBDD res = mtbdd_makeleaf(ltype_id, (uint64_t) &res_data);
+        mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, NULL);
+        return res;
+    }
+
+    return mtbdd_invalid; // Recurse deeper
+}
+
 TASK_IMPL_2(MTBDD, mtbdd_negate, MTBDD, t, size_t, x)
 {
     (void)x; // extra parameter needed for task - not needed
@@ -357,7 +385,7 @@ TASK_IMPL_2(MTBDD, mtbdd_negate, MTBDD, t, size_t, x)
     // Partial function check
     if (t == mtbdd_false) return mtbdd_false;
 
-    // Compute -t if mtbdd is t leaf
+    // Compute -t if mtbdd is a leaf
     if (mtbdd_isleaf(t)) {
         cnum *ldata = (cnum*) mtbdd_getvalue(t);
 

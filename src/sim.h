@@ -32,8 +32,10 @@
  * 
  * @param is_symb should perform symbolic simulation
  * 
+ * @return true if the circuit has been properly initialized and simulated
+ * 
  */
-void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool *is_measure, bool opt_symb);
+bool sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool *is_measure, bool opt_symb);
 
 /**
  * Measures all bits in the given array (compatible only with measurement at the end of the circuit)

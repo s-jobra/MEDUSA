@@ -124,7 +124,7 @@ static uint64_t get_iters(FILE *in)
     return ((uint64_t) iters);
 }
 
-void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool *is_measure, bool opt_symb)
+bool sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool *is_measure, bool opt_symb)
 {
     //TODO: refactoring
     //TODO: add line counter and display in errors
@@ -147,7 +147,7 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
         }
 
         if (c == EOF) {
-            return;
+            return init;
         }
 
         // Skip one-line comments
@@ -155,7 +155,7 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
             if ((c = fgetc(in)) == '/') {
                 while ((c = fgetc(in)) != '\n') {
                     if (c == EOF) {
-                        return;
+                        return init;
                     }
                 }
                 continue;
@@ -355,6 +355,8 @@ void sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
             }
         }
     } // while
+
+    return init;
 }
 
 void measure_all(unsigned long samples, FILE *output, MTBDD circ, int n, int *bits_to_measure)

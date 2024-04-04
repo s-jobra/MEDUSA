@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
     double t_el;
     clock_gettime(CLOCK_MONOTONIC, &t_start); // Start the timer
 
-    sim_file(input, &circ, &n_qubits, &bits_to_measure, &is_measure, opt_symbolic);
+    bool sim_successful = sim_file(input, &circ, &n_qubits, &bits_to_measure, &is_measure, opt_symbolic);
 
     if (opt_measure && is_measure) {
         measure_all(samples, measure_output, circ, n_qubits, bits_to_measure);
@@ -159,7 +159,9 @@ int main(int argc, char *argv[])
     }
 
     // Finish:
-    circuit_delete(&circ);
+    if (sim_successful) {
+        circuit_delete(&circ);
+    }
     stop_sylvan();
     fclose(out);
     if (opt_infile) {

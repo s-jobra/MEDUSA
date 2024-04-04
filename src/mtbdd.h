@@ -136,6 +136,16 @@ TASK_DECL_2(MTBDD, mtbdd_times, MTBDD*, MTBDD*); // ptrs needed because of the b
  */
 #define my_mtbdd_times(p_a, p_b) mtbdd_apply(p_a, p_b, TASK(mtbdd_times))
 
+TASK_DECL_2(MTBDD, mtbdd_times_c, MTBDD, size_t);
+/**
+ * Computes c * t for a cnum MTBDD
+ * 
+ * @param t an MTBDD
+ * 
+ * @param c unsigned integer (the multiplication coefficient)
+ * 
+ */
+#define my_mtbdd_times_c(t, c) mtbdd_uapply(t, TASK(mtbdd_times_c), c)
 
 TASK_DECL_2(MTBDD, mtbdd_negate, MTBDD, size_t);
 /**
