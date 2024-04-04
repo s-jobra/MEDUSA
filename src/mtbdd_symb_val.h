@@ -143,6 +143,18 @@ TASK_DECL_2(MTBDD, mtbdd_symb_minus, MTBDD*, MTBDD*); // ptrs needed because of 
 #define my_mtbdd_symb_minus(p_a, p_b) mtbdd_apply(p_a, p_b, TASK(mtbdd_symb_minus))
 
 
+TASK_DECL_2(MTBDD, mtbdd_symb_times_c, MTBDD, size_t);
+/**
+ * Computes c * t for a symbolic MTBDD
+ * 
+ * @param t symbolic value MTBDD
+ * 
+ * @param c unsigned integer (the multiplication coefficient)
+ * 
+ */
+#define my_mtbdd_symb_times_c(t, c) mtbdd_uapply(t, TASK(mtbdd_symb_times_c), c)
+
+
 TASK_DECL_2(MTBDD, mtbdd_symb_neg, MTBDD, size_t);
 /**
  * Computes -a for a symbolic MTBDD

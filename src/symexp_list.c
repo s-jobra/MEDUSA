@@ -57,6 +57,17 @@ void symexp_list_neg(symexp_list_t *l)
     }
 }
 
+void symexp_list_mul_c(symexp_list_t *l, unsigned long c)
+{
+    if(l){
+        symexp_list_first(l);
+        while (l->active) {
+            mpz_mul_ui(l->active->data->coef, l->active->data->coef, c);
+            symexp_list_next(l);
+        }
+    }
+}
+
 void symexp_list_del(symexp_list_t *l)
 {
     if (l) {

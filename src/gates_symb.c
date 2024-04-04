@@ -107,6 +107,7 @@ void gate_symb_z(MTBDD *p_t, uint32_t xt)
     *p_t = mtbdd_uapply(*p_t, TASK(_gate_symb_z), xt);
 }
 
+
 TASK_DECL_2(MTBDD, _gate_symb_s, MTBDD, uint64_t);
 TASK_IMPL_2(MTBDD, _gate_symb_s, MTBDD, t, uint64_t, xt)
 {
@@ -203,32 +204,51 @@ void gate_symb_t(MTBDD *p_t, uint32_t xt)
 }
 
 
+TASK_DECL_2(MTBDD, _gate_symb_h, MTBDD, uint64_t);
+TASK_IMPL_2(MTBDD, _gate_symb_h, MTBDD, t, uint64_t, xt)
+{
+    // Partial function check
+    if (t == mtbdd_false) return mtbdd_false;
+
+    if (mtbdd_isnode(t)) {
+        xt = (uint32_t)xt; // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
+        uint32_t var = mtbdd_getvar(t);
+        MTBDD high = mtbdd_gethigh(t);
+        MTBDD low = mtbdd_getlow(t);
+
+        if (var == xt) { 
+            // alpha = alpha + beta, beta = alpha - beta
+            return mtbdd_makenode(xt, my_mtbdd_symb_plus(low, high), my_mtbdd_symb_minus(low, high));
+        }
+        else if (var < xt) {
+            MTBDD new_high = mtbdd_false, new_low = mtbdd_false;
+            if (mtbdd_isleaf(high) || (mtbdd_getvar(high) > xt)) {
+                new_high = mtbdd_makenode(xt, my_mtbdd_symb_times_c(high, 2), mtbdd_false);
+                high = new_high;
+            }
+
+            if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
+                new_low = mtbdd_makenode(xt, my_mtbdd_symb_times_c(low, 2), mtbdd_false);
+                low = new_low;
+            }
+
+            if (new_high != mtbdd_false || new_low != mtbdd_false) {
+                return mtbdd_makenode(var, low, high);
+            }
+        }
+    }
+    else { // is a leaf
+        return t;
+    }
+
+    return mtbdd_invalid; // Recurse deeper
+}
+
 void gate_symb_h(MTBDD *p_t, uint32_t xt)
 {
-    MTBDD t = *p_t;
-    mtbdd_protect(&t);
-    MTBDD res;
-
-    res = my_mtbdd_symb_t_xt_comp(t, xt);  // Txt_c
-    mtbdd_protect(&res);
-
-    MTBDD t_xt = my_mtbdd_symb_t_xt(t, xt);
-    mtbdd_protect(&t_xt);
-    MTBDD inter_res = my_mtbdd_symb_b_xt_comp_mul(t_xt, xt); // Bxt_c * Txt
-    mtbdd_protect(&inter_res);
-    mtbdd_unprotect(&t_xt);
-
-    res = my_mtbdd_symb_plus(res, inter_res); // Txt_c + (Bxt_c * Txt)
-
-    inter_res = my_mtbdd_symb_b_xt_mul(t, xt); // Bxt * T
-    mtbdd_unprotect(&t);
-    res = my_mtbdd_symb_minus(res, inter_res); // (Txt_c + Bxt_c * Txt) - Bxt * T
-    mtbdd_unprotect(&inter_res);
-
-    *p_t = res;
-    mtbdd_unprotect(&res);
-
-    mpz_add_ui(cs_k, cs_k, 1); // (1/√2) * (Txt_c + Bxt_c * Txt - Bxt * T)
+    check_xt_root_missing(p_t, xt);
+    *p_t = mtbdd_uapply(*p_t, TASK(_gate_symb_h), xt);
+    mpz_add_ui(cs_k, cs_k, 1);
 }
 
 void gate_symb_cnot(MTBDD *p_t, uint32_t xt, uint32_t xc)

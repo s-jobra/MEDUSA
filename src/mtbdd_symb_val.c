@@ -341,6 +341,29 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_minus, MTBDD*, p_a, MTBDD*, p_b)
     return mtbdd_invalid; // Recurse deeper
 }
 
+TASK_IMPL_2(MTBDD, mtbdd_symb_times_c, MTBDD, t, size_t, c_raw)
+{
+    // Partial function check
+    if (t == mtbdd_false) return mtbdd_false;
+
+    // Compute c*t if mtbdd is a leaf
+    if (mtbdd_isleaf(t)) {
+        sl_val_t *ldata = (sl_val_t*) mtbdd_getvalue(t);
+        unsigned long c = (unsigned long)c_raw;
+
+        sl_val_t res_data;
+        res_data.a = symexp_mul_c(ldata->a, c);
+        res_data.b = symexp_mul_c(ldata->b,c);
+        res_data.c = symexp_mul_c(ldata->c, c);
+        res_data.d = symexp_mul_c(ldata->d, c);
+
+        MTBDD res = mtbdd_makeleaf(ltype_symb_expr_id, (uint64_t) &res_data);
+        return res;
+    }
+
+    return mtbdd_invalid; // Recurse deeper
+}
+
 TASK_IMPL_2(MTBDD, mtbdd_symb_neg, MTBDD, t, size_t, x)
 {
     (void)x; // extra parameter needed for task - not needed

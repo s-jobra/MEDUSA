@@ -39,6 +39,11 @@ symexp_list_t* symexp_init(vars_t v);
 // symexp_list_t* st_htab_add(symexp_list_t *t);
 
 /**
+ * Multiplies the tree with the given coefficient
+ */
+symexp_list_t* symexp_mul_c(symexp_list_t *a, unsigned long c);
+
+/**
  * Performs the given operation on the two trees (a op b) and returns the result
  */
 symexp_list_t* symexp_op(symexp_list_t *a, symexp_list_t *b, symexp_op_t op);

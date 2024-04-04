@@ -96,6 +96,13 @@ void symexp_list_insert_after(symexp_list_t *l, symexp_val_t *val);
 void symexp_list_neg(symexp_list_t *l);
 
 /**
+ * Multiplies all the coefficients in the expression with the coefficient.
+ * 
+ * @param l list representing a symbolic expression
+ */
+void symexp_list_mul_c(symexp_list_t *l, unsigned long c);
+
+/**
  * Returns a deep copy of the given list.
  * 
  * @param l list representing a symbolic expression

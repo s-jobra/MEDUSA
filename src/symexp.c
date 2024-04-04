@@ -41,6 +41,14 @@ symexp_list_t* symexp_init(vars_t v)
     return symexp_htab_add(res);
 }
 
+symexp_list_t* symexp_mul_c(symexp_list_t *a, unsigned long c)
+{
+    symexp_list_t *res = symexp_list_mkcpy(a);
+    symexp_list_mul_c(res, c);
+    //TODO: refs cnt update
+    return symexp_htab_add(res);
+}
+
 symexp_list_t* symexp_op(symexp_list_t *a, symexp_list_t *b, symexp_op_t op)
 {
     // No new alloc needed and refs cnt stays the same:
