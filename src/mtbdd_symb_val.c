@@ -436,31 +436,4 @@ TASK_IMPL_2(MTBDD, mtbdd_symb_coef_rot2, MTBDD, t, size_t, x)
     return mtbdd_invalid; // Recurse deeper
 }
 
-TASK_IMPL_2(MTBDD, mtbdd_symb_b_xt_mul, MTBDD*, p_t, MTBDD*, p_b)
-{
-    MTBDD t = *p_t;
-    MTBDD b = *p_b;
-
-    // Partial function check
-    if (b == mtbdd_true && mtbdd_isleaf(t)) return t;
-    if (b == mtbdd_false || t == mtbdd_false) return mtbdd_false;
-
-    return mtbdd_invalid; // Recurse deeper
-}
-
-MTBDD mtbdd_symb_b_xt_mul_wrapper(MTBDD t, uint32_t xt)
-{
-    MTBDD b_xt = sylvan_ithvar(xt);
-
-    return mtbdd_apply(t, b_xt, TASK(mtbdd_symb_b_xt_mul));
-}
-
-
-MTBDD mtbdd_symb_b_xt_comp_mul_wrapper(MTBDD t, uint32_t xt)
-{
-    MTBDD b_xt_comp = sylvan_nithvar(xt);
-
-    return mtbdd_apply(t, b_xt_comp, TASK(mtbdd_symb_b_xt_mul));
-}
-
 /* end of "mtbdd_symb_val.c" */

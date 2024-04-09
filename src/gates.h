@@ -146,19 +146,6 @@ void gate_cz(MTBDD *p_t, uint32_t xt, uint32_t xc);
 void gate_toffoli(MTBDD *p_t, uint32_t xt, uint32_t xc1, uint32_t xc2);
 
 /**
- * Function implementing quantum Fredkin gate for a given MTBDD.
- * 
- * @param p_t custom MTBDD
- * 
- * @param xt1 first target qubit index
- * 
- * @param xt2 second target qubit index
- * 
- * @param xc control qubit index
- */
-void gate_fredkin(MTBDD *p_t, uint32_t xt1, uint32_t xt2, uint32_t xc);
-
-/**
  * Function implementing quantum Multicontrol NOT gate for a given MTBDD.
  * 
  * @param p_t custom MTBDD

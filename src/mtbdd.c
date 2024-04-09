@@ -503,40 +503,31 @@ TASK_IMPL_2(MTBDD, t_xt_comp_create, MTBDD, t, uint64_t, xt)
     return mtbdd_invalid; // Recurse deeper
 }
 
-MTBDD b_xt_create(uint32_t xt)
+TASK_IMPL_2(MTBDD, mtbdd_b_xt_mul, MTBDD*, p_t, MTBDD*, p_b)
 {
-    BDDSET variables = mtbdd_set_empty();
-    variables = mtbdd_set_add(variables, xt); // list of all nonterminal node names
+    MTBDD t = *p_t;
+    MTBDD b = *p_b;
 
-    cnum num;
-    mpz_init_set_ui(num.a, 1);
-    mpz_init_set_ui(num.b, 1);
-    mpz_init_set_ui(num.c, 1);
-    mpz_init_set_ui(num.d, 1);
+    // Partial function check
+    if (b == mtbdd_true && mtbdd_isleaf(t)) return t;
+    if (b == mtbdd_false || t == mtbdd_false) return mtbdd_false;
 
-    uint8_t num_symbol[] = {1}; // symbol seq. 0/1/2 denotes where the leaf will be (low/high/both)
-    MTBDD leaf1  = mtbdd_makeleaf(ltype_id, (uint64_t) &num);
-    MTBDD b_xt = mtbdd_cube(variables, num_symbol, leaf1); // creates mtbdd with leaves based on variables and symbol. seq.
-    mpz_clears(num.a, num.b, num.c, num.d, NULL);
-    return b_xt;
+    return mtbdd_invalid; // Recurse deeper
 }
 
-MTBDD b_xt_comp_create(uint32_t xt)
+MTBDD mtbdd_b_xt_mul_wrapper(MTBDD t, uint32_t xt)
 {
-    BDDSET variables = mtbdd_set_empty();
-    variables = mtbdd_set_add(variables, xt); // list of all nonterminal node names
+    MTBDD b_xt = sylvan_ithvar(xt);
 
-    cnum num;
-    mpz_init_set_ui(num.a, 1);
-    mpz_init_set_ui(num.b, 1);
-    mpz_init_set_ui(num.c, 1);
-    mpz_init_set_ui(num.d, 1);
+    return mtbdd_apply(t, b_xt, TASK(mtbdd_b_xt_mul));
+}
 
-    uint8_t num_symbol_comp[] = {0}; // symbol seq. 0/1/2 denotes where the leaf will be (low/high/both)
-    MTBDD leaf  = mtbdd_makeleaf(ltype_id, (uint64_t) &num);
-    MTBDD b_xt_comp = mtbdd_cube(variables, num_symbol_comp, leaf); // creates mtbdd with leaves based on variables and symbol. seq.
-    mpz_clears(num.a, num.b, num.c, num.d, NULL);
-    return b_xt_comp;
+
+MTBDD mtbdd_b_xt_comp_mul_wrapper(MTBDD t, uint32_t xt)
+{
+    MTBDD b_xt_comp = sylvan_nithvar(xt);
+
+    return mtbdd_apply(t, b_xt_comp, TASK(mtbdd_b_xt_mul));
 }
 
 /**

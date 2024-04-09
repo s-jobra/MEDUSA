@@ -334,12 +334,6 @@ bool sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
                 qparam_list_del(qparams);
                 continue; // ';' already encountered
             }
-            else if (strcasecmp(cmd, "cswap") == 0) {
-                uint32_t qc = get_q_num(in);
-                uint32_t qt1 = get_q_num(in);
-                uint32_t qt2 = get_q_num(in);
-                (opt_symb && is_loop)? error_exit("Gate 'cswap' does not support symbolic simulation.\n") : gate_fredkin(circ, qt1, qt2, qc); //TODO:
-            }
             else {
                 error_exit("Invalid command '%s'.\n", cmd);
             }

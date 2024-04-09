@@ -191,7 +191,7 @@ TASK_DECL_2(MTBDD, t_xt_create, MTBDD, uint64_t);
  * @param xt target qubit index
  * 
  */
-#define create_t_xt(t, xt) mtbdd_uapply(t, TASK(t_xt_create), xt)
+#define my_mtbdd_t_xt(t, xt) mtbdd_uapply(t, TASK(t_xt_create), xt)
 
 
 TASK_DECL_2(MTBDD, t_xt_comp_create, MTBDD, uint64_t);
@@ -203,27 +203,32 @@ TASK_DECL_2(MTBDD, t_xt_comp_create, MTBDD, uint64_t);
  * @param xt target qubit index
  * 
  */
-#define create_t_xt_comp(t, xt) mtbdd_uapply(t, TASK(t_xt_comp_create), xt)
+#define my_mtbdd_t_xt_comp(t, xt) mtbdd_uapply(t, TASK(t_xt_comp_create), xt)
 
 
-MTBDD b_xt_create(uint32_t xt);
+TASK_DECL_2(MTBDD, mtbdd_b_xt_mul, MTBDD*, MTBDD*);
+MTBDD mtbdd_b_xt_mul_wrapper(MTBDD t, uint32_t xt);
 /**
- * Creates Bxt for the target qubit (low -> 0, high -> 1)
+ * Computes restriction (Bxt * T) on a symbolic MTBDD (multiplies target with: low -> 0, high -> 1)
+ * 
+ * @param t an MTBDD
  * 
  * @param xt target qubit index
  * 
  */
-#define create_b_xt(xt) b_xt_create(xt)
+#define my_mtbdd_b_xt_mul(t, xt) mtbdd_b_xt_mul_wrapper(t, xt)
 
 
-MTBDD b_xt_comp_create(uint32_t xt);
+MTBDD mtbdd_b_xt_comp_mul_wrapper(MTBDD t, uint32_t xt);
 /**
- * Creates Bxt_complement for the target qubit (low -> 1, high -> 0)
+ * Computes restriction (Bxt_complement * T) on a symbolic MTBDD (multiplies target with: low -> 1, high -> 0)
+ * 
+ * @param t an MTBDD
  * 
  * @param xt target qubit index
  * 
  */
-#define create_b_xt_comp(xt) b_xt_comp_create(xt)
+#define my_mtbdd_b_xt_comp_mul(t, xt) mtbdd_b_xt_comp_mul_wrapper(t, xt)
 
 // ==========================================
 // Measurement operations:
