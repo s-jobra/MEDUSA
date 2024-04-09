@@ -1,16 +1,5 @@
 #include "gates.h"
-
-//TODO: change Bxt, Bxt_c create to Bxt * T, Bxt_c * T operations
-//TODO: update gate formulae
-
-void check_xt_root_missing(MTBDD *a, uint32_t xt)
-{
-    if (*a != mtbdd_false) {
-        if (xt < mtbdd_getvar(*a)) {
-            *a = _mtbdd_makenode(xt, *a, *a);
-        }
-    }
-}
+#include "sylvan_int.h" // Because of 'mtbddnode_t'
 
 prob_t measure(MTBDD *a, uint32_t xt, char *curr_state, int n)
 {
@@ -34,68 +23,92 @@ prob_t measure(MTBDD *a, uint32_t xt, char *curr_state, int n)
 }
 
 // Decl in header file as this implementation is used by symbolic as well
-TASK_IMPL_2(MTBDD, m_gate_x, MTBDD, a, uint64_t, xt)
+// can use regular uapply (simpler) because it doesn't create any new nodes
+TASK_IMPL_2(MTBDD, _gate_x, MTBDD, t, uint64_t, xt)
 {
     // Partial function check
-    if (a == mtbdd_false) return mtbdd_false;
+    if (t == mtbdd_false) return mtbdd_false;
 
     // Change high and low successors if node variable is the target qubit
-    if (mtbdd_isnode(a)) {
+    if (mtbdd_isnode(t)) {
         xt = (uint32_t)xt; // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
-        if (mtbdd_getvar(a) == xt) { 
-            return mtbdd_makenode(xt, mtbdd_gethigh(a), mtbdd_getlow(a));
+        if (mtbdd_getvar(t) == xt) { 
+            return mtbdd_makenode(xt, mtbdd_gethigh(t), mtbdd_getlow(t));
         }
     }
     else { // is a leaf
-        return a;
+        return t;
     }
 
     return mtbdd_invalid; // Recurse deeper
 }
 
+TASK_IMPL_3(MTBDD, mtbdd_apply_gate, MTBDD, dd, mtbdd_apply_gate_op, op, uint32_t, xt)
+{
+    sylvan_gc_test();
+    sylvan_stats_count(MTBDD_UAPPLY);
+
+    // Check cache
+    MTBDD result;
+    if (cache_get3(mtbdd_apply_gate_id, dd, (size_t)op, xt, &result)) {
+        sylvan_stats_count(MTBDD_UAPPLY_CACHED);
+        return result;
+    }
+
+    // Every gate on 0 returns 0
+    if (dd == mtbdd_false) {
+        return mtbdd_false;
+    }
+
+    mtbddnode_t n = MTBDD_GETNODE(dd);
+    MTBDD target_dd = dd;
+    // Add the missing node if needed
+    if (mtbddnode_isleaf(n) || xt < mtbddnode_getvariable(n)) {
+        target_dd = _mtbdd_makenode(xt, dd, dd);
+    }
+
+    // Check if not xt
+    result = WRAP(op, target_dd, xt);
+    if (result != mtbdd_invalid) {
+        if (cache_put3(mtbdd_apply_gate_id, dd, (size_t)op, xt, result)) {
+            sylvan_stats_count(MTBDD_UAPPLY_CACHEDPUT);
+        }
+        return result;
+    }
+    // Else recursion
+    MTBDD low = node_getlow(dd, n);
+    MTBDD high = node_gethigh(dd, n);
+
+    mtbdd_refs_spawn(SPAWN(mtbdd_apply_gate, high, op, xt));
+    MTBDD new_low = mtbdd_refs_push(CALL(mtbdd_apply_gate, low, op, xt));
+    MTBDD new_high = mtbdd_refs_sync(SYNC(mtbdd_apply_gate));
+    mtbdd_refs_pop(1);
+    result = mtbdd_makenode(mtbddnode_getvariable(n), new_low, new_high);
+
+    if (cache_put3(mtbdd_apply_gate_id, dd, (size_t)op, xt, result)) {
+        sylvan_stats_count(MTBDD_UAPPLY_CACHEDPUT);
+    }
+
+    return result;
+}
+
 /**
  * Permutation based implementation of the Y gate on the given MTBDD.
  */
-TASK_DECL_2(MTBDD, m_gate_y, MTBDD, uint64_t);
-TASK_IMPL_2(MTBDD, m_gate_y, MTBDD, a, uint64_t, xt)
+TASK_DECL_2(MTBDD, _gate_y, MTBDD, uint32_t);
+TASK_IMPL_2(MTBDD, _gate_y, MTBDD, t, uint32_t, xt)
 {
-    // Partial function check
-    if (a == mtbdd_false) return mtbdd_false;
+    // t has to be a nonterminal because of the apply
+    uint32_t var = mtbdd_getvar(t);
 
-    if (mtbdd_isnode(a)) {
-        xt = (uint32_t)xt; // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
-        uint32_t var_a = mtbdd_getvar(a);
-        MTBDD high = mtbdd_gethigh(a);
-        MTBDD low = mtbdd_getlow(a);
+    if (var == xt) {
+        MTBDD high = mtbdd_gethigh(t);
+        MTBDD low = mtbdd_getlow(t);
 
-        if (var_a == xt) { 
-            // Change high and low successors and negate the low successor
-            MTBDD updated = mtbdd_makenode(xt, my_mtbdd_neg(high), low);
-            // Perform the rotations
-            return my_mtbdd_coef_rot2(updated);
-        }
-        //If child's variable is > xt or it is a leaf, the target node has to be generated manually
-        else if (var_a < xt) {
-            MTBDD new_high = mtbdd_false, new_low = mtbdd_false;
-            if (mtbdd_isleaf(high) || (mtbdd_getvar(high) > xt)) {
-                new_high = mtbdd_makenode(xt, my_mtbdd_neg(high), high);
-                new_high = my_mtbdd_coef_rot2(new_high);
-                high = new_high;
-            }
-
-            if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
-                new_low = mtbdd_makenode(xt, my_mtbdd_neg(low), low);
-                new_low = my_mtbdd_coef_rot2(new_low);
-                low = new_low;
-            }
-
-            if (new_high != mtbdd_false || new_low != mtbdd_false) {
-                return mtbdd_makenode(var_a, low, high);
-            }
-        }
-    }
-    else { // is a leaf
-        return a;
+        // Change high and low successors and negate the low successor
+        MTBDD updated = mtbdd_makenode(xt, my_mtbdd_neg(high), low);
+        // Perform the rotations
+        return my_mtbdd_coef_rot2(updated);
     }
 
     return mtbdd_invalid; // Recurse deeper
@@ -104,41 +117,18 @@ TASK_IMPL_2(MTBDD, m_gate_y, MTBDD, a, uint64_t, xt)
 /**
  * Permutation based implementation of the Z gate on the given MTBDD.
  */
-TASK_DECL_2(MTBDD, m_gate_z, MTBDD, uint64_t);
-TASK_IMPL_2(MTBDD, m_gate_z, MTBDD, a, uint64_t, xt)
+TASK_DECL_2(MTBDD, _gate_z, MTBDD, uint32_t);
+TASK_IMPL_2(MTBDD, _gate_z, MTBDD, t, uint32_t, xt)
 {
-    // Partial function check
-    if (a == mtbdd_false) return mtbdd_false;
+    // t has to be a nonterminal because of the apply
+    uint32_t var = mtbdd_getvar(t);
 
-    if (mtbdd_isnode(a)) {
-        xt = (uint32_t)xt; // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
-        uint32_t var_a = mtbdd_getvar(a);
-        MTBDD high = mtbdd_gethigh(a);
-        MTBDD low = mtbdd_getlow(a);
+    if (var == xt) {
+        MTBDD high = mtbdd_gethigh(t);
+        MTBDD low = mtbdd_getlow(t);
 
-        if (var_a == xt) { 
-            // Negate the high successor
-            return mtbdd_makenode(xt, low, my_mtbdd_neg(high));
-        }
-        else if (var_a < xt) {
-            MTBDD new_high = mtbdd_false, new_low = mtbdd_false;
-            if (mtbdd_isleaf(high) || (mtbdd_getvar(high) > xt)) {
-                new_high = mtbdd_makenode(xt, high, my_mtbdd_neg(high));
-                high = new_high;
-            }
-
-            if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
-                new_low = mtbdd_makenode(xt, low, my_mtbdd_neg(low));
-                low = new_low;
-            }
-
-            if (new_high != mtbdd_false || new_low != mtbdd_false) {
-                return mtbdd_makenode(var_a, low, high);
-            }
-        }
-    }
-    else { // is a leaf
-        return a;
+        // Negate the high successor
+        return mtbdd_makenode(xt, low, my_mtbdd_neg(high));
     }
 
     return mtbdd_invalid; // Recurse deeper
@@ -147,41 +137,18 @@ TASK_IMPL_2(MTBDD, m_gate_z, MTBDD, a, uint64_t, xt)
 /**
  * Permutation based implementation of the S gate on the given MTBDD.
  */
-TASK_DECL_2(MTBDD, m_gate_s, MTBDD, uint64_t);
-TASK_IMPL_2(MTBDD, m_gate_s, MTBDD, a, uint64_t, xt)
+TASK_DECL_2(MTBDD, _gate_s, MTBDD, uint32_t);
+TASK_IMPL_2(MTBDD, _gate_s, MTBDD, t, uint32_t, xt)
 {
-    // Partial function check
-    if (a == mtbdd_false) return mtbdd_false;
+    // t has to be a nonterminal because of the apply
+    uint32_t var = mtbdd_getvar(t);
 
-    if (mtbdd_isnode(a)) {
-        xt = (uint32_t)xt; // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
-        uint32_t var_a = mtbdd_getvar(a);
-        MTBDD high = mtbdd_gethigh(a);
-        MTBDD low = mtbdd_getlow(a);
+    if (var == xt) {
+        MTBDD high = mtbdd_gethigh(t);
+        MTBDD low = mtbdd_getlow(t);
 
-        if (var_a == xt) { 
-            // Multiply the high successor by i
-            return mtbdd_makenode(xt, low, my_mtbdd_coef_rot2(high));
-        }
-        else if (var_a < xt) {
-            MTBDD new_high = mtbdd_false, new_low = mtbdd_false;
-            if (mtbdd_isleaf(high) || (mtbdd_getvar(high) > xt)) {
-                new_high = mtbdd_makenode(xt, high, my_mtbdd_coef_rot2(high));
-                high = new_high;
-            }
-
-            if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
-                new_low = mtbdd_makenode(xt, low, my_mtbdd_coef_rot2(low));
-                low = new_low;
-            }
-
-            if (new_high != mtbdd_false || new_low != mtbdd_false) {
-                return mtbdd_makenode(var_a, low, high);
-            }
-        }
-    }
-    else { // is a leaf
-        return a;
+        // Multiply the high successor by i
+        return mtbdd_makenode(xt, low, my_mtbdd_coef_rot2(high));
     }
 
     return mtbdd_invalid; // Recurse deeper
@@ -190,41 +157,18 @@ TASK_IMPL_2(MTBDD, m_gate_s, MTBDD, a, uint64_t, xt)
 /**
  * Permutation based implementation of the T gate on the given MTBDD.
  */
-TASK_DECL_2(MTBDD, m_gate_t, MTBDD, uint64_t);
-TASK_IMPL_2(MTBDD, m_gate_t, MTBDD, a, uint64_t, xt)
+TASK_DECL_2(MTBDD, _gate_t, MTBDD, uint32_t);
+TASK_IMPL_2(MTBDD, _gate_t, MTBDD, t, uint32_t, xt)
 {
-    // Partial function check
-    if (a == mtbdd_false) return mtbdd_false;
+    // t has to be a nonterminal because of the apply
+    uint32_t var = mtbdd_getvar(t);
 
-    if (mtbdd_isnode(a)) {
-        xt = (uint32_t)xt; // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
-        uint32_t var_a = mtbdd_getvar(a);
-        MTBDD high = mtbdd_gethigh(a);
-        MTBDD low = mtbdd_getlow(a);
+    if (var == xt) {
+        MTBDD high = mtbdd_gethigh(t);
+        MTBDD low = mtbdd_getlow(t);
 
-        if (var_a == xt) { 
-            // Multiply the high successor by e^(i*pi/4)
-            return mtbdd_makenode(xt, low, my_mtbdd_coef_rot1(high));
-        }
-        else if (var_a < xt) {
-            MTBDD new_high = mtbdd_false, new_low = mtbdd_false;
-            if (mtbdd_isleaf(high) || (mtbdd_getvar(high) > xt)) {
-                new_high = mtbdd_makenode(xt, high, my_mtbdd_coef_rot1(high));
-                high = new_high;
-            }
-
-            if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
-                new_low = mtbdd_makenode(xt, low, my_mtbdd_coef_rot1(low));
-                low = new_low;
-            }
-
-            if (new_high != mtbdd_false || new_low != mtbdd_false) {
-                return mtbdd_makenode(var_a, low, high);
-            }
-        }
-    }
-    else { // is a leaf
-        return a;
+        // Multiply the high successor by e^(i*pi/4)
+        return mtbdd_makenode(xt, low, my_mtbdd_coef_rot1(high));
     }
 
     return mtbdd_invalid; // Recurse deeper
@@ -233,41 +177,23 @@ TASK_IMPL_2(MTBDD, m_gate_t, MTBDD, a, uint64_t, xt)
 /**
  * Permutation based implementation of the Hadamard gate on the given MTBDD.
  */
-TASK_DECL_2(MTBDD, m_gate_h, MTBDD, uint64_t);
-TASK_IMPL_2(MTBDD, m_gate_h, MTBDD, a, uint64_t, xt)
+TASK_DECL_2(MTBDD, _gate_h, MTBDD, uint32_t);
+TASK_IMPL_2(MTBDD, _gate_h, MTBDD, t, uint32_t, xt)
 {
-    // Partial function check
-    if (a == mtbdd_false) return mtbdd_false;
+    // t has to be a nonterminal because of the apply
+    uint32_t var = mtbdd_getvar(t);
 
-    if (mtbdd_isnode(a)) {
-        xt = (uint32_t)xt; // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
-        uint32_t var_a = mtbdd_getvar(a);
-        MTBDD high = mtbdd_gethigh(a);
-        MTBDD low = mtbdd_getlow(a);
+    if (var == xt) {
+        MTBDD high = mtbdd_gethigh(t);
+        MTBDD low = mtbdd_getlow(t);
 
-        if (var_a == xt) { 
-            // alpha = alpha + beta, beta = alpha - beta
+        // low = low + high, high = low - high
+        if (low == high) {
+            return mtbdd_makenode(xt, my_mtbdd_times_c(low, 2), mtbdd_false);
+        }
+        else {
             return mtbdd_makenode(xt, my_mtbdd_plus(low, high), my_mtbdd_minus(low, high));
         }
-        else if (var_a < xt) {
-            MTBDD new_high = mtbdd_false, new_low = mtbdd_false;
-            if (mtbdd_isleaf(high) || (mtbdd_getvar(high) > xt)) {
-                new_high = mtbdd_makenode(xt, my_mtbdd_times_c(high, 2), mtbdd_false);
-                high = new_high;
-            }
-
-            if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
-                new_low = mtbdd_makenode(xt, my_mtbdd_times_c(low, 2), mtbdd_false);
-                low = new_low;
-            }
-
-            if (new_high != mtbdd_false || new_low != mtbdd_false) {
-                return mtbdd_makenode(var_a, low, high);
-            }
-        }
-    }
-    else { // is a leaf
-        return a;
     }
 
     return mtbdd_invalid; // Recurse deeper
@@ -276,46 +202,26 @@ TASK_IMPL_2(MTBDD, m_gate_h, MTBDD, a, uint64_t, xt)
 /**
  * Permutation based implementation of the Rx(π/2) gate on the given MTBDD.
  */
-TASK_DECL_2(MTBDD, m_gate_rx_pihalf, MTBDD, uint64_t);
-TASK_IMPL_2(MTBDD, m_gate_rx_pihalf, MTBDD, a, uint64_t, xt)
+TASK_DECL_2(MTBDD, _gate_rx_pihalf, MTBDD, uint32_t);
+TASK_IMPL_2(MTBDD, _gate_rx_pihalf, MTBDD, t, uint32_t, xt)
 {
-    // Partial function check
-    if (a == mtbdd_false) return mtbdd_false;
+    // t has to be a nonterminal because of the apply
+    uint32_t var = mtbdd_getvar(t);
 
-    if (mtbdd_isnode(a)) {
-        xt = (uint32_t)xt; // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
-        uint32_t var_a = mtbdd_getvar(a);
-        MTBDD high = mtbdd_gethigh(a);
-        MTBDD low = mtbdd_getlow(a);
+    if (var == xt) {
+        MTBDD high = mtbdd_gethigh(t);
+        MTBDD low = mtbdd_getlow(t);
         MTBDD rot_low, rot_high;
 
-        if (var_a == xt) { 
-            // alpha = alpha - i * beta, beta = -i * alpha + beta
+        // low = low - i * high, high = -i * low + high
+        rot_low = my_mtbdd_coef_rot2(low);
+        if (low == high) {
+            return my_mtbdd_minus(low, rot_low); // new low and high of xt are always the same
+        }
+        else {
             rot_high = my_mtbdd_coef_rot2(high);
-            rot_low = my_mtbdd_coef_rot2(low);
             return mtbdd_makenode(xt, my_mtbdd_minus(low, rot_high), my_mtbdd_minus(high, rot_low));
         }
-        else if (var_a < xt) {
-            MTBDD new_high = mtbdd_false, new_low = mtbdd_false;
-            if (mtbdd_isleaf(high) || (mtbdd_getvar(high) > xt)) {
-                rot_high = my_mtbdd_coef_rot2(high);
-                new_high = my_mtbdd_minus(high, rot_high); // new low and high of xt are always the same
-                high = new_high;
-            }
-
-            if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
-                rot_low = my_mtbdd_coef_rot2(low);
-                new_low = my_mtbdd_minus(low, rot_low); // new low and high of xt are always the same
-                low = new_low;
-            }
-
-            if (new_high != mtbdd_false || new_low != mtbdd_false) {
-                return mtbdd_makenode(var_a, low, high);
-            }
-        }
-    }
-    else { // is a leaf
-        return a;
     }
 
     return mtbdd_invalid; // Recurse deeper
@@ -324,97 +230,73 @@ TASK_IMPL_2(MTBDD, m_gate_rx_pihalf, MTBDD, a, uint64_t, xt)
 /**
  * Permutation based implementation of the Ry(π/2) gate on the given MTBDD.
  */
-TASK_DECL_2(MTBDD, m_gate_ry_pihalf, MTBDD, uint64_t);
-TASK_IMPL_2(MTBDD, m_gate_ry_pihalf, MTBDD, a, uint64_t, xt)
+TASK_DECL_2(MTBDD, _gate_ry_pihalf, MTBDD, uint32_t);
+TASK_IMPL_2(MTBDD, _gate_ry_pihalf, MTBDD, t, uint32_t, xt)
 {
-    // Partial function check
-    if (a == mtbdd_false) return mtbdd_false;
+    // t has to be a nonterminal because of the apply
+    uint32_t var = mtbdd_getvar(t);
 
-    if (mtbdd_isnode(a)) {
-        xt = (uint32_t)xt; // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
-        uint32_t var_a = mtbdd_getvar(a);
-        MTBDD high = mtbdd_gethigh(a);
-        MTBDD low = mtbdd_getlow(a);
+    if (var == xt) {
+        MTBDD high = mtbdd_gethigh(t);
+        MTBDD low = mtbdd_getlow(t);
 
-        if (var_a == xt) { 
-            // alpha = alpha - beta, beta = alpha + beta
+        // low = low - high, high = low + high
+        if (low == high) {
+            return mtbdd_makenode(xt, mtbdd_false, my_mtbdd_times_c(low, 2));
+        }
+        else {
             return mtbdd_makenode(xt, my_mtbdd_minus(low, high), my_mtbdd_plus(low, high));
         }
-        else if (var_a < xt) {
-            MTBDD new_high = mtbdd_false, new_low = mtbdd_false;
-            if (mtbdd_isleaf(high) || (mtbdd_getvar(high) > xt)) {
-                new_high = mtbdd_makenode(xt, mtbdd_false, my_mtbdd_times_c(high, 2));
-                high = new_high;
-            }
-
-            if (mtbdd_isleaf(low) || (mtbdd_getvar(low) > xt)) {
-                new_low = mtbdd_makenode(xt, mtbdd_false, my_mtbdd_times_c(low, 2));
-                low = new_low;
-            }
-
-            if (new_high != mtbdd_false || new_low != mtbdd_false) {
-                return mtbdd_makenode(var_a, low, high);
-            }
-        }
-    }
-    else { // is a leaf
-        return a;
     }
 
     return mtbdd_invalid; // Recurse deeper
 }
 
-void gate_x(MTBDD *a, uint32_t xt)
+void gate_x(MTBDD *p_t, uint32_t xt)
 {
     // Check if xt is a missing root not needed -> swap is identical with the original MTBDD
-    *a = mtbdd_uapply(*a, TASK(m_gate_x), xt);
+    *p_t = mtbdd_uapply(*p_t, TASK(_gate_x), xt);
 }
 
-void gate_y(MTBDD *a, uint32_t xt)
+void gate_y(MTBDD *p_t, uint32_t xt)
 {
-    check_xt_root_missing(a, xt);
-    *a = mtbdd_uapply(*a, TASK(m_gate_y), xt);
+    *p_t = my_mtbdd_apply_gate(*p_t, TASK(_gate_y), xt);
 }
 
-void gate_z(MTBDD *a, uint32_t xt)
+void gate_z(MTBDD *p_t, uint32_t xt)
 {
-    check_xt_root_missing(a, xt);
-    *a = mtbdd_uapply(*a, TASK(m_gate_z), xt);
+    *p_t = my_mtbdd_apply_gate(*p_t, TASK(_gate_z), xt);
 }
 
-void gate_s(MTBDD *a, uint32_t xt)
+void gate_s(MTBDD *p_t, uint32_t xt)
 {
-    check_xt_root_missing(a, xt);
-    *a = mtbdd_uapply(*a, TASK(m_gate_s), xt);
+    *p_t = my_mtbdd_apply_gate(*p_t, TASK(_gate_s), xt);
 }
 
-void gate_t(MTBDD *a, uint32_t xt)
+void gate_t(MTBDD *p_t, uint32_t xt)
 {
-    check_xt_root_missing(a, xt);
-    *a = mtbdd_uapply(*a, TASK(m_gate_t), xt);
+    *p_t = my_mtbdd_apply_gate(*p_t, TASK(_gate_t), xt);
 }
 
-void gate_h(MTBDD *a, uint32_t xt)
+void gate_h(MTBDD *p_t, uint32_t xt)
 {
-    check_xt_root_missing(a, xt);
-    *a = mtbdd_uapply(*a, TASK(m_gate_h), xt);
+    *p_t = my_mtbdd_apply_gate(*p_t, TASK(_gate_h), xt );
     mpz_add_ui(c_k, c_k, 1);
 }
 
-void gate_rx_pihalf(MTBDD *a, uint32_t xt)
+void gate_rx_pihalf(MTBDD *p_t, uint32_t xt)
 {
-    check_xt_root_missing(a, xt);
-    *a = mtbdd_uapply(*a, TASK(m_gate_rx_pihalf), xt);
+    *p_t = my_mtbdd_apply_gate(*p_t, TASK(_gate_rx_pihalf), xt);
     mpz_add_ui(c_k, c_k, 1);
 }
 
-void gate_ry_pihalf(MTBDD *a, uint32_t xt)
+void gate_ry_pihalf(MTBDD *p_t, uint32_t xt)
 {
-    check_xt_root_missing(a, xt);
-    *a = mtbdd_uapply(*a, TASK(m_gate_ry_pihalf), xt);
+    *p_t = my_mtbdd_apply_gate(*p_t, TASK(_gate_ry_pihalf), xt);
     mpz_add_ui(c_k, c_k, 1);
 }
 
+//FIXME: change Bxt, Bxt_c create to Bxt * T, Bxt_c * T operations
 //FIXME: remove unnecessary applies (bracket multiplication)
 
 void gate_cnot(MTBDD *p_t, uint32_t xt, uint32_t xc)

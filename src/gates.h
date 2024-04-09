@@ -1,26 +1,28 @@
+#include <stdbool.h>
 #include "mtbdd.h"
 #include "qparam.h"
 
 #ifndef GATES_H
 #define GATES_H
 
-//FIXME: func naming, decl placement (move to .c), unite MTBDD param names
-
-/**
- * Checks if xt shouldn't be root (for permutation based formulae)
- */
-void check_xt_root_missing(MTBDD *a, uint32_t xt);
-
 /**
  * Permutation based implementation of the X gate on the given MTBDD.
  */
-TASK_DECL_2(MTBDD, m_gate_x, MTBDD, uint64_t);
+TASK_DECL_2(MTBDD, _gate_x, MTBDD, uint64_t);
+
+LACE_TYPEDEF_CB(MTBDD, mtbdd_apply_gate_op, MTBDD, uint32_t);
+TASK_DECL_3(MTBDD, mtbdd_apply_gate, MTBDD, mtbdd_apply_gate_op, uint32_t);
+/**
+ * Apply a gate operation <op> to <dd>. Custom apply needed because xt nodes may not be present in the reduced <dd>.
+ * Otherwise it's basically the standard uapply.
+ */
+#define my_mtbdd_apply_gate(dd, op, param) RUN(mtbdd_apply_gate, dd, op, param)
 
 /**
  * Returns the probability the given qubit's state will be 1.
  * This implementation supports only a measurement of all the qubits at the end of the circuit.
  * 
- * @param a pointer to an MTBDD
+ * @param p_t pointer to an MTBDD
  * 
  * @param xt target qubit index
  * 
@@ -29,84 +31,84 @@ TASK_DECL_2(MTBDD, m_gate_x, MTBDD, uint64_t);
  * @param n number of qubits in the circuit
  * 
  */
-prob_t measure(MTBDD *a, uint32_t xt, char *curr_state, int n);
+prob_t measure(MTBDD *p_t, uint32_t xt, char *curr_state, int n);
 
 /**
  * Apply quantum gate X on the state vector.
  * 
- * @param a pointer to an MTBDD
+ * @param p_t pointer to an MTBDD
  * 
  * @param xt target qubit index
  * 
  */
-void gate_x(MTBDD *a, uint32_t xt);
+void gate_x(MTBDD *p_t, uint32_t xt);
 
 /**
  * Apply quantum gate Y on the state vector.
  * 
- * @param a pointer to an MTBDD
+ * @param p_t pointer to an MTBDD
  * 
  * @param xt target qubit index
  * 
  */
-void gate_y(MTBDD *a, uint32_t xt);
+void gate_y(MTBDD *p_t, uint32_t xt);
 
 /**
  * Apply quantum gate Z on the state vector.
  * 
- * @param a pointer to an MTBDD
+ * @param p_t pointer to an MTBDD
  * 
  * @param xt target qubit index
  * 
  */
-void gate_z(MTBDD *a, uint32_t xt);
+void gate_z(MTBDD *p_t, uint32_t xt);
 
 /**
  * Apply quantum gate S on the state vector.
  * 
- * @param a pointer to an MTBDD
+ * @param p_t pointer to an MTBDD
  * 
  * @param xt target qubit index
  * 
  */
-void gate_s(MTBDD *a, uint32_t xt);
+void gate_s(MTBDD *p_t, uint32_t xt);
 
 /**
  * Apply quantum gate T on the state vector.
  * 
- * @param a pointer to an MTBDD
+ * @param p_t pointer to an MTBDD
  * 
  * @param xt target qubit index
  * 
  */
-void gate_t(MTBDD *a, uint32_t xt);
+void gate_t(MTBDD *p_t, uint32_t xt);
 
 /**
  * Function implementing quantum Hadamard gate for a given MTBDD.
  * 
- * @param a pointer to an MTBDD
+ * @param p_t pointer to an MTBDD
  * 
  * @param xt target qubit index
  */
-void gate_h(MTBDD *a, uint32_t xt);
+void gate_h(MTBDD *p_t, uint32_t xt);
 
 /**
  * Function implementing quantum Rx(π/2) gate for a given MTBDD.
  * 
- * @param a pointer to an MTBDD
+ * @param p_t pointer to an MTBDD
  * 
  * @param xt target qubit index
  */
-void gate_rx_pihalf(MTBDD *a, uint32_t xt);
+void gate_rx_pihalf(MTBDD *p_t, uint32_t xt);
 
 /**
  * Function implementing quantum Ry(π/2) gate for a given MTBDD.
  * 
- * @param a pointer to an MTBDD
+ * @param p_t pointer to an MTBDD
  * 
  * @param xt target qubit index
  */
-void gate_ry_pihalf(MTBDD *a, uint32_t xt);
+void gate_ry_pihalf(MTBDD *p_t, uint32_t xt);
 
 /**
  * Function implementing quantum Controlled NOT gate for a given MTBDD.

@@ -65,6 +65,24 @@ void gate_symb_t(MTBDD *p_t, uint32_t xt);
 void gate_symb_h(MTBDD *p_t, uint32_t xt);
 
 /**
+ * Apply Rx(π/2) gate on the symbolic state vector.
+ * 
+ * @param p_t pointer to a symbolic value MTBDD
+ * 
+ * @param xt target qubit index
+ */
+void gate_symb_rx_pihalf(MTBDD *p_t, uint32_t xt);
+
+/**
+ * Apply Ry(π/2) gate on the symbolic state vector.
+ * 
+ * @param p_t pointer to a symbolic value MTBDD
+ * 
+ * @param xt target qubit index
+ */
+void gate_symb_ry_pihalf(MTBDD *p_t, uint32_t xt);
+
+/**
  * Apply Controlled NOT gate on the symbolic state vector.
  * 
  * @param p_t pointer to a symbolic value MTBDD
