@@ -509,15 +509,17 @@ TASK_IMPL_2(MTBDD, mtbdd_b_xt_mul, MTBDD*, p_t, MTBDD*, p_b)
     MTBDD b = *p_b;
 
     // Partial function check
-    if (b == mtbdd_true && mtbdd_isleaf(t)) return t;
     if (b == mtbdd_false || t == mtbdd_false) return mtbdd_false;
+
+    if (mtbdd_isleaf(b) && mtbdd_isleaf(t)) return t; // mtbdd_isleaf(b) is basically == mtbdd_true
 
     return mtbdd_invalid; // Recurse deeper
 }
 
 MTBDD mtbdd_b_xt_mul_wrapper(MTBDD t, uint32_t xt)
 {
-    MTBDD b_xt = sylvan_ithvar(xt);
+    MTBDD n1 = mtbdd_int64(1); // used instead of nithvar as it creates all leafs F
+    MTBDD b_xt = mtbdd_makenode(xt, mtbdd_false, n1);
 
     return mtbdd_apply(t, b_xt, TASK(mtbdd_b_xt_mul));
 }
@@ -525,7 +527,8 @@ MTBDD mtbdd_b_xt_mul_wrapper(MTBDD t, uint32_t xt)
 
 MTBDD mtbdd_b_xt_comp_mul_wrapper(MTBDD t, uint32_t xt)
 {
-    MTBDD b_xt_comp = sylvan_nithvar(xt);
+    MTBDD n1 = mtbdd_int64(1); // used instead of nithvar as it creates all leafs F
+    MTBDD b_xt_comp = mtbdd_makenode(xt, n1, mtbdd_false);
 
     return mtbdd_apply(t, b_xt_comp, TASK(mtbdd_b_xt_mul));
 }
