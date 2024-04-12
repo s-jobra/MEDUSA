@@ -227,31 +227,7 @@ void gate_symb_cnot(MTBDD *p_t, uint32_t xt, uint32_t xc)
 
 void gate_symb_cz(MTBDD *p_t, uint32_t xt, uint32_t xc)
 {
-    MTBDD t = *p_t;
-    mtbdd_protect(&t);
-    MTBDD res;
-
-    res = my_mtbdd_symb_b_xt_comp_mul(t, xc); // Bxc_c * T
-    mtbdd_protect(&res);
-
-    MTBDD bracket_left = my_mtbdd_symb_b_xt_comp_mul(t, xt); // Bxt_c * T
-    mtbdd_protect(&bracket_left);
-
-    MTBDD bracket_right = my_mtbdd_symb_b_xt_mul(t, xt); // Bxt * T
-    mtbdd_protect(&bracket_right);
-    mtbdd_unprotect(&t);
-
-    MTBDD inter_res = my_mtbdd_symb_minus(bracket_left, bracket_right); // (Bxt_c * T) - (Bxt * T)
-    mtbdd_protect(&inter_res);
-    mtbdd_unprotect(&bracket_left);
-    mtbdd_unprotect(&bracket_right);
-    inter_res = my_mtbdd_symb_b_xt_mul(inter_res, xc); // Bxc * (Bxt_c * T - Bxt * T)
-
-    res = my_mtbdd_symb_plus(res, inter_res); // (Bxc_c * T) + (Bxc * (Bxt_c * T - Bxt * T))
-    mtbdd_unprotect(&inter_res);
-
-    *p_t = res;
-    mtbdd_unprotect(&res);
+    *p_t = my_mtbdd_apply_cgate(*p_t, TASK(_gate_symb_z), xc, xt);
 }
 
 void gate_symb_toffoli(MTBDD *p_t, uint32_t xt, uint32_t xc1, uint32_t xc2)

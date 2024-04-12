@@ -76,7 +76,7 @@ TASK_IMPL_3(MTBDD, mtbdd_apply_gate, MTBDD, dd, mtbdd_apply_gate_op, op, uint32_
         return result;
     }
     // Else recursion
-    MTBDD low = node_getlow(dd, n);
+    MTBDD low = node_getlow(dd, n); // can use dd as if the target dd is different, it means xt is the root
     MTBDD high = node_gethigh(dd, n);
 
     mtbdd_refs_spawn(SPAWN(mtbdd_apply_gate, high, op, xt));
@@ -86,6 +86,70 @@ TASK_IMPL_3(MTBDD, mtbdd_apply_gate, MTBDD, dd, mtbdd_apply_gate_op, op, uint32_
     result = mtbdd_makenode(mtbddnode_getvariable(n), new_low, new_high);
 
     if (cache_put3(mtbdd_apply_gate_id, dd, (size_t)op, xt, result)) {
+        sylvan_stats_count(MTBDD_UAPPLY_CACHEDPUT);
+    }
+
+    return result;
+}
+
+TASK_IMPL_5(MTBDD, mtbdd_apply_cgate, MTBDD, dd, mtbdd_apply_gate_op, op, uint32_t, xc, uint32_t, xt, bool, xc_generated)
+{
+    sylvan_gc_test();
+    sylvan_stats_count(MTBDD_UAPPLY);
+
+    // Check cache
+    MTBDD result;
+    if (cache_get3(mtbdd_apply_cgate_id, dd, xc, xt, &result)) {
+        sylvan_stats_count(MTBDD_UAPPLY_CACHED);
+        return result;
+    }
+
+    // Every gate on 0 returns 0
+    if (dd == mtbdd_false) {
+        return mtbdd_false;
+    }
+
+    mtbddnode_t n = MTBDD_GETNODE(dd);
+    MTBDD target_dd = dd;
+    // Add the missing node if needed
+    if (!xc_generated && (mtbddnode_isleaf(n) || xc < mtbddnode_getvariable(n))) {
+        target_dd = _mtbdd_makenode(xc, dd, dd);
+    }
+    else if (xc_generated && (mtbddnode_isleaf(n) || xt < mtbddnode_getvariable(n))) {
+        target_dd = _mtbdd_makenode(xt, dd, dd);
+    }
+
+    // Check if not xc
+    if (mtbdd_getvar(target_dd) == xc) {
+        xc_generated = true;
+        MTBDD new_high = mtbdd_refs_push(CALL(mtbdd_apply_cgate, mtbdd_gethigh(target_dd), op, xc, xt, xc_generated));
+        mtbdd_refs_pop(1);
+        result = mtbdd_makenode(xc, mtbdd_getlow(target_dd), new_high);
+
+        if (cache_put3(mtbdd_apply_cgate_id, dd, xc, xt, result)) {
+            sylvan_stats_count(MTBDD_UAPPLY_CACHEDPUT);
+        }
+        return result;
+    }
+    // Else check if not xt
+    result = WRAP(op, target_dd, xt);
+    if (result != mtbdd_invalid) {
+        if (cache_put3(mtbdd_apply_gate_id, dd, xc, xt, result)) {
+            sylvan_stats_count(MTBDD_UAPPLY_CACHEDPUT);
+        }
+        return result;
+    }
+    // Else recursion (both successors)
+    MTBDD low = node_getlow(dd, n); // can use dd and n as if the target dd is different, it means xc/xt is the root
+    MTBDD high = node_gethigh(dd, n);
+
+    mtbdd_refs_spawn(SPAWN(mtbdd_apply_cgate, high, op, xc, xt, xc_generated));
+    MTBDD new_low = mtbdd_refs_push(CALL(mtbdd_apply_cgate, low, op, xc, xt, xc_generated));
+    MTBDD new_high = mtbdd_refs_sync(SYNC(mtbdd_apply_cgate));
+    mtbdd_refs_pop(1);
+    result = mtbdd_makenode(mtbddnode_getvariable(n), new_low, new_high);
+
+    if (cache_put3(mtbdd_apply_cgate_id, dd, xc, xt, result)) {
         sylvan_stats_count(MTBDD_UAPPLY_CACHEDPUT);
     }
 
@@ -333,31 +397,7 @@ void gate_cnot(MTBDD *p_t, uint32_t xt, uint32_t xc)
 
 void gate_cz(MTBDD *p_t, uint32_t xt, uint32_t xc)
 {
-    MTBDD t = *p_t;
-    mtbdd_protect(&t);
-    MTBDD res;
-
-    res = my_mtbdd_b_xt_comp_mul(t, xc); // Bxc_c * T
-    mtbdd_protect(&res);
-
-    MTBDD bracket_left = my_mtbdd_b_xt_comp_mul(t, xt); // Bxt_c * T
-    mtbdd_protect(&bracket_left);
-
-    MTBDD bracket_right = my_mtbdd_b_xt_mul(t, xt); // Bxt * T
-    mtbdd_protect(&bracket_right);
-    mtbdd_unprotect(&t);
-
-    MTBDD inter_res = my_mtbdd_minus(bracket_left, bracket_right); // (Bxt_c * T) - (Bxt * T)
-    mtbdd_protect(&inter_res);
-    mtbdd_unprotect(&bracket_left);
-    mtbdd_unprotect(&bracket_right);
-    inter_res = my_mtbdd_b_xt_mul(inter_res, xc); // Bxc * (Bxt_c * T - Bxt * T)
-
-    res = my_mtbdd_plus(res, inter_res); // (Bxc_c * T) + (Bxc * (Bxt_c * T - Bxt * T))
-    mtbdd_unprotect(&inter_res);
-
-    *p_t = res;
-    mtbdd_unprotect(&res);
+    *p_t = my_mtbdd_apply_cgate(*p_t, TASK(_gate_z), xc, xt);
 }
 
 void gate_toffoli(MTBDD *p_t, uint32_t xt, uint32_t xc1, uint32_t xc2)

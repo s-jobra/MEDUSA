@@ -18,6 +18,16 @@ TASK_DECL_3(MTBDD, mtbdd_apply_gate, MTBDD, mtbdd_apply_gate_op, uint32_t);
  */
 #define my_mtbdd_apply_gate(dd, op, param) RUN(mtbdd_apply_gate, dd, op, param)
 
+TASK_DECL_5(MTBDD, mtbdd_apply_cgate, MTBDD, mtbdd_apply_gate_op, uint32_t, uint32_t, bool);
+/**
+ * Apply a controlled gate rotation operation <op> to <dd>. Custom apply needed because xc, xt nodes may not be present in the reduced <dd>.
+ * Otherwise it's basically the standard uapply. Assumes xc < xt.
+ * 
+ * Note that in the current implementation will work only with a single controlled rotation operation because
+ * of insufficient number of arguments for Sylvan caching.
+ */
+#define my_mtbdd_apply_cgate(dd, op, xc, xt) RUN(mtbdd_apply_cgate, dd, op, xc, xt, false)
+
 /**
  * Returns the probability the given qubit's state will be 1.
  * This implementation supports only a measurement of all the qubits at the end of the circuit.

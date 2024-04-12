@@ -299,6 +299,12 @@ bool sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
             else if (strcasecmp(cmd, "cz") == 0) {
                 uint32_t qc = get_q_num(in);
                 uint32_t qt = get_q_num(in);
+                if (qc > qt) { // can swap as it is only a controlled rotation
+                    uint32_t temp = qt;
+                    qt = qc;
+                    qc = temp;
+                }
+                assert(qc != qt);
                 (opt_symb && is_loop)? gate_symb_cz(&symbc.val, qt, qc) : gate_cz(circ, qt, qc);
             }
             else if (strcasecmp(cmd, "ccx") == 0) {

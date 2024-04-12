@@ -18,6 +18,11 @@ extern uint32_t ltype_id;
 extern uint64_t mtbdd_apply_gate_id;
 
 /**
+ * Opid of mtbdd_apply_cgate needed for operation caching
+*/
+extern uint64_t mtbdd_apply_cgate_id;
+
+/**
  * Type of single complex number coefficient
  */
 typedef mpz_t coef_t;
