@@ -24,16 +24,21 @@ prob_t measure(MTBDD *a, uint32_t xt, char *curr_state, int n)
 
 // Decl in header file as this implementation is used by symbolic as well
 // can use regular uapply (simpler) because it doesn't create any new nodes
-TASK_IMPL_2(MTBDD, _gate_x, MTBDD, t, uint64_t, xt)
+TASK_IMPL_2(MTBDD, _gate_x, MTBDD, t, uint64_t, xt_raw)
 {
     // Partial function check
     if (t == mtbdd_false) return mtbdd_false;
 
     // Change high and low successors if node variable is the target qubit
     if (mtbdd_isnode(t)) {
-        xt = (uint32_t)xt; // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
-        if (mtbdd_getvar(t) == xt) { 
+        uint32_t xt = (uint32_t)xt_raw; // variables are uint32_t, but TASK_IMPL_2 needs 2 uint64_t
+        uint32_t var = mtbdd_getvar(t);
+        if (var == xt) { 
             return mtbdd_makenode(xt, mtbdd_gethigh(t), mtbdd_getlow(t));
+        }
+        else if (var > xt) {
+            // Already skipped xt -> can end the recursion
+            return t;
         }
     }
     else { // is a leaf
