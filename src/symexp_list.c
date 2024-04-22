@@ -116,6 +116,7 @@ symexp_list_t* symexp_list_mkcpy(symexp_list_t *l)
             symexp_list_next(l);
         }
     }
+    cpy->active = NULL;
     return cpy;
 }
 

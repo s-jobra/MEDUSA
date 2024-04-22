@@ -85,38 +85,43 @@ symexp_list_t* symexp_op(symexp_list_t *a, symexp_list_t *b, symexp_op_t op)
         symexp_list_first(a);
         symexp_el_t *res_prev = NULL;
         while(a->active != NULL) {
-            if (!res->active) {
-                //FIXME: maybe quicker to insert all the remaining elements at once
-                res->active = res_prev; //FIXME: make prettier
-                symexp_list_insert_after(res, a->active->data);
-                symexp_list_next(res); // Moves to the just added element
-                res_prev = res->active;
-                symexp_list_next(res); // Moves to a new element in res
-                symexp_list_next(a);
+            // if reached the end of res
+            if (res->active == NULL) {
+                // insert all the remaining elements at once
+                res->active = res_prev;
+                while(a->active != NULL) {
+                    symexp_list_insert_after(res, a->active->data);
+                    symexp_list_next(res); // Moves to the just added element
+                    symexp_list_next(a); // Moves to next element
+                }
+                break;
             }
+            // else if need to insert here
             else if (a->active->data->var < res->active->data->var) {
-                if (!res_prev) {
+                if (!res_prev) { // inserting before first element of res
                     symexp_list_insert_first(res, a->active->data);
                     // res active stays the same
                     symexp_list_next(a);
                     res_prev = res->first;
                 }
-                else {
-                    res->active = res_prev; //FIXME: make prettier
+                else { // regular insert before the current element
+                    res->active = res_prev;
                     symexp_list_insert_after(res, a->active->data);
                     symexp_list_next(res); // Moves to the just added element
                     res_prev = res->active;
                     symexp_list_next(res); // Moves to a new element in res
                     symexp_list_next(a);
                 }
-                
             }
+            // else if the same variable
             else if (a->active->data->var == res->active->data->var) {
+                //TODO: check if coef 0
                 mpz_add(res->active->data->coef, res->active->data->coef, a->active->data->coef);
                 res_prev = res->active;
                 symexp_list_next(res);
                 symexp_list_next(a);
             }
+            // else no insert now
             else {
                 res_prev = res->active;
                 symexp_list_next(res);

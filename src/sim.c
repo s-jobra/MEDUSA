@@ -321,11 +321,11 @@ bool sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
             }
             else if (strcasecmp(cmd, "rx(pi/2)") == 0) {
                 uint32_t qt = get_q_num(in);
-                (opt_symb && is_loop)? gate_symb_rx_pihalf(circ, qt) : gate_rx_pihalf(circ, qt);
+                (opt_symb && is_loop)? gate_symb_rx_pihalf(&symbc.val, qt) : gate_rx_pihalf(circ, qt);
             }
             else if (strcasecmp(cmd, "ry(pi/2)") == 0) {
                 uint32_t qt = get_q_num(in);
-                (opt_symb && is_loop)? gate_symb_ry_pihalf(circ, qt) : gate_ry_pihalf(circ, qt);
+                (opt_symb && is_loop)? gate_symb_ry_pihalf(&symbc.val, qt) : gate_ry_pihalf(circ, qt);
             }
             else if (strcasecmp(cmd, "cx") == 0) {
                 uint32_t qc = get_q_num(in);
