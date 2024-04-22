@@ -1,8 +1,13 @@
+#include <string.h>
 #include "mtbdd_symb_map.h"
+#include "hash.h"
+#include "error.h"
 
+/// String length limit used for mtbdd_to_str
 #define MAX_SYMB_MAP_LEAF_STR_LEN 1000
 
-uint32_t ltype_symb_map_id;  // leaf type id for symbolic representation
+/// leaf type id for symbolic representation
+uint32_t ltype_symb_map_id;
 
 void vmap_init(vmap_t **vm, size_t size)
 {

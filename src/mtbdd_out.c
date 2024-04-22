@@ -1,11 +1,12 @@
+#include <stdio.h>
+#include <assert.h>
 #include "mtbdd_out.h"
+#include "error.h"
 
-static lnum_map_t out_map; // Global variable for the map
-                           // needed as custom arguments cannot be added to Sylvan's mtbdd_fprintdot()
+/// Global variable for the map (needed as custom arguments cannot be added to Sylvan's mtbdd_fprintdot())
+static lnum_map_t out_map;
 
-/**
- * Step for array reallocation when the array size isn't sufficient when adding
- */
+/// Step for array reallocation when the array size isn't sufficient when adding
 #define REALLOC_STEP 5
 
 void lnum_map_init(size_t size)

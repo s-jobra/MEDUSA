@@ -1,4 +1,5 @@
 #include "qparam.h"
+#include "error.h"
 
 qparam_list_t* qparam_list_create()
 {

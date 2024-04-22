@@ -1,3 +1,8 @@
+/**
+ * @file gates.h
+ * @brief Gate operations on the classic MTBDD
+ */
+
 #include <stdbool.h>
 #include "mtbdd.h"
 #include "qparam.h"

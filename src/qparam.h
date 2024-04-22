@@ -1,20 +1,20 @@
+/**
+ * @file qparam.h
+ * @brief Data structure and operations for list of qubit parameters (for MCX gate)
+ */
+
 #include <stdint.h>
-#include "error.h"
 
 #ifndef QPARAM_H
 #define QPARAM_H
 
-/**
- * Type for qparam list element
- */
+/// Type for qparam list element
 typedef struct qparam {
     uint32_t q_index;
     struct qparam *next;
 } qparam_t;
 
-/**
- *  Type for list for gate parameters (target/control qubit indices)
- */
+///  Type for list for gate parameters (target/control qubit indices)
 typedef struct qparam_list {
     qparam_t *first;
     qparam_t *active;

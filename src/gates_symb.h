@@ -1,5 +1,9 @@
+/**
+ * @file gates_symb.h
+ * @brief Symbolic gate operations
+ */
+
 #include "mtbdd_symb_val.h"
-#include "gates.h"
 #include "qparam.h"
 
 #ifndef GATES_SYMB_H

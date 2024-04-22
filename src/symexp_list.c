@@ -1,4 +1,7 @@
+#include <stdlib.h>
+#include <gmp.h>
 #include "symexp_list.h"
+#include "error.h"
 
 symexp_list_t* symexp_list_create()
 {

@@ -1,19 +1,19 @@
-#include <sylvan.h>
+/**
+ * @file mtbdd_symb_map.h
+ * @brief Custom Sylvan MTBDD type and operations for symbolic variable mapping
+ */
+
 #include "mtbdd.h"
-#include "hash.h"
 #include "symexp_list.h"
 
 #ifndef MTBDD_SYMB_MAP_H
 #define MTBDD_SYMB_MAP_H
 
-/**
- * Global variable for my custom symbolic map mtbdd leaf type id
- */
+/// Global variable for my custom symbolic map mtbdd leaf type id
 extern uint32_t ltype_symb_map_id;
 
-/**
- * MTBDD leaf value with the variable mapping for symbolic representation
- */
+
+/// MTBDD leaf value with the variable mapping for symbolic representation
 typedef struct sl_map {
     vars_t va;
     vars_t vb;
@@ -21,13 +21,14 @@ typedef struct sl_map {
     vars_t vd;
 } sl_map_t;
 
-/**
- * Type for saving and using the symbolic variable to value mapping
- */
+
+/// Type for saving and using the symbolic variable to value mapping
 typedef struct vmap {
-    coef_t *map;        // array for saving the variable mapping to their values (complex numbers)
+    /// array for saving the variable mapping to their values (complex numbers)
+    coef_t *map;
     size_t msize; 
-    vars_t next_var;    // next variable index to be assigned
+    /// next variable index to be assigned
+    vars_t next_var;
 } vmap_t;
 
 /**

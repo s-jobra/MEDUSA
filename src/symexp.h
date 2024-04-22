@@ -1,18 +1,17 @@
-#include <stdint.h>
+/**
+ * @file symexp.h
+ * @brief Arithmetic and hash table operations for symbolic expressions
+ */
+
 #include <stdbool.h>
-#include <gmp.h>
 #include "symexp_list.h"
-#include "htab.h"
-#include "error.h"
 
 #ifndef SYMEXP_H
 #define SYMEXP_H
 
 //TODO:FIXME:TODO: all comments
 
-/**
- * Max. string size when converting expression from tree to string
- */
+/// Max. string size when converting expression from tree to string
 #define MAX_ST_TO_STR_LEN 2000
 
 /**

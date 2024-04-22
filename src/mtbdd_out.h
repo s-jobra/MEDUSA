@@ -1,30 +1,34 @@
-#include <stdio.h>
+/**
+ * @file mtbdd_out.h
+ * @brief Large number output using variables in the MTBDD result
+ * 
+ * @details Separate from 'vmap_t' for better clarity and extensibility.
+ *          Works with a single global map, as one cannot add custom arguments to Sylvan's output functions.
+ */
+
 #include <stdbool.h>
 #include <stdint.h>
-#include <assert.h>
 #include <gmp.h>
 #include "mtbdd.h"
-#include "error.h"
 
 #ifndef MTBDD_OUT_H
 #define MTBDD_OUT_H
 
-// Separate from 'vmap_t' for better clarity and extensibility
-// Works with a single global map, as one cannot add custom arguments to Sylvan's output functions
 
-/**
- * Format string for the variable name
- */
+/// Format string for the variable name
 #define VAR_NAME_FMT "large-number[%ld]"
 
-/**
- * Type for saving and using the variable to value mapping for the separate output of large numbers
- */
+
+/// Type for saving and using the variable to value mapping for the separate output of large numbers
 typedef struct lnum_map {
-    coef_t **map;         // array for saving the variable mapping to their values (ptrs to complex numbers to avoid realloc)
-    mp_bitcnt_t *shifts;  // array for saving the shift that should be applied to the value with the same index in map
-    size_t msize; 
-    uint64_t next_var;    // next variable index to be assigned
+    /// array for saving the variable mapping to their values (ptrs to complex numbers to avoid realloc)
+    coef_t **map;
+    /// array for saving the shift that should be applied to the value with the same index in map
+    mp_bitcnt_t *shifts;
+    /// map size
+    size_t msize;
+    /// next variable index to be assigned
+    uint64_t next_var;
 } lnum_map_t;
 
 /**

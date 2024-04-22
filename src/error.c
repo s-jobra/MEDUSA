@@ -1,4 +1,10 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdarg.h>
 #include "error.h"
+
+/// Beginning of an error message.
+#define ERROR_TEXT "ERROR: "
 
 void error_exit(const char *error, ...)
 {

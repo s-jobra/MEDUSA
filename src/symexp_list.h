@@ -1,51 +1,40 @@
-// Separate file to avoid circular dependency with htab
+/**
+ * @file symexp_list.h
+ * @brief List data type and operations representing a symbolic expression
+ */
 
-#include <stdlib.h>
 #include <stdint.h>
-#include <gmp.h>
-#include "error.h"
 
 #ifndef SYMEXP_LIST_H
 #define SYMEXP_LIST_H
 
-/**
- * Type for symbolic variables' coefficients
- */
+/// Type for symbolic variables' coefficients
 typedef mpz_t coefs_t;
 
-/**
- * Type for symbolic variables
- */
+/// Type for symbolic variables
 typedef uint64_t vars_t;
 
-/**
- * Operations that can be performed on the symbolic values
- * when updating the MTBDDs.
- */
+/// Operations that can be performed on the symbolic values when updating the MTBDDs
 typedef enum {
     SYMEXP_ADD,
     SYMEXP_SUB,
 } symexp_op_t;
 
-/**
- * Data of the symbolic expression list element
- */
+/// Data of the symbolic expression list element
 typedef struct symexp_val {
-    coefs_t coef; // the coefficient by which the variable is multiplied
-    vars_t var;   // variable
+    /// the coefficient by which the variable is multiplied
+    coefs_t coef;
+    /// variable
+    vars_t var;
 } symexp_val_t;
 
-/**
- * Type for symbolic expression list element
- */
+/// Type for symbolic expression list element
 typedef struct symexp_el {
     symexp_val_t *data;
     struct symexp_el *next;
 } symexp_el_t;
 
-/**
- * Type for representing the symbolic expression
- */
+/// Type for representing the symbolic expression
 typedef struct symexp_list {
     symexp_el_t *first;
     symexp_el_t *active;

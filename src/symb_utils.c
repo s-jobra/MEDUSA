@@ -1,9 +1,14 @@
+#include <string.h>
 #include "symb_utils.h"
+#include "mtbdd_symb_val.h"
+#include "sylvan_int.h" // for cache_next_opid()
+#include "error.h"
 
-static uint64_t apply_mtbdd_symb_refine_id; // Opid for mtbdd_symb_refine (needed for mtbdd_applyp)
+/// Opid for mtbdd_symb_refine (needed for mtbdd_applyp)
+static uint64_t apply_mtbdd_symb_refine_id;
 
-
-#define SYMEXP_NULL (void*)1 // Value for distinguishing between uninitialized expression and NULL expression
+/// Value for distinguishing between uninitialized expression and NULL expression
+#define SYMEXP_NULL (void*)1
 
 // =================
 // Refine internal:
@@ -14,26 +19,21 @@ static uint64_t apply_mtbdd_symb_refine_id; // Opid for mtbdd_symb_refine (neede
  */
 typedef symexp_list_t* upd_elem_t;
 
-/**
- * Type for elements of the refined list (old_var -> new_var mapping)
- */
+
+/// Type for elements of the refined list (old_var -> new_var mapping)
 typedef struct ref_elem {
     vars_t old;
     vars_t new;
     struct ref_elem *next;
 } ref_elem_t;
 
-/**
- * Type for the refined list
- */
+/// Type for the refined list
 typedef struct ref_list {
     ref_elem_t *first;
     ref_elem_t *cur;
 } ref_list_t;
 
-/**
- * Type for encapsulating all data needed during refine
- */
+/// Type for encapsulating all data needed during refine
 typedef struct rdata {
     upd_elem_t *upd;
     ref_list_t *ref;

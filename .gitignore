@@ -7,6 +7,8 @@
 MEDUSA
 /obj
 
+/doc
+
 # Program output
 *.svg
 *.pdf

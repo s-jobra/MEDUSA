@@ -1,7 +1,12 @@
+#include <string.h>
+#include <gmp.h>
 #include "symexp.h"
+#include "htab.h"
+#include "error.h"
 
 //FIXME: should be global?
-static htab_t *symexp_table; // Global symbolic hash table
+/// Global symbolic hash table
+static htab_t *symexp_table;
 
 
 void symexp_htab_init(size_t size)

@@ -1,14 +1,17 @@
+#include <string.h>
+#include <sylvan_int.h>
 #include "mtbdd_symb_val.h"
+#include "mtbdd_symb_map.h"
+#include "hash.h"
+#include "error.h"
+
+/// leaf type id for symbolic representation
+uint32_t ltype_symb_expr_id;
+/// coefficient k common for all MTBDD leaf values for symbolic representation
+coefs_k_t cs_k;
 
 
-uint32_t ltype_symb_expr_id;  // leaf type id for symbolic representation
-
-coefs_k_t cs_k; // coefficient k common for all MTBDD leaf values for symbolic representation
-
-
-/**
- * Max. size of string written as leaf value in output file.
- */
+/// Max. size of string written as leaf value in output file.
 #define MAX_SYMB_LEAF_STR_LEN MAX_ST_TO_STR_LEN * 5
 
 

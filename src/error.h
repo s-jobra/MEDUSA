@@ -1,13 +1,12 @@
-#include <stdio.h>
+/**
+ * @file error.h
+ * @brief Custom error handling functions
+ */
+
 #include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
 
 #ifndef ERROR_H
 #define ERROR_H
-
-/** Beginning of an error message. */
-#define ERROR_TEXT "ERROR: "
 
 /**
  * Function that handles program exiting in case of error.

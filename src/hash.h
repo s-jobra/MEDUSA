@@ -1,3 +1,8 @@
+/**
+ * @file hash.h
+ * @brief Hash functions
+ */
+
 #include <stdint.h>
 #include <gmp.h>
 

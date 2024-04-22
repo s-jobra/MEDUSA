@@ -2,13 +2,18 @@
 #include <getopt.h>
 #include <time.h>
 #include <sys/resource.h>
+#include "mtbdd.h"
+#include "symb_utils.h"
 #include "sim.h"
 #include "mtbdd_out.h"
 #include "error.h"
 
-#define OUT_FILE "res"                    // Name of the output .dot file
-#define LONG_NUMS_OUT_FILE "res-vars.txt" // Name of the output file with the large numbers
-#define LONG_NUMS_MAP_INIT_SIZE 5         // Initial size of array for the separate output of large numbers
+/// Name of the output .dot file
+#define OUT_FILE "res"
+/// Name of the output file with the large numbers
+#define LONG_NUMS_OUT_FILE "res-vars.txt"
+/// Initial size of array for the separate output of large numbers
+#define LONG_NUMS_MAP_INIT_SIZE 5
 #define HELP_MSG \
 " Usage: MEDUSA [options] \n\
 \n\

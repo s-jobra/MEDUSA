@@ -1,14 +1,18 @@
+#include <string.h>
+#include <stdbool.h>
+#include <gmp.h>
+#include <assert.h>
 #include "htab.h"
+#include "hash.h"
+#include "error.h"
 
-#define AVG_LEN_MAX 2 // Max allowed average list length
+/// Max allowed average list length
+#define AVG_LEN_MAX 2
+/// Table resize coefficient
 #define RESIZE_COEF 2
-/**
- * Obtains a properly casted key from the symbolic item ptr
- */
+/// Obtains a properly casted key from the symbolic item ptr
 #define htab_s_get_key(item_p) ((htab_s_key_t)(item_p->data.key))
-/**
- * Obtains a properly casted key from the measure item ptr
- */
+/// Obtains a properly casted key from the measure item ptr
 #define htab_m_get_key(item_p) ((htab_m_key_t)(item_p->data.key))
 
 htab_t* htab_init(size_t n)

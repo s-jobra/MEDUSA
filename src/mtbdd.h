@@ -1,51 +1,43 @@
+/**
+ * @file mtbdd.h
+ * @brief Custom Sylvan MTBDD type and operations with algebraic complex number representation in leaves
+ */
+
 #include <sylvan.h>
 #include <gmp.h>
-#include <math.h>
 #include <stdbool.h>
-#include "hash.h"
-#include "error.h"
 
 #ifndef MTBDD_H
 #define MTBDD_H
 
-/**
- * Global variable for my custom leaf type id
- */
+/// Global variable for my custom leaf type id
 extern uint32_t ltype_id;
 
-/**
- * Opid of mtbdd_apply_gate needed for operation caching
-*/
+/// Opid of mtbdd_apply_gate needed for operation caching
 extern uint64_t mtbdd_apply_gate_id;
 
-/**
- * Opid of mtbdd_apply_cgate needed for operation caching
-*/
+/// Opid of mtbdd_apply_cgate needed for operation caching
 extern uint64_t mtbdd_apply_cgate_id;
 
-/**
- * Type of single complex number coefficient
- */
+/// Type of single complex number coefficient
 typedef mpz_t coef_t;
 
-/**
- * Complex number in algebraic representation
- */
+/// Complex number in algebraic representation
 typedef struct cnum {
+    /// a * 1
     coef_t a;
+    /// b * ω
     coef_t b;
+    /// c * ω²
     coef_t c;
+    /// d * ω³
     coef_t d;
 }cnum;
 
-/**
- * Type for the probability that a given qubit is 1
- */
+/// Type for the probability that a given qubit is 1
 typedef double prob_t;
 
-/**
- * Complex number coefficient k
- */
+/// Complex number coefficient k
 extern coef_t c_k;
 
 /* SETUP */

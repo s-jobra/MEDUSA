@@ -1,4 +1,5 @@
 #include "gates_symb.h"
+#include "gates.h"
 
 void gate_symb_x(MTBDD *p_t, uint32_t xt)
 {

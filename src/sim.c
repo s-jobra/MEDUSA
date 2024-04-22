@@ -1,6 +1,23 @@
+#include <ctype.h>  // For isspace(), isdigit()
+#include <string.h>
+#include <math.h>
+#include <errno.h>
 #include "sim.h"
+#include "gates.h"
+#include "gates_symb.h"
+#include "mtbdd_symb_val.h"
+#include "symb_utils.h"
+#include "qparam.h"
+#include "htab.h"
+#include "error.h"
 
+/// Max. supported length of qasm command
+#define CMD_MAX_LEN 10
+/// Max. number of characters in a parsed number
+#define NUM_MAX_LEN 25
+/// Constant for no other possible end character for 'parse_num()'
 #define NO_ALT_END -2
+/// Eps for checking if probability is > 0 & < 1
 #define EPSILON 0.001
 
 /**

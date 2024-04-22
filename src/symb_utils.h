@@ -1,15 +1,16 @@
+/**
+ * @file symb_utils.h
+ * @brief Symbolic simulation conversion from/to regular simulation and other symbolic sim. utilities
+ */
+
 #include <sylvan.h>
-#include "sylvan_int.h" // for cache_next_opid()
-#include "mtbdd.h"
+#include <stdint.h>
 #include "mtbdd_symb_map.h"
-#include "mtbdd_symb_val.h"
 
 #ifndef SYMB_UTILS_H
 #define SYMB_UTILS_H
 
-/**
- * Type for encapsulating the mtbdd tuple and map function needed for symbolic representation
- */
+/// Type for encapsulating the mtbdd tuple and map function needed for symbolic representation
 typedef struct mtbdd_symb {
     MTBDD map;
     MTBDD val;

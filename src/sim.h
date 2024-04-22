@@ -1,21 +1,13 @@
-#include <ctype.h>  // For isspace(), isdigit()
-#include <stdbool.h>
-#include <errno.h>
+/**
+ * @file sim.h
+ * @brief Module performing quantum circuit simulation
+ */
 
-#include "qparam.h"
+#include <stdbool.h>
 #include "mtbdd.h"
-#include "gates.h"
-#include "mtbdd_symb_val.h"
-#include "gates_symb.h"
-#include "symb_utils.h"
-#include "error.h"
-#include "htab.h"
 
 #ifndef SIMULATOR_H
 #define SIMULATOR_H
-
-#define CMD_MAX_LEN 10 // Max. supported length of qasm command
-#define NUM_MAX_LEN 25 // Max. number of characters in a parsed number
 
 /**
  * Parses a given QASM file and simulates this circuit

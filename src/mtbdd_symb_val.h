@@ -1,38 +1,33 @@
-#include <sylvan.h>
+/**
+ * @file mtbdd_symb_val.h
+ * @brief Custom Sylvan MTBDD type and operations for symbolic variable values (symbolic expressions)
+ */
+
+
 #include <gmp.h>
-#include <sylvan_int.h>
-#include "mtbdd.h"
-#include "mtbdd_symb_map.h"
-#include "hash.h"
+#include <sylvan.h>
 #include "symexp.h"
-#include "error.h"
+#include "mtbdd.h"
 
 #ifndef MTBDD_SYMB_VAL_H
 #define MTBDD_SYMB_VAL_H
 
-/**
- * Global variable for my custom symbolic expression mtbdd leaf type id
- */
+/// Global variable for my custom symbolic expression mtbdd leaf type id
 extern uint32_t ltype_symb_expr_id;
 
-/**
- * MTBDD symbolic leaf value
- */
+/// MTBDD symbolic leaf value
 typedef struct sl_val {
-    symexp_list_t *a;  // ptr to a list representing the symbolic expression
+    /// ptr to a list representing the symbolic expression for the first variable
+    symexp_list_t *a;
     symexp_list_t *b;
     symexp_list_t *c;
     symexp_list_t *d;
 } sl_val_t;
 
-/**
- * Type for the coefficient k for symbolic representation
- */
+/// Type for the coefficient k for symbolic representation
 typedef mpz_t coefs_k_t;
 
-/**
- * Complex number coefficient k for symbolic representation
- */
+/// Complex number coefficient k for symbolic representation
 extern coefs_k_t cs_k;
 
 /**
@@ -208,26 +203,26 @@ TASK_DECL_2(MTBDD, mtbdd_symb_coef_rot2, MTBDD, size_t);
 
 
 /**
- * Computes restriction (Bxt * T) on a symbolic MTBDD (multiplies target with: low -> 0, high -> 1)
+ * @brief Computes restriction (Bxt * T) on a symbolic MTBDD (multiplies target with: low -> 0, high -> 1)
  * 
  * @param t a symbolic value MTBDD
  * 
  * @param xt target qubit index
  * 
+ * @details Uses the same implementation as the regular MTBDDs.
  */
 #define my_mtbdd_symb_b_xt_mul(t, xt) mtbdd_b_xt_mul_wrapper(t, xt)
-// uses the same implementation as the regular MTBDDs
 
 /**
- * Computes restriction (Bxt_complement * T) on a symbolic MTBDD (multiplies target with: low -> 1, high -> 0)
+ * @brief Computes restriction (Bxt_complement * T) on a symbolic MTBDD (multiplies target with: low -> 1, high -> 0)
  * 
  * @param t a symbolic value MTBDD
  * 
  * @param xt target qubit index
  * 
+ * @details Uses the same implementation as the regular MTBDDs.
  */
 #define my_mtbdd_symb_b_xt_comp_mul(t, xt) mtbdd_b_xt_comp_mul_wrapper(t, xt)
-// uses the same implementation as the regular MTBDDs
 
 #endif
 /* end of "mtbdd_symb_val.h" */

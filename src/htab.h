@@ -1,31 +1,41 @@
+/**
+ * @file htab.h
+ * @brief Hash table implementation (for both measurement results and symbolic simulation)
+ */
+
+#include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <assert.h>
 #include "symexp_list.h"
-#include "hash.h"
-#include "error.h"
 
 #ifndef HTAB_H
 #define HTAB_H
 
-typedef struct htab {            // Hash table
-    size_t size;                 // Number of items in the table
-    size_t arr_size;             // Bucket count
+/// Hash table
+typedef struct htab {
+    /// Number of items in the table
+    size_t size;
+    /// Bucket count
+    size_t arr_size;
     struct htab_item **arr_ptr;
 } htab_t;
 
-typedef void* htab_key_t;            // Universal hash table data key type
-typedef char* htab_m_key_t;          // Key type for measure hash table
-typedef symexp_list_t* htab_s_key_t; // Key type for symbolic hash table
-typedef unsigned htab_value_t;       // Universal hash table data value type
+/// Universal hash table data key type
+typedef void* htab_key_t;
+/// Key type for measure hash table
+typedef char* htab_m_key_t;
+/// Key type for symbolic hash table
+typedef symexp_list_t* htab_s_key_t;
+/// Universal hash table data value type
+typedef unsigned htab_value_t;
 
-typedef struct htab_data {       // Data in a hash table item
+/// Data in a hash table item
+typedef struct htab_data {
     htab_key_t key;
     htab_value_t value;
 } htab_data_t;
 
-typedef struct htab_item {       // Hash table item
+/// Hash table item
+typedef struct htab_item {
     struct htab_item *next;
     htab_data_t data;
 } htab_item_t;
