@@ -13,16 +13,17 @@
 " Usage: MEDUSA [options] \n\
 \n\
  Options with no argument:\n\
- --help,     -h          show this message\n\
- --info,     -i          measure the simulation runtime and peak memory usage\n\
- --symbolic, -s          perform symbolic simulation if possible\n\
+ --help,        -h          show this message\n\
+ --info,        -i          measure the simulation runtime and peak memory usage\n\
+ --symbolic,    -s          perform symbolic simulation if possible\n\
+ --probability, -p       show probabilities of measuring the basis state in the result MTBDD instead\n\
  \n\
  Options with a required argument:\n\
- --file,     -f          specify the input QASM file (default STDIN)\n\
- --nsamples, -n          specify the number of samples used for measurement (default 1024)\n\
+ --file,        -f          specify the input QASM file (default STDIN)\n\
+ --nsamples,    -n          specify the number of samples used for measurement (default 1024)\n\
  \n\
  Options with an optional argument:\n\
- --measure,  -m          perform the measure operations encountered in the circuit, \n\
+ --measure,     -m          perform the measure operations encountered in the circuit, \n\
                          optional arg specifies the file for saving the measurement result (default STDOUT)\n\
  \n\
  The MTBDD result is saved in the file 'res.dot'.\n\
@@ -54,6 +55,7 @@ int main(int argc, char *argv[])
     bool opt_info = false;
     bool opt_measure = false;
     bool opt_symbolic = false;
+    bool opt_probability = false;
     unsigned long samples = 1024;
     
     int opt;
@@ -64,10 +66,11 @@ int main(int argc, char *argv[])
         {"measure",  optional_argument,  0, 'm'},
         {"nsamples", required_argument,  0, 'n'},
         {"symbolic", no_argument,        0, 's'},
+        {"probability", no_argument,     0, 'p'},
         {0, 0, 0, 0}
     };
     char *endptr;
-    while((opt = getopt_long(argc, argv, "hif:m::n:s", long_options, 0)) != -1) {
+    while((opt = getopt_long(argc, argv, "hif:m::n:sp", long_options, 0)) != -1) {
         switch(opt) {
             case 'h':
                 printf("%s\n", HELP_MSG);
@@ -101,6 +104,9 @@ int main(int argc, char *argv[])
             case 's':
                 opt_symbolic = true;
                 break;
+            case 'p':
+                opt_probability = true;
+                break;
             case '?':
                 exit(1); // error msg already printed by getopt_long
         }
@@ -108,7 +114,7 @@ int main(int argc, char *argv[])
 
     // Init:
     init_sylvan();
-    init_my_leaf();
+    init_my_leaf(opt_probability);
     if (opt_symbolic) {
         init_sylvan_symb();
     }

@@ -1,6 +1,7 @@
 #include <sylvan.h>
 #include <gmp.h>
 #include <math.h>
+#include <stdbool.h>
 #include "hash.h"
 #include "error.h"
 
@@ -55,8 +56,10 @@ void init_sylvan();
 
 /**
  * Function for my custom leaf setup in Sylvan.
+ * 
+ * @param is_prob true if the result MTBDD should hold the probabilities instead
  */
-void init_my_leaf();
+void init_my_leaf(bool is_prob);
 
 /** 
  * Initialize for all qubit values 0.
@@ -102,6 +105,11 @@ int my_leaf_equals(const uint64_t ldata_a_raw, const uint64_t ldata_b_raw);
  * Handle for creating string representation of leaf.
  */
 char* my_leaf_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf, size_t sylvan_bufsize);
+
+/**
+ * Handle for creating string representation of the probability represented by some leaf.
+ */
+char* my_leaf_to_str_prob(int complemented, uint64_t ldata_raw, char *sylvan_buf, size_t sylvan_bufsize);
 
 /**
  * Hashing function for calculating leaf's hash.

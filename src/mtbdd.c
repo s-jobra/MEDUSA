@@ -28,6 +28,12 @@ coef_t c_k; // coefficient k common for all MTBDD leaf values
  */
 #define GET_MIN(a, b) ((a) < (b))? (a) : (b)
 
+
+/**
+ * Function for calculating the probability from a given complex number
+ */
+static inline prob_t calculate_prob(cnum* prob);
+
 /* SETUP */
 void init_sylvan() {
     lace_start(1, 0); // 1 thread, default task queue size
@@ -36,7 +42,7 @@ void init_sylvan() {
     sylvan_init_mtbdd();
 }
 
-void init_my_leaf()
+void init_my_leaf(bool is_prob)
 {
     ltype_id = sylvan_mt_create_type();
     mtbdd_apply_gate_id = cache_next_opid();
@@ -45,7 +51,12 @@ void init_my_leaf()
     sylvan_mt_set_create(ltype_id, my_leaf_create);
     sylvan_mt_set_destroy(ltype_id, my_leaf_destroy);
     sylvan_mt_set_equals(ltype_id, my_leaf_equals);
-    sylvan_mt_set_to_str(ltype_id, my_leaf_to_str);
+    if (is_prob) {
+        sylvan_mt_set_to_str(ltype_id, my_leaf_to_str_prob);
+    }
+    else {
+        sylvan_mt_set_to_str(ltype_id, my_leaf_to_str);
+    }
     sylvan_mt_set_hash(ltype_id, my_leaf_hash);
 }
 
@@ -200,6 +211,37 @@ char* my_leaf_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf, siz
     }
     else if (chars_written < 0) {
         error_exit("An encoding error has occured when producing leaf value output.\n");
+    }
+
+    // Is buffer large enough?
+    if (chars_written < sylvan_bufsize) {
+        memcpy(sylvan_buf, ldata_string, chars_written * sizeof(char));
+        sylvan_buf[chars_written] = '\0';
+        return sylvan_buf;
+    }
+    
+    // Else return newly allocated string
+    char *new_buf = (char*)my_malloc((chars_written + 1) * sizeof(char));
+    memcpy(new_buf, ldata_string, chars_written * sizeof(char));
+    new_buf[chars_written] = '\0';
+    return new_buf;
+}
+
+char* my_leaf_to_str_prob(int complemented, uint64_t ldata_raw, char *sylvan_buf, size_t sylvan_bufsize)
+{
+    (void) complemented;
+    char ldata_string[MAX_LEAF_STR_LEN] = {0};
+    int chars_written;
+
+    prob_t p = calculate_prob((cnum*) ldata_raw);
+    chars_written = snprintf(ldata_string, MAX_LEAF_STR_LEN, "%f", p);
+
+    // Was string truncated?
+    if (chars_written >= MAX_LEAF_STR_LEN) {
+        error_exit("Allocated string length for the probability leaf value output has not been sufficient.\n");
+    }
+    else if (chars_written < 0) {
+        error_exit("An encoding error has occured when producing probability leaf value output.\n");
     }
 
     // Is buffer large enough?
@@ -536,9 +578,6 @@ MTBDD mtbdd_b_xt_comp_mul_wrapper(MTBDD t, uint32_t xt)
     return mtbdd_apply(t, b_xt_comp, TASK(mtbdd_b_xt_mul));
 }
 
-/**
- * Function for calculating the probability from a given complex number
- */
 static inline prob_t calculate_prob(cnum* prob)
 {
     mpf_t a, b, c, d;
