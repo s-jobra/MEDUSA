@@ -122,7 +122,6 @@ static uint64_t get_iters(FILE *in)
     }
     
     // Note: expects 64bit long long
-    //TODO: better error detection?
     if (step == 0) {
         error_exit("Invalid number of loop iterations - step must be non-zero.\n");
     }
@@ -139,6 +138,29 @@ static uint64_t get_iters(FILE *in)
     iters = (end + 1 - start) / step;
     
     return ((uint64_t) iters);
+}
+
+/**
+ * Skips a one line comment (checks if the given char doesn't mark a start of a comment)
+ * 
+ * @return Returns 1 if comment has been skipped, -1 if EOF was reached, 0 if there is no comment
+ */
+static int skip_one_line_comments(char c, FILE *in)
+{
+    if (c == '/') {
+        if ((c = fgetc(in)) == '/') {
+            while ((c = fgetc(in)) != '\n') {
+                if (c == EOF) {
+                    return -1;
+                }
+            }
+            return 1;
+        }
+        else {
+            error_exit("Invalid command, expected a one-line comment.\n");
+        }
+    }
+    return 0;
 }
 
 bool sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool *is_measure, bool opt_symb)
@@ -168,18 +190,12 @@ bool sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
         }
 
         // Skip one-line comments
-        if (c == '/') {
-            if ((c = fgetc(in)) == '/') {
-                while ((c = fgetc(in)) != '\n') {
-                    if (c == EOF) {
-                        return init;
-                    }
-                }
-                continue;
-            }
-            else {
-                error_exit("Invalid command, expected a one-line comment.\n");
-            }
+        int comment_check = skip_one_line_comments(c, in);
+        if (comment_check == -1) {
+            return iters;
+        }
+        else if (comment_check == 1) {
+            continue;
         }
 
         // Load the command
@@ -203,7 +219,7 @@ bool sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
         // Identify the command
         if (strcmp(cmd, "OPENQASM") == 0) {}
         else if (strcmp(cmd, "include") == 0) {}
-        else if (strcmp(cmd, "creg") == 0) {} //TODO: check if is valid?
+        else if (strcmp(cmd, "creg") == 0) {} //TODO: add check if is valid?
         else if (strcmp(cmd, "qreg") == 0) {
             uint32_t n = get_q_num(in);
             *n_qubits = (int)n;
@@ -217,11 +233,14 @@ bool sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
         }
         else if (init) {
             if (strcmp(cmd, "for") == 0) {
+                if (is_loop) { // currently doen't allow nested loops
+                    error_exit("Nested loops are not allowed, aborting.\n");
+                }
                 iters = get_iters(in);
                 if (iters == 0) {
                     // skip symbolic
-                    while ((c = fgetc(in)) != '}') { //TODO: check for comments - shouldn't count commented }
-                        if (c == EOF) {
+                    while ((c = fgetc(in)) != '}') {
+                        if (c == EOF || skip_one_line_comments(c, in) == -1) {
                             error_exit("Invalid format - reached an unexpected end of file (there is an unfinished loop).\n");
                         }
                     }
@@ -232,7 +251,7 @@ bool sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
                         error_exit("Invalid format - reached an unexpected end of file at the start of a loop.\n");
                     }
                 }
-                is_loop = true; // TODO: allow nested loops?
+                is_loop = true;
                 if (opt_symb) {
                     symb_init(circ, &symbc);
                 }
@@ -260,7 +279,7 @@ bool sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
                     if (symb_refine(&symbc)) {
                         // is final result
                         is_loop = false;
-                        symb_eval(circ, &symbc, iters); // TODO: should request gc call?
+                        symb_eval(circ, &symbc, iters);
                     }
                     else {
                         if (fsetpos(in, &loop_start) != 0) {

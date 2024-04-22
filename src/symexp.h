@@ -9,7 +9,6 @@
 #ifndef SYMEXP_H
 #define SYMEXP_H
 
-//TODO:FIXME:TODO: all comments
 
 /// Max. string size when converting expression from tree to string
 #define MAX_ST_TO_STR_LEN 2000
@@ -34,7 +33,7 @@ void symexp_htab_delete();
  */
 symexp_list_t* symexp_init(vars_t v);
 
-// //FIXME: comment, maybe rename, maybe remove completely if refs wont be used
+// TODO: comment, rename, maybe remove completely if refs wont be used
 // symexp_list_t* st_htab_add(symexp_list_t *t);
 
 /**
@@ -59,6 +58,7 @@ char* symexp_to_str(symexp_list_t *l);
 
 /**
  * Deletes the given tree
+ * 
  */
 void symexp_ref_dec(symexp_list_t *l);
 

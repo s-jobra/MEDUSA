@@ -101,7 +101,7 @@ void htab_m_free(htab_t *t)
  */
 static size_t htab_s_hash_func(htab_key_t key_raw)
 {
-    //FIXME: is good? (maybe vals and op map to the same hash often OR maybe too complex: just first elem + len?)
+    //TODO: is good? (maybe vals and op map to the same hash often OR maybe too complex: just first elem + len?)
     htab_s_key_t key = (htab_s_key_t) key_raw;
     size_t val = 0;
     symexp_list_first(key);
@@ -177,7 +177,7 @@ static bool htab_s_key_cmp(htab_s_key_t a, htab_s_key_t b)
     symexp_list_first(a);
     symexp_list_first(b);
 
-    while(a->active && b->active) {    //TODO:FIXME:TODO: create function for getting active element, var & coef
+    while(a->active && b->active) {
         if ((a->active->data->var != b->active->data->var)
              || mpz_cmp(a->active->data->coef, b->active->data->coef)) {
                 res = false;
@@ -240,7 +240,7 @@ void htab_s_lookup_remove(htab_t *t, htab_s_key_t key)
 
     // Find the item
     while (item != NULL) {
-        if (htab_s_get_key(item) == key) { //TODO:FIXME:TODO: ptr comparison should be enough and I don't need htab_s_key_cmp() CHECK!, 
+        if (htab_s_get_key(item) == key) { //TODO: ptr comparison should be enough and I don't need htab_s_key_cmp() - CHECK
             item->data.value--;
             if (!item->data.value) {
                 if (prev) {

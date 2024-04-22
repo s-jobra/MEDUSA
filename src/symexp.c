@@ -4,7 +4,7 @@
 #include "htab.h"
 #include "error.h"
 
-//FIXME: should be global?
+//TODO: should be global?
 /// Global symbolic hash table
 static htab_t *symexp_table;
 
@@ -124,11 +124,11 @@ symexp_list_t* symexp_op(symexp_list_t *a, symexp_list_t *b, symexp_op_t op)
         }
     }
 
-    // Update refs: TODO:FIXME:TODO: segfault - probably not adding to refs somewhere
+    // Update refs: TODO: segfault - probably not adding to refs somewhere
     //symexp_ref_dec(a);
     //symexp_ref_dec(b);
 
-    // Check if cannot be reduced to NULL TODO:FIXME:TODO: move to op calculation
+    // Check if cannot be reduced to NULL TODO: move to op calculation
     bool is_null = true;
     symexp_list_first(res);
     while(res->active) {
@@ -157,14 +157,13 @@ char* symexp_to_str(symexp_list_t *l)
     int chars_written;
     int buflen = 0;
 
-    //TODO:FIXME:TODO:
     if (l == NULL) {
         return "";
     }
     else {
         symexp_list_first(l);
         while (l->active != NULL) {
-            //FIXME: remove printing plus sign for the first value
+            //TODO: remove printing plus sign for the first value
             // Append string
             chars_written = gmp_snprintf(buf + buflen, MAX_ST_TO_STR_LEN, "%+Zd[%ld]", l->active->data->coef, l->active->data->var);
             // Was string truncated?

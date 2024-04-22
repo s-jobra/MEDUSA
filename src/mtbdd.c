@@ -134,7 +134,7 @@ static int _leaf_to_str_output(char *buf, cnum *ldata, mpz_t a, mpz_t b, mpz_t c
     char buf_c[MAX_NUM_LEN + 2] = {0};
     char buf_d[MAX_NUM_LEN + 2] = {0};
     
-    //FIXME: check snprintf outs?
+    //TODO: check snprintf outs?
     if (mpz_sizeinbase(a, 10) > MAX_NUM_LEN) {
         snprintf(buf_a, MAX_NUM_LEN + 2, VAR_NAME_FMT, lnum_map_add(&(ldata->a), shift_cnt));
     }
@@ -184,7 +184,8 @@ char* my_leaf_to_str(int complemented, uint64_t ldata_raw, char *sylvan_buf, siz
 
         // Get the power of 2, by which the result will be divided
         // Will be k/2 for even k and (k-1)/2 for odd k
-        mp_bitcnt_t pow2 = mpz_get_ui(c_k) >> 1; //TODO: should add overflow check?
+        assert(mpz_fits_uint_p(c_k));
+        mp_bitcnt_t pow2 = mpz_get_ui(c_k) >> 1;
 
         mp_bitcnt_t shift_cnt = GET_MIN(greatest_pow2, pow2);
 
@@ -589,12 +590,13 @@ static inline prob_t calculate_prob(cnum* prob)
     prob_t prob_re, prob_im;
     prob_t c_a, c_b, c_c, c_d;
 
-    mp_bitcnt_t shift_cnt = mpz_get_ui(c_k); // TODO: check possible bottleneck
+    assert(mpz_fits_uint_p(c_k));
+    mp_bitcnt_t shift_cnt = mpz_get_ui(c_k);
+
+    shift_cnt = shift_cnt >> 1; // for k odd actually: shift_cnt = (shift_cnt - 1) >> 1, but the result is same
 
     // k even, k+1 odd
     if (mpz_even_p(c_k) != 0) {
-        shift_cnt = shift_cnt >> 1;
-
         mpf_div_2exp(a, a, shift_cnt); // k/2 right shifts
         mpf_div_2exp(b, b, shift_cnt);
         mpf_div_2exp(c, c, shift_cnt);
@@ -611,8 +613,6 @@ static inline prob_t calculate_prob(cnum* prob)
     }
     // k odd, k+1 even
     else {
-        shift_cnt = (shift_cnt - 1) >> 1; //FIXME: can remove -1: will get rid of this extra 1 when shifted
-
         mpf_div_2exp(a, a, shift_cnt); // k-1/2 right shifts
         mpf_div_2exp(b, b, shift_cnt + 1); // k+1/2 right shifts
         mpf_div_2exp(c, c, shift_cnt);
