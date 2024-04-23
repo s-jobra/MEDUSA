@@ -118,8 +118,8 @@ TASK_IMPL_2(MTBDD, mtbdd_map_to_symb_val, MTBDD, t, size_t, raw_map)
         sl_map_t *t_data = (sl_map_t*) mtbdd_getvalue(t);
         sl_val_t new_data;
 
-        if (!mpz_cmp_si(map[t_data->va], 0) && !mpz_cmp_si(map[t_data->vb], 0) &&
-            !mpz_cmp_si(map[t_data->vc], 0) && !mpz_cmp_si(map[t_data->vd], 0)) {
+        if (!mpz_sgn(map[t_data->va]) && !mpz_sgn(map[t_data->vb]) &&
+            !mpz_sgn(map[t_data->vc]) && !mpz_sgn(map[t_data->vd])) {
             return mtbdd_false;
         }
 
@@ -258,7 +258,7 @@ TASK_IMPL_2(MTBDD, mtbdd_from_symb, MTBDD, t, size_t, raw_map)
         mpz_init_set(new_data.c, map[data->vc]);
         mpz_init_set(new_data.d, map[data->vd]);
 
-        if (!mpz_cmp_si(new_data.a, 0) && !mpz_cmp_si(new_data.b, 0) && !mpz_cmp_si(new_data.c, 0) && !mpz_cmp_si(new_data.d, 0)) {
+        if (!mpz_sgn(new_data.a) && !mpz_sgn(new_data.b) && !mpz_sgn(new_data.c) && !mpz_sgn(new_data.d)) {
             mpz_clears(new_data.a, new_data.b, new_data.c, new_data.d, NULL);
             return mtbdd_false;
         }

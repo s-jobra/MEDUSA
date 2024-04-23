@@ -404,7 +404,7 @@ void measure_all(unsigned long samples, FILE *output, MTBDD circ, int n, int *bi
     curr_state[n] = '\0';
     int curr_ct;
 
-    htab_t *state_table = htab_init(n*n); //TODO: is optimal?
+    htab_t *state_table = htab_init(n*n*n-1);
     
     for (unsigned long i=0; i < samples; i++) {
         norm_coef = 1;

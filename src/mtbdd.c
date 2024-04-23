@@ -304,7 +304,7 @@ TASK_IMPL_2(MTBDD, mtbdd_plus, MTBDD*, p_a, MTBDD*, p_b)
         mpz_add(res_data.c, a_data->c, b_data->c);
         mpz_add(res_data.d, a_data->d, b_data->d);
         
-        if (!mpz_cmp_si(res_data.a, 0) && !mpz_cmp_si(res_data.b, 0) && !mpz_cmp_si(res_data.c, 0) && !mpz_cmp_si(res_data.d, 0)) {
+        if (!mpz_sgn(res_data.a) && !mpz_sgn(res_data.b) && !mpz_sgn(res_data.c) && !mpz_sgn(res_data.d)) {
             mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, NULL);
             return mtbdd_false;
         }
@@ -350,7 +350,7 @@ TASK_IMPL_2(MTBDD, mtbdd_minus, MTBDD*, p_a, MTBDD*, p_b)
         mpz_sub(res_data.c, a_data->c, b_data->c);
         mpz_sub(res_data.d, a_data->d, b_data->d);
         
-        if (!mpz_cmp_si(res_data.a, 0) && !mpz_cmp_si(res_data.b, 0) && !mpz_cmp_si(res_data.c, 0) && !mpz_cmp_si(res_data.d, 0)) {
+        if (!mpz_sgn(res_data.a) && !mpz_sgn(res_data.b) && !mpz_sgn(res_data.c) && !mpz_sgn(res_data.d)) {
             mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, NULL);
             return mtbdd_false;
         }
@@ -386,7 +386,7 @@ TASK_IMPL_2(MTBDD, mtbdd_times, MTBDD*, p_a, MTBDD*, p_b)
         mpz_mul(res_data.c, a_data->c, b_data->c);
         mpz_mul(res_data.d, a_data->d, b_data->d);
 
-        if (!mpz_cmp_si(res_data.a, 0) && !mpz_cmp_si(res_data.b, 0) && !mpz_cmp_si(res_data.c, 0) && !mpz_cmp_si(res_data.d, 0)) {
+        if (!mpz_sgn(res_data.a) && !mpz_sgn(res_data.b) && !mpz_sgn(res_data.c) && !mpz_sgn(res_data.d)) {
             mpz_clears(res_data.a, res_data.b, res_data.c, res_data.d, NULL);
             return mtbdd_false;
         }
