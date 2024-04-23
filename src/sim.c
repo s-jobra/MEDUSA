@@ -172,6 +172,7 @@ bool sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
     bool init = false;
 
     bool is_loop = false;
+    bool is_first_symb = true;
     fpos_t loop_start;
     mtbdd_symb_t symbc;
     uint64_t iters;
@@ -186,13 +187,13 @@ bool sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
         }
 
         if (c == EOF) {
-            return init;
+            break;
         }
 
         // Skip one-line comments
         int comment_check = skip_one_line_comments(c, in);
         if (comment_check == -1) {
-            return iters;
+            break;
         }
         else if (comment_check == 1) {
             continue;
@@ -253,6 +254,10 @@ bool sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
                 }
                 is_loop = true;
                 if (opt_symb) {
+                    if (is_first_symb) {
+                        symexp_htab_init(1LL<<17);
+                        is_first_symb = false;
+                    }
                     symb_init(circ, &symbc);
                 }
                 if (fgetpos(in, &loop_start) != 0) {
@@ -392,6 +397,9 @@ bool sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
         }
     } // while
 
+    if (!is_first_symb) {
+        symexp_htab_clear();
+    }
     return init;
 }
 

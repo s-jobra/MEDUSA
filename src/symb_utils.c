@@ -222,8 +222,6 @@ void symb_init(MTBDD *circ, mtbdd_symb_t *symbc)
 
     symbc->map = my_mtbdd_to_symb_map(*circ, symbc->vm);
     mtbdd_protect(&(symbc->map));
-    //TODO: initial size?
-    symexp_htab_init(msize * 10); // has to be initialized before mtbdd val
     symbc->val = my_mtbdd_map_to_symb_val(symbc->map, symbc->vm->map);
     mtbdd_protect(&(symbc->val));
 
@@ -238,15 +236,9 @@ bool symb_refine(mtbdd_symb_t *symbc)
     bool is_finished = (rdata->ref->first == NULL);
     if (!is_finished) {
         // Reset symbolic simulation
-        symexp_htab_clear();
         cs_k_reset();
         symbc->map = refined;
-
-        mtbdd_unprotect(&symbc->val);
-        sylvan_gc(); // Clears both the operation cache and the node cache
-                     // (needed because symbolic applies are cached with the expressions from the cleared htab)
         symbc->val = my_mtbdd_map_to_symb_val(refined, symbc->vm->map);
-        mtbdd_protect(&symbc->val);
     }
 
     mtbdd_unprotect(&refined);
@@ -284,7 +276,6 @@ void symb_eval(MTBDD *circ,  mtbdd_symb_t *symbc, uint64_t iters)
 
     // Symbolic clean up
     vmap_delete(symbc->vm);
-    symexp_htab_delete();
     mtbdd_unprotect(&(symbc->map));
     mtbdd_unprotect(&(symbc->val));
     mpz_clear(cs_k);
