@@ -238,7 +238,6 @@ bool symb_refine(mtbdd_symb_t *symbc)
     bool is_finished = (rdata->ref->first == NULL);
     if (!is_finished) {
         // Reset symbolic simulation
-        symexp_htab_clear();
         cs_k_reset();
         symbc->map = refined;
 
@@ -284,7 +283,6 @@ void symb_eval(MTBDD *circ,  mtbdd_symb_t *symbc, uint64_t iters)
 
     // Symbolic clean up
     vmap_delete(symbc->vm);
-    symexp_htab_delete();
     mtbdd_unprotect(&(symbc->map));
     mtbdd_unprotect(&(symbc->val));
     mpz_clear(cs_k);
