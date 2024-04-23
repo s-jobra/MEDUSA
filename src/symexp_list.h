@@ -77,6 +77,20 @@ void symexp_list_insert_first(symexp_list_t *l, symexp_val_t *val);
 void symexp_list_insert_after(symexp_list_t *l, symexp_val_t *val);
 
 /**
+ * Removes the first list element. If first was active, active is unset.
+ * 
+ * @param l list representing a symbolic expression
+ */
+void symexp_list_remove_first(symexp_list_t *l);
+
+/**
+ * Removes the next element after active (doesn't do anything if active is not set).
+ * 
+ * @param l list representing a symbolic expression
+ */
+void symexp_list_remove_after(symexp_list_t *l);
+
+/**
  * Negates all the coefficients in the expression
  * (instead of subtracting two lists use addition with one list negated).
  * 

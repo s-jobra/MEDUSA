@@ -98,7 +98,7 @@ symexp_list_t* symexp_op(symexp_list_t *a, symexp_list_t *b, symexp_op_t op)
             }
             // else if need to insert here
             else if (a->active->data->var < res->active->data->var) {
-                if (!res_prev) { // inserting before first element of res
+                if (res_prev == NULL) { // inserting before first element of res
                     symexp_list_insert_first(res, a->active->data);
                     // res active stays the same
                     symexp_list_next(a);
@@ -115,11 +115,25 @@ symexp_list_t* symexp_op(symexp_list_t *a, symexp_list_t *b, symexp_op_t op)
             }
             // else if the same variable
             else if (a->active->data->var == res->active->data->var) {
-                //TODO: check if coef 0
                 mpz_add(res->active->data->coef, res->active->data->coef, a->active->data->coef);
-                res_prev = res->active;
-                symexp_list_next(res);
-                symexp_list_next(a);
+                // Check if result isn't 0
+                if (mpz_sgn(res->active->data->coef) == 0) {
+                    if (res_prev == NULL) {
+                        symexp_list_remove_first(res);
+                        symexp_list_first(res); // move to new element, prev stays the same
+                    }
+                    else {
+                        res->active = res_prev;
+                        symexp_list_remove_after(res);
+                        symexp_list_next(res); // move to new element, prev stays the same
+                    }
+                    symexp_list_next(a);
+                }
+                else {
+                    res_prev = res->active;
+                    symexp_list_next(res);
+                    symexp_list_next(a);
+                }
             }
             // else no insert now
             else {
@@ -133,17 +147,8 @@ symexp_list_t* symexp_op(symexp_list_t *a, symexp_list_t *b, symexp_op_t op)
     //symexp_ref_dec(a);
     //symexp_ref_dec(b);
 
-    // Check if cannot be reduced to NULL TODO: move to op calculation
-    bool is_null = true;
-    symexp_list_first(res);
-    while(res->active) {
-        if(mpz_cmp_si(res->active->data->coef, 0)) {
-            is_null = false;
-            break;
-        }
-        symexp_list_next(res);
-    }
-    if (is_null) {
+    // Check if cannot be reduced to NULL
+    if (res->first == NULL) {
         symexp_list_del(res);
         return NULL;
     }

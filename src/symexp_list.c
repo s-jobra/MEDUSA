@@ -49,6 +49,34 @@ void symexp_list_insert_after(symexp_list_t *l, symexp_val_t *val)
     }
 }
 
+void symexp_list_remove_first(symexp_list_t *l)
+{
+    if(l && l->first){
+        symexp_el_t *new_first = l->first->next;
+        // Check if first isn't active
+        if (l->first == l->active) {
+            l->active = NULL;
+        }
+        mpz_clear(l->first->data->coef);
+        free(l->first->data);
+        free(l->first);
+        l->first = new_first;
+    }
+}
+
+void symexp_list_remove_after(symexp_list_t *l)
+{
+    if(l && l->active){
+        symexp_el_t *el_before = l->active;
+        symexp_list_next(l); // now on element that should be deleted
+        el_before->next = l->active->next;
+        mpz_clear(l->active->data->coef);
+        free(l->active->data);
+        free(l->active);
+        l->active = el_before;
+    }
+}
+
 void symexp_list_neg(symexp_list_t *l)
 {
     if(l){
@@ -77,6 +105,7 @@ void symexp_list_del(symexp_list_t *l)
         symexp_el_t *tmp;
         symexp_list_first(l);
         while (l->active) {
+            // Doesn't use other remove functions because now we can skip rewiring
             tmp = l->active;
             symexp_list_next(l);
             // Dealloc:
