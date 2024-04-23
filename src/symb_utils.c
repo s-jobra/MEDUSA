@@ -9,6 +9,8 @@ static uint64_t apply_mtbdd_symb_refine_id;
 
 /// Value for distinguishing between uninitialized expression and NULL expression
 #define SYMEXP_NULL (void*)1
+/// Coefficient for resizing refine data's update array
+#define UPDATE_RESIZE_COEF 2
 
 // =================
 // Refine internal:
@@ -33,9 +35,15 @@ typedef struct ref_list {
     ref_elem_t *cur;
 } ref_list_t;
 
+/// Type for storing the new variable values (in order to check for conflicts)
+typedef struct upd_list{
+    upd_elem_t *arr;
+    size_t size;
+} upd_list_t;
+
 /// Type for encapsulating all data needed during refine
 typedef struct rdata {
-    upd_elem_t *upd;
+    upd_list_t *upd;
     ref_list_t *ref;
     vmap_t *vm;
 } rdata_t;
@@ -51,8 +59,10 @@ static rdata_t* rdata_create(vmap_t *vm)
     rd->ref->first = NULL;
     rd->ref->cur = NULL;
 
-    rd->upd = my_malloc(sizeof(upd_elem_t) * vm->msize);
-    memset(rd->upd, 0, sizeof(upd_elem_t) * vm->msize);
+    rd->upd = my_malloc(sizeof(upd_list_t));
+    rd->upd->size = vm->msize;
+    rd->upd->arr = my_malloc(sizeof(upd_elem_t) * rd->upd->size);
+    memset(rd->upd->arr, 0, sizeof(upd_elem_t) * rd->upd->size);
 
     rd->vm = vm;
     return rd;
@@ -70,7 +80,8 @@ static void rdata_delete(rdata_t *rd)
         free(temp);
     }
 
-    free(rd->upd); // stores only stree*, trees are freed when the value MTBDD is deleted
+    free(rd->upd->arr); // stores only stree*, trees are freed when the value MTBDD is deleted
+    free(rd->upd);
     free(rd);
 }
 
@@ -85,16 +96,18 @@ static void rdata_add(rdata_t *rd, vars_t old, vars_t new, symexp_list_t *data)
     new_ref_elem->next = rd->ref->first;
     rd->ref->first = new_ref_elem;
     
-    //TODO: should realloc with step 1?
-    rd->upd = my_realloc(rd->upd, sizeof(upd_elem_t) * (rd->vm->msize + 1));
-    rd->upd[new] = data;
+    if (new >= rd->upd->size) {
+        // resize
+        rd->upd->size *= UPDATE_RESIZE_COEF;
+        rd->upd->arr = my_realloc(rd->upd->arr, sizeof(upd_elem_t) * (rd->upd->size));
+    }
+    rd->upd->arr[new] = data;
 
     vmap_add(rd->vm, old);
 }
 
 static void rdata_ref_first(rdata_t *rd)
 {
-
     rd->ref->cur =  rd->ref->first;
 }
 
@@ -108,13 +121,13 @@ static void rdata_ref_next(rdata_t *rd)
  */
 static vars_t refine_var_check(vars_t var, symexp_list_t *data, rdata_t *rd)
 {
-    if (rd->upd[var] == NULL) {
-        rd->upd[var] = data;
+    if (rd->upd->arr[var] == NULL) {
+        rd->upd->arr[var] = data;
         return var;
     }
 
-    if ((data == SYMEXP_NULL && rd->upd[var] == SYMEXP_NULL) ||
-        (data != SYMEXP_NULL && symexp_cmp(data, rd->upd[var]))) {
+    if ((data == SYMEXP_NULL && rd->upd->arr[var] == SYMEXP_NULL) ||
+        (data != SYMEXP_NULL && symexp_cmp(data, rd->upd->arr[var]))) {
         return var;
     }
 
@@ -122,8 +135,8 @@ static vars_t refine_var_check(vars_t var, symexp_list_t *data, rdata_t *rd)
     rdata_ref_first(rd);
     while(rd->ref->cur) {
         if ((rd->ref->cur->old == var) && 
-            ((data == SYMEXP_NULL && rd->upd[rd->ref->cur->new] == SYMEXP_NULL) ||
-             (data != SYMEXP_NULL && symexp_cmp(data, rd->upd[rd->ref->cur->new]))
+            ((data == SYMEXP_NULL && rd->upd->arr[rd->ref->cur->new] == SYMEXP_NULL) ||
+             (data != SYMEXP_NULL && symexp_cmp(data, rd->upd->arr[rd->ref->cur->new]))
             )) {
             return rd->ref->cur->new;
         }

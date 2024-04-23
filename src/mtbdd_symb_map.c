@@ -6,7 +6,7 @@
 /// String length limit used for mtbdd_to_str
 #define MAX_SYMB_MAP_LEAF_STR_LEN 1000
 /// Realloc step for vmap
-#define REALLOC_STEP 1 //TODO: check if optimal
+#define REALLOC_COEF 2
 
 /// leaf type id for symbolic representation
 uint32_t ltype_symb_map_id;
@@ -21,8 +21,10 @@ void vmap_init(vmap_t **vm, size_t size)
 
 void vmap_add(vmap_t *vm, vars_t old)
 {
-    vm->map = my_realloc(vm->map, sizeof(coef_t) * (vm->msize + REALLOC_STEP));
-    vm->msize++;
+    if (vm->next_var >= vm->msize) {
+        vm->msize *= REALLOC_COEF;
+        vm->map = my_realloc(vm->map, sizeof(coef_t) * vm->msize);
+    }
     mpz_init_set(vm->map[vm->next_var], vm->map[old]);
     vm->next_var++;
 }

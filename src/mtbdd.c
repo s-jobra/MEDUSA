@@ -133,37 +133,43 @@ static int _leaf_to_str_output(char *buf, cnum *ldata, mpz_t a, mpz_t b, mpz_t c
     char buf_b[MAX_NUM_LEN + 2] = {0};
     char buf_c[MAX_NUM_LEN + 2] = {0};
     char buf_d[MAX_NUM_LEN + 2] = {0};
+    int chars_written;
     
-    //TODO: check snprintf outs?
     if (mpz_sizeinbase(a, 10) > MAX_NUM_LEN) {
-        snprintf(buf_a, MAX_NUM_LEN + 2, VAR_NAME_FMT, lnum_map_add(&(ldata->a), shift_cnt));
+        chars_written = snprintf(buf_a, MAX_NUM_LEN + 2, VAR_NAME_FMT, lnum_map_add(&(ldata->a), shift_cnt));
+        // variable length shouldn't exceed the max length but check to make sure
+        assert(chars_written < MAX_NUM_LEN + 2 && chars_written >= 0);
     }
     else {
+        // will always fit
         gmp_snprintf(buf_a, MAX_NUM_LEN + 2, "%Zd", a);
     }
 
     if (mpz_sizeinbase(b, 10) > MAX_NUM_LEN) {
-        snprintf(buf_b, MAX_NUM_LEN + 2, "+"VAR_NAME_FMT, lnum_map_add(&(ldata->b), shift_cnt));
+        chars_written = snprintf(buf_b, MAX_NUM_LEN + 2, "+"VAR_NAME_FMT, lnum_map_add(&(ldata->b), shift_cnt));
+        assert(chars_written < MAX_NUM_LEN + 2 && chars_written >= 0);
     }
     else {
         gmp_snprintf(buf_b, MAX_NUM_LEN + 2, "%+Zd", b);
     }
 
     if (mpz_sizeinbase(c, 10) > MAX_NUM_LEN) {
-        snprintf(buf_c, MAX_NUM_LEN + 2, "+"VAR_NAME_FMT, lnum_map_add(&(ldata->c), shift_cnt));
+        chars_written = snprintf(buf_c, MAX_NUM_LEN + 2, "+"VAR_NAME_FMT, lnum_map_add(&(ldata->c), shift_cnt));
+        assert(chars_written < MAX_NUM_LEN + 2 && chars_written >= 0);
     }
     else {
         gmp_snprintf(buf_c, MAX_NUM_LEN + 2, "%+Zd", c);
     }
 
     if (mpz_sizeinbase(d, 10) > MAX_NUM_LEN) {
-        snprintf(buf_d, MAX_NUM_LEN + 2, "+"VAR_NAME_FMT, lnum_map_add(&(ldata->d), shift_cnt));
+        chars_written = snprintf(buf_d, MAX_NUM_LEN + 2, "+"VAR_NAME_FMT, lnum_map_add(&(ldata->d), shift_cnt));
+        assert(chars_written < MAX_NUM_LEN + 2 && chars_written >= 0);
     }
     else {
         gmp_snprintf(buf_d, MAX_NUM_LEN + 2, "%+Zd", d);
     }
 
-    int chars_written = gmp_snprintf(buf, MAX_LEAF_STR_LEN, "(1/√2)^(%Zd) * (%s%sω%sω²%sω³)", k, buf_a, buf_b, buf_c, buf_d);
+    chars_written = gmp_snprintf(buf, MAX_LEAF_STR_LEN, "(1/√2)^(%Zd) * (%s%sω%sω²%sω³)", k, buf_a, buf_b, buf_c, buf_d);
     return chars_written;
 }
 
