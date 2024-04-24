@@ -31,7 +31,7 @@ void vmap_add(vmap_t *vm, vars_t old)
 
 void vmap_clear(vmap_t *vm)
 {
-    for (size_t i = 0; i < vm->msize; i++) {
+    for (size_t i = 0; i < vm->next_var; i++) {
         mpz_clear(vm->map[i]);
     }
     free(vm->map);
