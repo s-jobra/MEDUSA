@@ -16,42 +16,7 @@ static uint64_t apply_mtbdd_symb_refine_id;
 // Refine internal:
 // =================
 
-/**
- * Type for elements of the update array
- */
-typedef symexp_list_t* upd_elem_t;
-
-
-/// Type for elements of the refined list (old_var -> new_var mapping)
-typedef struct ref_elem {
-    vars_t old;
-    vars_t new;
-    struct ref_elem *next;
-} ref_elem_t;
-
-/// Type for the refined list
-typedef struct ref_list {
-    ref_elem_t *first;
-    ref_elem_t *cur;
-} ref_list_t;
-
-/// Type for storing the new variable values (in order to check for conflicts)
-typedef struct upd_list{
-    upd_elem_t *arr;
-    size_t size;
-} upd_list_t;
-
-/// Type for encapsulating all data needed during refine
-typedef struct rdata {
-    upd_list_t *upd;
-    ref_list_t *ref;
-    vmap_t *vm;
-} rdata_t;
-
-/**
- * Creates and initializes refine data
- */
-static rdata_t* rdata_create(vmap_t *vm)
+rdata_t* rdata_create(vmap_t *vm)
 {
     rdata_t *rd = my_malloc(sizeof(rdata_t));
 
@@ -68,10 +33,7 @@ static rdata_t* rdata_create(vmap_t *vm)
     return rd;
 }
 
-/**
- * Disposes refine data except for vmap (as it is used also outside refine)
- */
-static void rdata_delete(rdata_t *rd)
+void rdata_delete(rdata_t *rd)
 {
     ref_elem_t *temp;
     while (rd->ref->first != NULL) {
@@ -205,6 +167,31 @@ TASK_IMPL_3(MTBDD, mtbdd_symb_refine, MTBDD*, p_map, MTBDD*, p_val, size_t, rd_r
 #define my_mtbdd_symb_refine(p_map, p_val, rdata) \
         mtbdd_applyp(p_map, p_val, (size_t)rdata, TASK(mtbdd_symb_refine), apply_mtbdd_symb_refine_id)
 
+/**
+ * Evaluates the given variable according to the rdata expression and the map, saves the value into new_map
+ */
+static void eval_var(size_t var, rdata_t *rdata, coef_t* map, coef_t* new_map)
+{
+    symexp_list_t *expr = (symexp_list_t*)rdata->upd->arr[var];
+    mpz_set_ui(new_map[var], 0);
+
+    if (expr != SYMEXP_NULL) {
+        coef_t imm_res;
+        mpz_init(imm_res);
+
+        if (expr != NULL) {
+            symexp_list_first(expr);
+            while(expr->active) {
+                mpz_set(imm_res, map[expr->active->data->var]);
+                mpz_mul(imm_res, imm_res, expr->active->data->coef);
+                mpz_add(new_map[var], new_map[var], imm_res);
+                symexp_list_next(expr);
+            }
+        }
+        mpz_clear(imm_res);
+    }
+}
+
 // ========================================
 
 void init_sylvan_symb()
@@ -230,9 +217,8 @@ void symb_init(MTBDD *circ, mtbdd_symb_t *symbc)
     mpz_init(cs_k);
 }
 
-bool symb_refine(mtbdd_symb_t *symbc)
+bool symb_refine(mtbdd_symb_t *symbc, rdata_t *rdata)
 {
-    rdata_t *rdata = rdata_create(symbc->vm);
     MTBDD refined = my_mtbdd_symb_refine(symbc->map, symbc->val, rdata);
     mtbdd_protect(&refined);
     bool is_finished = (rdata->ref->first == NULL);
@@ -249,20 +235,21 @@ bool symb_refine(mtbdd_symb_t *symbc)
     }
 
     mtbdd_unprotect(&refined);
-    rdata_delete(rdata);
     return is_finished;
 }
 
-void symb_eval(MTBDD *circ,  mtbdd_symb_t *symbc, uint64_t iters)
+void symb_eval(MTBDD *circ,  mtbdd_symb_t *symbc, uint64_t iters, rdata_t *rdata)
 {
     coef_t *new_map = my_malloc(sizeof(coef_t) * symbc->vm->msize);
     for (int i = 0; i < symbc->vm->msize; i++) {
         mpz_init(new_map[i]);
     }
     coef_t *temp_map;
-
     for (uint64_t i = 0; i < iters; i++) {
-        my_mtbdd_update_map(symbc->map, symbc->val, symbc->vm->map, new_map);
+        // update new_map
+        for (int i = 0; i < symbc->vm->next_var; i++) {
+            eval_var(i, rdata, symbc->vm->map, new_map);
+        }
 
         // swap maps
         temp_map = symbc->vm->map;
