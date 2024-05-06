@@ -82,24 +82,6 @@ TASK_DECL_2(MTBDD, mtbdd_map_to_symb_val, MTBDD, size_t);
  */
 #define my_mtbdd_map_to_symb_val(t, map) mtbdd_uapply(t, TASK(mtbdd_map_to_symb_val), (size_t)map)
 
-
-VOID_TASK_DECL_4(mtbdd_update_map, MTBDD, MTBDD, coef_t*, coef_t*);
-/**
- * Simulates one symbolic iteration (single update of the map values)
- * 
- * @param mtbdd_map a symbolic map MTBDD
- * 
- * @param mtbdd_val a symbolic value MTBDD
- * 
- * @param map array with the variable mapping to their values (complex numbers)
- * 
- * @param new_map array for storing the new variable mapping
- * 
- */
-#define my_mtbdd_update_map(mtbdd_map, mtbdd_val, map, new_map) \
-        RUN(mtbdd_update_map, mtbdd_map, mtbdd_val, map, new_map)
-
-
 TASK_DECL_2(MTBDD, mtbdd_from_symb, MTBDD, size_t);
 /**
  * Converts the given symbolic MTBDD to a regular MTBDD according to the variable mapping
