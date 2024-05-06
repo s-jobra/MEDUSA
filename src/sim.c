@@ -276,16 +276,19 @@ bool sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
                     }
                 }
                 else {
-                    if (symb_refine(&symbc)) {
+                    rdata_t *rdata = rdata_create(symbc.vm);
+                    if (symb_refine(&symbc, rdata)) {
                         // is final result
                         is_loop = false;
-                        symb_eval(circ, &symbc, iters);
+                        symb_eval(circ, &symbc, iters, rdata);
+                        
                     }
                     else {
                         if (fsetpos(in, &loop_start) != 0) {
                             error_exit("Could not set a new position of the stream during symbolic simulation.\n");
                         }
                     }
+                    rdata_delete(rdata);
                 }
                 continue; // ';' not expected
             }
