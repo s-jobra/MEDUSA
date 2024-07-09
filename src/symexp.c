@@ -197,6 +197,18 @@ char* symexp_to_str(symexp_list_t *l)
     return new_buf;
 }
 
+bool symexp_is_first_var_marked(symexp_list_t *l, bool *is_zero)
+{
+    bool var_marked = false;
+    symexp_list_first(l);
+    if (l->active) {
+        if (is_zero[l->active->data->var]) {
+            var_marked = true;
+        }
+    }
+    return var_marked;
+}
+
 void symexp_ref_dec(symexp_list_t *l)
 {
     if (l != NULL) {

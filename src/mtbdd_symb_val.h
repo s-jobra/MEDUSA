@@ -71,7 +71,9 @@ uint64_t my_leaf_symb_v_hash(const uint64_t ldata_raw, const uint64_t seed);
 /* CUSTOM MTBDD OPERATIONS */
 // Basic operations:
 
+// Two separate TASKS needed because uapply supports only 1 extra argument
 TASK_DECL_2(MTBDD, mtbdd_map_to_symb_val, MTBDD, size_t);
+TASK_DECL_2(MTBDD, mtbdd_map_to_symb_val_reduced, MTBDD, size_t);
 /**
  * Converts the given symbolic map MTBDD to a symbolic value MTBDD
  * 
@@ -79,8 +81,13 @@ TASK_DECL_2(MTBDD, mtbdd_map_to_symb_val, MTBDD, size_t);
  * 
  * @param map array with the variable mapping to their values
  * 
+ * @param reduce_zero if true, variables that have value 0 will produce 'mtbdd_false' leaves 
+ *                    in symbolic value MTBDD (else the leaf contains the full symbolic expression as usual)
+ * 
  */
-#define my_mtbdd_map_to_symb_val(t, map) mtbdd_uapply(t, TASK(mtbdd_map_to_symb_val), (size_t)map)
+#define my_mtbdd_map_to_symb_val(t, map, reduce_zero) \
+            ((reduce_zero) ? mtbdd_uapply(t, TASK(mtbdd_map_to_symb_val_reduced), (size_t)map) \
+                             : mtbdd_uapply(t, TASK(mtbdd_map_to_symb_val), (size_t)map))
 
 TASK_DECL_2(MTBDD, mtbdd_from_symb, MTBDD, size_t);
 /**
