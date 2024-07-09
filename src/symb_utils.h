@@ -15,6 +15,7 @@ typedef struct mtbdd_symb {
     MTBDD map;
     MTBDD val;
     vmap_t *vm;
+    bool is_reduced; /// if true, val is initialized with 'mtbdd_false' leaves if all variables have value 0
 } mtbdd_symb_t;
 
 // Refine internal:

@@ -197,6 +197,22 @@ char* symexp_to_str(symexp_list_t *l)
     return new_buf;
 }
 
+bool symexp_incl_var(symexp_list_t *l, vars_t v)
+{
+    bool var_included = false;
+    symexp_list_first(l);
+    while (l->active != NULL) {
+        if (l->active->data->var == v) {
+            var_included = true;
+            break;
+        }
+        else if (l->active->data->var > v) {
+            break;
+        }
+    }
+    return var_included;
+}
+
 void symexp_ref_dec(symexp_list_t *l)
 {
     if (l != NULL) {
