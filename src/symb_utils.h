@@ -45,9 +45,10 @@ typedef struct upd_list{
 
 /// Type for encapsulating all data needed during refine
 typedef struct rdata {
-    upd_list_t *upd;
-    ref_list_t *ref;
-    vmap_t *vm;
+    upd_list_t *upd; /// Symbolic values of all variables, including the ones added during this refine
+    ref_list_t *ref; /// Information about variable refinement (splitting)
+    vmap_t *vm;      /// Only ptr to the original variable mapping, so it can be updated during refine operations. \
+                         Holds initial numeric values of all variables.
 } rdata_t;
 
 /**
@@ -72,6 +73,7 @@ void rdata_delete(rdata_t *rd);
 
 /**
  * Executes refine on the symbolic MTBDDs and returns true if the MTBDDs haven't been changed.
+ * Fills update, refined data structures and updates variable map.
  */
 bool symb_refine(mtbdd_symb_t *symbc, rdata_t *rdata);
 

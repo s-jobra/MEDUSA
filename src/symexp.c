@@ -170,6 +170,9 @@ char* symexp_to_str(symexp_list_t *l)
     if (l == NULL) {
         return "";
     }
+    else if (l == SYMEXP_NULL) {
+        return "0";
+    }
     else {
         symexp_list_first(l);
         while (l->active != NULL) {
