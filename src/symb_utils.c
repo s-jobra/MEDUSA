@@ -103,7 +103,7 @@ static vars_t refine_var_check(vars_t var, symexp_list_t *data, rdata_t *rd)
         rdata_ref_next(rd);
     }
 
-    vars_t new = rd->vm->next_var;
+    vars_t new = rd->vm->next_var; // next_var is incremented during rdata_add when adding into vmap
     rdata_add(rd, var, new, data);
     return new;
 }
@@ -204,15 +204,68 @@ void symb_init(MTBDD *circ, mtbdd_symb_t *symbc)
     size_t msize = 4 * (mtbdd_leafcount(*circ)); // multiplied because one var is needed for every coefficient
                                                  // !doesn't count F ... needs to be allocated manually
     vmap_init(&(symbc->vm), msize);
+    symbc->is_reduced = true;  // initially tries to reduce symb. leaves into F
+    symbc->is_refined = false;
 
     symbc->map = my_mtbdd_to_symb_map(*circ, symbc->vm);
     mtbdd_protect(&(symbc->map));
     //TODO: initial size?
     symexp_htab_init(msize * 10); // has to be initialized before mtbdd val
-    symbc->val = my_mtbdd_map_to_symb_val(symbc->map, symbc->vm->map);
+    symbc->val = my_mtbdd_map_to_symb_val(symbc->map, symbc->vm->map, symbc->is_reduced);
     mtbdd_protect(&(symbc->val));
 
     mpz_init(cs_k);
+}
+
+/**
+ * Returns true if no errors will occur during evaluation (for value MTBDDs with reduced 0 leaves)
+ */
+static bool can_be_reduced(mtbdd_symb_t *symbc, rdata_t *rdata)
+{
+    bool is_correct = true;
+    bool is_zero[rdata->vm->next_var];
+    for (int i = 0; i < rdata->vm->next_var; i++) {
+        is_zero[i] = false;
+    }
+
+    // The whole leaf behaves the same way, so checking every 4th variable is sufficient
+    for (int i = 0; i < rdata->vm->next_var; i += 4) {
+        // If leaf is initially 0:
+        if (!mpz_sgn(rdata->vm->map[i]) && !mpz_sgn(rdata->vm->map[i+1]) 
+            && !mpz_sgn(rdata->vm->map[i+2]) && !mpz_sgn(rdata->vm->map[i+3])) {
+            is_zero[i] = true;
+            is_zero[i+1] = true;
+            is_zero[i+2] = true;
+            is_zero[i+3] = true;
+
+            // Check if the right side of update equation for these variables is 0
+            // (eg. change of value caused by H)
+            if (rdata->upd->arr[i] != SYMEXP_NULL && rdata->upd->arr[i+1] != SYMEXP_NULL
+                && rdata->upd->arr[i+2] != SYMEXP_NULL && rdata->upd->arr[i+3] != SYMEXP_NULL) {
+                is_correct = false;
+                break;
+            }
+        }
+    }
+
+    // Check if swap with 0 leaf occurs 
+    // (i.e., if these variables appear alone on some right side of update equation)
+    for(int i = 0; i < rdata->vm->next_var; i +=4) {
+        // Check for permutations as well, first variable of the leaf is sufficient
+        // (we always swap the whole leaf)
+        if (rdata->upd->arr[i] != SYMEXP_NULL) {
+            //TODO: should check for include instead of first?
+            if (symexp_is_first_var_marked(rdata->upd->arr[i], is_zero)) {
+                is_correct = false;
+                break;
+            }
+        }
+    }
+
+    if (!is_correct) {
+        symbc->is_reduced = false;
+    }
+    return is_correct;
 }
 
 bool symb_refine(mtbdd_symb_t *symbc, rdata_t *rdata)
@@ -220,6 +273,14 @@ bool symb_refine(mtbdd_symb_t *symbc, rdata_t *rdata)
     MTBDD refined = my_mtbdd_symb_refine(symbc->map, symbc->val, rdata);
     mtbdd_protect(&refined);
     bool is_finished = (rdata->ref->first == NULL);
+
+    // Check if the MTBDD can truly be reduced (= all 0 leafs remain unchanged)
+    if (!symbc->is_refined && symbc->is_reduced) {
+        is_finished = can_be_reduced(symbc, rdata) && is_finished; // In this order so can_be_reduced() is always called
+        symbc->is_refined = true; // Reduce errors would already appear, so don't check again
+                                  // (can be in this if because first refine is always reduced)
+    }
+
     if (!is_finished) {
         // Reset symbolic simulation
         symexp_htab_clear();
@@ -229,7 +290,7 @@ bool symb_refine(mtbdd_symb_t *symbc, rdata_t *rdata)
         mtbdd_unprotect(&symbc->val);
         sylvan_gc(); // Clears both the operation cache and the node cache
                      // (needed because symbolic applies are cached with the expressions from the cleared htab)
-        symbc->val = my_mtbdd_map_to_symb_val(refined, symbc->vm->map);
+        symbc->val = my_mtbdd_map_to_symb_val(refined, symbc->vm->map, symbc->is_reduced);
         mtbdd_protect(&symbc->val);
     }
 
