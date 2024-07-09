@@ -281,7 +281,7 @@ bool sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
                     }
                 }
                 else {
-                    rdata_t *rdata = rdata_create(symbc.vm);
+                    rdata_t *rdata = rdata_create(symbc.vm); // vm will be directly updated during refine
                     if (symb_refine(&symbc, rdata)) {
                         // is final result
                         is_loop = false;
