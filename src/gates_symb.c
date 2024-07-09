@@ -1,6 +1,8 @@
 #include "gates_symb.h"
 #include "gates.h"
 
+// FIXME: probably need to remove hacks with 0, both successors are the same etc
+
 void gate_symb_x(MTBDD *p_t, uint32_t xt)
 {
     // uses the same implementation as the regular MTBDDs

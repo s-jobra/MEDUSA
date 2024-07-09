@@ -12,9 +12,11 @@
 
 /// Type for encapsulating the mtbdd tuple and map function needed for symbolic representation
 typedef struct mtbdd_symb {
-    MTBDD map;
-    MTBDD val;
-    vmap_t *vm;
+    MTBDD map;  /// MTBDD with the symoblic variable mapping
+    MTBDD val;  /// MTBDD with symbolic values of the variables
+    vmap_t *vm; /// Array mapping variables (index) to their initial values (needed for the final evaluation)
+    bool is_reduced; /// If true, val is initialized with 'mtbdd_false' leaves if all variables have value 0
+    bool is_refined; /// False only before first refine attempt (to check for reduction errors only once)
 } mtbdd_symb_t;
 
 // Refine internal:
