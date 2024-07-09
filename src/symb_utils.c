@@ -7,8 +7,6 @@
 /// Opid for mtbdd_symb_refine (needed for mtbdd_applyp)
 static uint64_t apply_mtbdd_symb_refine_id;
 
-/// Value for distinguishing between uninitialized expression and NULL expression
-#define SYMEXP_NULL (void*)1
 /// Coefficient for resizing refine data's update array
 #define UPDATE_RESIZE_COEF 2
 

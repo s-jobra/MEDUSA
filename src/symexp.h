@@ -10,6 +10,9 @@
 #define SYMEXP_H
 
 
+/// Value for distinguishing between uninitialized expression and NULL expression
+#define SYMEXP_NULL (void*)1
+
 /// Max. string size when converting expression from tree to string
 #define MAX_ST_TO_STR_LEN 2000
 
