@@ -7,6 +7,9 @@
 /// Opid for mtbdd_symb_refine (needed for mtbdd_applyp)
 static uint64_t apply_mtbdd_symb_refine_id;
 
+/// Global flag for enabling 0 leaf reduction (currently only until first error occurs during the simulation)
+static bool enable_reduce;
+
 /// Coefficient for resizing refine data's update array
 #define UPDATE_RESIZE_COEF 2
 
@@ -197,6 +200,7 @@ void init_sylvan_symb()
     init_my_leaf_symb_val();
     init_my_leaf_symb_map();
     apply_mtbdd_symb_refine_id = cache_next_opid();
+    enable_reduce = true;  // initially tries to reduce symb. leaves into F
 }
 
 void symb_init(MTBDD *circ, mtbdd_symb_t *symbc)
@@ -204,7 +208,8 @@ void symb_init(MTBDD *circ, mtbdd_symb_t *symbc)
     size_t msize = 4 * (mtbdd_leafcount(*circ)); // multiplied because one var is needed for every coefficient
                                                  // !doesn't count F ... needs to be allocated manually
     vmap_init(&(symbc->vm), msize);
-    symbc->is_reduced = true; // initially tries to reduce symb. leaves into F
+    symbc->is_reduced = enable_reduce;
+    symbc->is_refined = false;
 
     symbc->map = my_mtbdd_to_symb_map(*circ, symbc->vm);
     mtbdd_protect(&(symbc->map));
@@ -216,54 +221,62 @@ void symb_init(MTBDD *circ, mtbdd_symb_t *symbc)
     mpz_init(cs_k);
 }
 
-bool symb_refine(mtbdd_symb_t *symbc, rdata_t *rdata)
+/**
+ * Returns true if no errors will occur during evaluation (for value MTBDDs with reduced 0 leaves)
+ */
+static bool can_be_reduced(mtbdd_symb_t *symbc, rdata_t *rdata)
 {
-    MTBDD refined = my_mtbdd_symb_refine(symbc->map, symbc->val, rdata);
-    mtbdd_protect(&refined);
-    bool is_refine_finished = (rdata->ref->first == NULL);
     bool is_correct = true;
-
-    if (symbc->is_reduced) {
-        // Check if the MTBDD can truly be reduced (= all 0 leafs remain unchanged)
-        for (int i = 0; i < rdata->vm->next_var; i += 4) {
-            // The whole leaf behaves the same way, so checking every 4th variable is sufficient
+    // The whole leaf behaves the same way, so checking every 4th variable is sufficient
+    for (int i = 0; i < rdata->vm->next_var; i += 4) {
+        // If leaf is initially 0:
+        if (!mpz_sgn(rdata->vm->map[i]) && !mpz_sgn(rdata->vm->map[i+1]) 
+            && !mpz_sgn(rdata->vm->map[i+2]) && !mpz_sgn(rdata->vm->map[i+3])) {
             
-            // If leaf is initially 0:
-            if (!mpz_sgn(rdata->vm->map[i]) && !mpz_sgn(rdata->vm->map[i+1]) 
-                && !mpz_sgn(rdata->vm->map[i+2]) && !mpz_sgn(rdata->vm->map[i+3])) {
-                
-                // Check if the right side of update equation for these variables is 0
-                // (eg. change of value caused by H)
-                if (rdata->upd->arr[i] != SYMEXP_NULL && rdata->upd->arr[i+1] != SYMEXP_NULL
-                    && rdata->upd->arr[i+2] != SYMEXP_NULL && rdata->upd->arr[i+3] != SYMEXP_NULL) {
-                    is_correct = false;
-                    symbc->is_reduced = false;
-                    break;
-                }
-
-                // Check if swap with 0 leaf occurs 
-                // (i.e., if these variables appear alone on some right side of update equation)
-                for(int j = 0; j < rdata->vm->next_var; j +=4) {
-                    // Check for permutations as well, first variable of the leaf is sufficient
-                    // (we always swap the whole leaf)
-                    if (rdata->upd->arr[j] != SYMEXP_NULL) {
-                        //FIXME: check for all the 4 leaf variables at once or maybe even all the 0 leaf variables?
-                        for (int k=0; k < 4; k++) {
-                            //FIXME: shouldnt be check if only this one variable is in the symexp instead of check if is included?
-                            if (symexp_incl_var(rdata->upd->arr[j], i + k)) {
-                                is_correct = false;
-                                symbc->is_reduced = false;
-                                break;
-                            }
+            // Check if the right side of update equation for these variables is 0
+            // (eg. change of value caused by H)
+            if (rdata->upd->arr[i] != SYMEXP_NULL && rdata->upd->arr[i+1] != SYMEXP_NULL
+                && rdata->upd->arr[i+2] != SYMEXP_NULL && rdata->upd->arr[i+3] != SYMEXP_NULL) {
+                is_correct = false;
+                break;
+            }
+            // Check if swap with 0 leaf occurs 
+            // (i.e., if these variables appear alone on some right side of update equation)
+            for(int j = 0; j < rdata->vm->next_var; j +=4) {
+                // Check for permutations as well, first variable of the leaf is sufficient
+                // (we always swap the whole leaf)
+                if (rdata->upd->arr[j] != SYMEXP_NULL) {
+                    //FIXME: check for all the 4 leaf variables at once or maybe even all the 0 leaf variables?
+                    for (int k=0; k < 4; k++) {
+                        //FIXME: shouldnt be check if only this one variable is in the symexp instead of check if is included?
+                        if (symexp_incl_var(rdata->upd->arr[j], i + k)) {
+                            is_correct = false;
+                            goto end_loops; // cannot break, nested loops
                         }
                     }
                 }
             }
         }
     }
+    end_loops:
+    if (!is_correct) {
+        symbc->is_reduced = false;
+        enable_reduce = false; // Suppose all other loops cannot be reduced as well
+    }
+    return is_correct;
+}
 
-    //FIXME: separate flags? (only needed if initialized from the start, not using the refined map - if not needed keep only one)
-    bool is_finished = is_refine_finished && is_correct;
+bool symb_refine(mtbdd_symb_t *symbc, rdata_t *rdata)
+{
+    MTBDD refined = my_mtbdd_symb_refine(symbc->map, symbc->val, rdata);
+    mtbdd_protect(&refined);
+    bool is_finished = (rdata->ref->first == NULL);
+
+    // Check if the MTBDD can truly be reduced (= all 0 leafs remain unchanged)
+    if (symbc->is_reduced && !symbc->is_refined) {
+        is_finished = can_be_reduced(symbc, rdata) && is_finished; // In this order so can_be_reduced() is always called
+        symbc->is_refined = false; // Assume reduce errors would already appear, so don't check again
+    }
 
     if (!is_finished) {
         // Reset symbolic simulation
