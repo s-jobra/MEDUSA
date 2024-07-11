@@ -36,9 +36,6 @@ void symexp_htab_delete();
  */
 symexp_list_t* symexp_init(vars_t v);
 
-// TODO: comment, rename, maybe remove completely if refs wont be used
-// symexp_list_t* st_htab_add(symexp_list_t *t);
-
 /**
  * Multiplies the tree with the given coefficient
  */
@@ -63,12 +60,6 @@ char* symexp_to_str(symexp_list_t *l);
  * Returns true if the first variable of the expression is true in the given array.
  */
 bool symexp_is_first_var_marked(symexp_list_t *l, bool *is_zero);
-
-/**
- * Deletes the given tree
- * 
- */
-void symexp_ref_dec(symexp_list_t *l);
 
 #endif
 /* end of "symexp.h" */
