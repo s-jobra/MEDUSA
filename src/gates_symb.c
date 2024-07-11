@@ -1,8 +1,6 @@
 #include "gates_symb.h"
 #include "gates.h"
 
-// FIXME: probably need to remove hacks with 0, both successors are the same etc
-
 void gate_symb_x(MTBDD *p_t, uint32_t xt)
 {
     // uses the same implementation as the regular MTBDDs
@@ -116,6 +114,8 @@ TASK_IMPL_2(MTBDD, _gate_symb_h, MTBDD, t, uint32_t, xt)
 
         // low = low + high, high = low - high
         if (low == high) {
+            // We can do this because if we revert this operation during the loop, the result will be correct
+            // and if do not revert this operation, refine will be needed before evaluation (1 subtree -> 2 subtrees)
             return mtbdd_makenode(xt, my_mtbdd_symb_times_c(low, 2), mtbdd_false);
         }
         else {
@@ -147,6 +147,8 @@ TASK_IMPL_2(MTBDD, _gate_symb_rx_pihalf, MTBDD, t, uint32_t, xt)
         // low = low - i * high, high = -i * low + high
         rot_low = my_mtbdd_symb_coef_rot2(low);
         if (low == high) {
+            // We can do this because if we revert this operation during the loop, the result will be correct
+            // and if do not revert this operation, refine will be needed before evaluation (1 subtree -> 2 subtrees)
             return my_mtbdd_symb_minus(low, rot_low); // new low and high of xt are always the same
         }
         else {
@@ -177,6 +179,8 @@ TASK_IMPL_2(MTBDD, _gate_symb_ry_pihalf, MTBDD, t, uint32_t, xt)
 
         // low = low - high, high = low + high
         if (low == high) {
+            // We can do this because if we revert this operation during the loop, the result will be correct
+            // and if do not revert this operation, refine will be needed before evaluation (1 subtree -> 2 subtrees)
             return mtbdd_makenode(xt, mtbdd_false, my_mtbdd_symb_times_c(low, 2));
         }
         else {
