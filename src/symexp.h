@@ -60,9 +60,9 @@ bool symexp_cmp(symexp_list_t *a, symexp_list_t *b);
 char* symexp_to_str(symexp_list_t *l);
 
 /**
- * Returns true if the expression contains the given variable.
+ * Returns true if the first variable of the expression is true in the given array.
  */
-bool symexp_incl_var(symexp_list_t *l, vars_t v);
+bool symexp_is_first_var_marked(symexp_list_t *l, bool *is_zero);
 
 /**
  * Deletes the given tree
