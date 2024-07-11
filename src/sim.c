@@ -165,8 +165,6 @@ static int skip_one_line_comments(char c, FILE *in)
 
 bool sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool *is_measure, bool opt_symb)
 {
-    //TODO: refactoring
-    //TODO: add line counter and display in errors
     int c;
     char cmd[CMD_MAX_LEN];
     bool init = false;
@@ -220,7 +218,7 @@ bool sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
         // Identify the command
         if (strcmp(cmd, "OPENQASM") == 0) {}
         else if (strcmp(cmd, "include") == 0) {}
-        else if (strcmp(cmd, "creg") == 0) {} //TODO: add check if is valid?
+        else if (strcmp(cmd, "creg") == 0) {}
         else if (strcmp(cmd, "qreg") == 0) {
             uint32_t n = get_q_num(in);
             *n_qubits = (int)n;

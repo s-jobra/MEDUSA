@@ -252,7 +252,6 @@ static bool can_be_reduced(mtbdd_symb_t *symbc, rdata_t *rdata)
         // Check for permutations as well, first variable of the leaf is sufficient
         // (we always swap the whole leaf)
         if (rdata->upd->arr[i] != SYMEXP_NULL) {
-            //TODO: should check for include instead of first?
             if (symexp_is_first_var_marked(rdata->upd->arr[i], is_zero)) {
                 is_correct = false;
                 break;

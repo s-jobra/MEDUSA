@@ -668,8 +668,6 @@ TASK_IMPL_4(prob_t, mtbdd_prob_sum, MTBDD, t, uint32_t, xt, char*, curr_state, i
     // we must immediately convert to float else the skip coefficient will be also squared
     prob_t res = 0;
 
-    //TODO: cache + gc ??
-
     // terminal cases
     if (t == mtbdd_false) {
         return res;
