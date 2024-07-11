@@ -50,13 +50,11 @@ symexp_list_t* symexp_mul_c(symexp_list_t *a, unsigned long c)
 {
     symexp_list_t *res = symexp_list_mkcpy(a);
     symexp_list_mul_c(res, c);
-    //TODO: refs cnt update
     return symexp_htab_add(res);
 }
 
 symexp_list_t* symexp_op(symexp_list_t *a, symexp_list_t *b, symexp_op_t op)
 {
-    // No new alloc needed and refs cnt stays the same:
     // Case: NULL + NULL, NULL - NULL
     if (a == NULL && b == NULL) {
         return NULL;
@@ -143,10 +141,6 @@ symexp_list_t* symexp_op(symexp_list_t *a, symexp_list_t *b, symexp_op_t op)
         }
     }
 
-    // Update refs: TODO: segfault - probably not adding to refs somewhere
-    //symexp_ref_dec(a);
-    //symexp_ref_dec(b);
-
     // Check if cannot be reduced to NULL
     if (res->first == NULL) {
         symexp_list_del(res);
@@ -207,13 +201,6 @@ bool symexp_is_first_var_marked(symexp_list_t *l, bool *is_zero)
         }
     }
     return var_marked;
-}
-
-void symexp_ref_dec(symexp_list_t *l)
-{
-    if (l != NULL) {
-        htab_s_lookup_remove(symexp_table, l);
-    }
 }
 
 /* end of "symexp.c" */

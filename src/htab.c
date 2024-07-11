@@ -200,7 +200,7 @@ htab_s_key_t htab_s_lookup_add(htab_t *t, htab_s_key_t key)
     // Try to find the item
     while (item != NULL) {
         if (htab_s_key_cmp(htab_s_get_key(item), key)) {
-            item->data.value++;
+            item->data.value++; // Value counts the number of occurances, currently only for debug purposes
             return htab_s_get_key(item);
         }
         item = item->next;
