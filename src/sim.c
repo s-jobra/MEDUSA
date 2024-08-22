@@ -266,7 +266,7 @@ bool sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
                 continue; // end of command
             }
         }
-        else if ((strcmp(cmd, "qreg") == 0) || (strcmp(cmd, "qubit") == 0)) {
+        else if ((strcmp(cmd, "qreg") == 0) || (strcmp(cmd, "qubit") == 0)) { //FIXME: modify sim init so it can be used from verification as well
             if (init) {
                 error_exit("Multiple qubit register definitions encountered - currently not supported.\n");
             }

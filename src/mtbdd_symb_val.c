@@ -11,10 +11,6 @@ uint32_t ltype_symb_expr_id;
 coefs_k_t cs_k;
 
 
-/// Max. size of string written as leaf value in output file.
-#define MAX_SYMB_LEAF_STR_LEN MAX_ST_TO_STR_LEN * 5
-
-
 void cs_k_reset()
 {
     mpz_set_ui(cs_k, 0);

@@ -12,6 +12,9 @@
 #ifndef MTBDD_SYMB_VAL_H
 #define MTBDD_SYMB_VAL_H
 
+/// Max. size of string written as leaf value in output file.
+#define MAX_SYMB_LEAF_STR_LEN (MAX_ST_TO_STR_LEN * 4 + MAX_NUM_LEN * 2)
+
 /// Global variable for my custom symbolic expression mtbdd leaf type id
 extern uint32_t ltype_symb_expr_id;
 

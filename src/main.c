@@ -7,6 +7,7 @@
 #include "sim.h"
 #include "mtbdd_out.h"
 #include "error.h"
+#include "spec_parse.h"
 
 /// Name of the output .dot file
 #define OUT_FILE "res"
@@ -33,6 +34,7 @@
  \n\
  The MTBDD result is saved in the file 'res.dot'.\n\
  The evaluation of variables for large numbers is saved (if necessary) in 'res-vars.txt'.\n"
+//FIXME: update help according to new options
 
 /**
  * Returns the peak physical memory usage of the process in kilobytes. For an unsupported OS returns -1.
@@ -59,8 +61,10 @@ int main(int argc, char *argv[])
     bool opt_infile = false;
     bool opt_info = false;
     bool opt_measure = false;
-    bool opt_symbolic = false;
+    bool opt_symbolic_sim = false;
     bool opt_probability = false;
+    bool opt_verif = false; //FIXME: check if some option combinations arent forbidden
+    FILE *spec;
     unsigned long samples = 1024;
     
     int opt;
@@ -72,10 +76,11 @@ int main(int argc, char *argv[])
         {"nsamples", required_argument,  0, 'n'},
         {"symbolic", no_argument,        0, 's'},
         {"probability", no_argument,     0, 'p'},
+        {"verify", required_argument,  0, 'v'},
         {0, 0, 0, 0}
     };
     char *endptr;
-    while((opt = getopt_long(argc, argv, "hif:m::n:sp", long_options, 0)) != -1) {
+    while((opt = getopt_long(argc, argv, "hif:m::n:spv:", long_options, 0)) != -1) {
         switch(opt) {
             case 'h':
                 printf("%s\n", HELP_MSG);
@@ -107,10 +112,17 @@ int main(int argc, char *argv[])
                 }
                 break;
             case 's':
-                opt_symbolic = true;
+                opt_symbolic_sim = true;
                 break;
             case 'p':
                 opt_probability = true;
+                break;
+            case 'v':
+                opt_verif = true;
+                spec = fopen(optarg, "r");
+                if (spec == NULL) {
+                    error_exit("Invalid specification file '%s'.\n", optarg);
+                }
                 break;
             case '?':
                 exit(1); // error msg already printed by getopt_long
@@ -120,7 +132,7 @@ int main(int argc, char *argv[])
     // Init:
     init_sylvan();
     init_my_leaf(opt_probability);
-    if (opt_symbolic) {
+    if (opt_symbolic_sim || opt_verif) {
         init_sylvan_symb();
     }
     FILE *out = fopen(OUT_FILE".dot", "w");
@@ -128,6 +140,12 @@ int main(int argc, char *argv[])
         error_exit("Cannot open the output file.\n");
     }
     MTBDD circ;
+
+    if (opt_verif) {
+        init_sylvan_verif();
+        init_from_spec(spec, &circ);
+    }
+    
     int *bits_to_measure = NULL;
     bool is_measure = false;
     int n_qubits = 0;
@@ -137,11 +155,12 @@ int main(int argc, char *argv[])
     double t_el;
     clock_gettime(CLOCK_MONOTONIC, &t_start); // Start the timer
 
-    bool sim_successful = sim_file(input, &circ, &n_qubits, &bits_to_measure, &is_measure, opt_symbolic);
+    bool sim_successful = false; //FIXME: temp, to be removed
+    // bool sim_successful = sim_file(input, &circ, &n_qubits, &bits_to_measure, &is_measure, opt_symbolic_sim);
 
-    if (opt_measure && is_measure) {
-        measure_all(samples, measure_output, circ, n_qubits, bits_to_measure);
-    }
+    // if (opt_measure && is_measure) {
+    //     measure_all(samples, measure_output, circ, n_qubits, bits_to_measure);
+    // }
 
     clock_gettime(CLOCK_MONOTONIC, &t_finish); // End the timer
     

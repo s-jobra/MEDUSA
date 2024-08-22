@@ -18,12 +18,6 @@ uint64_t mtbdd_apply_cgate_id;
 coef_t c_k;
 
 
-/// Max. size of string written as leaf value in output file
-#define MAX_LEAF_STR_LEN 250
-
-/// Max. number of digits written in the .dot output file of a single number
-#define MAX_NUM_LEN 50
-
 /// Return min from two numbers
 #define GET_MIN(a, b) ((a) < (b))? (a) : (b)
 
