@@ -1,6 +1,6 @@
 OPENQASM 3.0;
 include "stdgates.inc";
-qreg q[98];
+qubit[98] q;
 
 x q[49];
 h q[0];
