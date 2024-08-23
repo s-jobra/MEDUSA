@@ -128,9 +128,9 @@ int main(int argc, char *argv[])
         error_exit("Cannot open the output file.\n");
     }
     MTBDD circ;
-    int *bits_to_measure;
+    int *bits_to_measure = NULL;
     bool is_measure = false;
-    int n_qubits;
+    int n_qubits = 0;
 
     // Sim:
     struct timespec t_start, t_finish;
