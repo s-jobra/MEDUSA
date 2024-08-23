@@ -1,7 +1,7 @@
 OPENQASM 3.0;
 include "stdgates.inc";
-qreg q[10];
-creg c[10];
+qubit[10] q;
+bit[10] c;
 
 x q[5];
 h q[0];
@@ -52,13 +52,13 @@ h q[3];
 h q[4];
 z q[5];
 }
-measure q[0] -> c[0];
-measure q[1] -> c[1];
-measure q[2] -> c[2];
-measure q[3] -> c[3];
-measure q[4] -> c[4];
-measure q[5] -> c[5];
-measure q[6] -> c[6];
-measure q[7] -> c[7];
-measure q[8] -> c[8];
-measure q[9] -> c[9];
+c[0] = measure q[0];
+c[1] = measure q[1];
+c[2] = measure q[2];
+c[3] = measure q[3];
+c[4] = measure q[4];
+c[5] = measure q[5];
+c[6] = measure q[6];
+c[7] = measure q[7];
+c[8] = measure q[8];
+c[9] = measure q[9];

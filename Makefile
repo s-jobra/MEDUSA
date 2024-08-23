@@ -15,7 +15,7 @@ INC_DIRS:=-I $(LIB_DIR)/sylvan/src/ -I $(LACE_DIR)/lace-src/src/ -I $(LACE_DIR)/
 
 N_JOBS=4
 
-OF_TYPE=svg
+OF_TYPE=pdf
 F_OUT_NAME=res
 LONG_NUMS_OUT_FILE=res-vars.txt
 BSCRIPT_PATH=benchmark-utils/scripts

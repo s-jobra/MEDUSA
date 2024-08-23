@@ -11,12 +11,16 @@
 #include "htab.h"
 #include "error.h"
 
-/// Max. supported length of qasm command
-#define CMD_MAX_LEN 10
+/// Max. supported length of the string with classical bit register identifier (includes '\0')
+#define BIT_REG_ID_MAX_LEN (30+1)
+/// Max. supported length of the string with the qasm command (set to identifier length because of OpenQASM 3 measurement syntax)
+#define CMD_MAX_LEN BIT_REG_ID_MAX_LEN
 /// Max. number of characters in a parsed number
 #define NUM_MAX_LEN 25
 /// Constant for no other possible end character for 'parse_num()'
 #define NO_ALT_END -2
+/// Constant for index into classical bit register used for measurement results if the qubit shouldn't be measured
+#define Q_NOT_MEASURED -1
 /// Eps for checking if probability is > 0 & < 1
 #define EPSILON 0.001
 
@@ -166,8 +170,10 @@ static int skip_one_line_comments(char c, FILE *in)
 bool sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool *is_measure, bool opt_symb)
 {
     int c;
-    char cmd[CMD_MAX_LEN];
+    char cmd[CMD_MAX_LEN]; // initialized to 0s in the loop
+    char bit_reg[BIT_REG_ID_MAX_LEN] = {0};
     bool init = false;
+    int n_bits = 0;
 
     bool is_loop = false;
     bool is_first_symb = true;
@@ -202,30 +208,73 @@ bool sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
             if (c == EOF) {
                 error_exit("Invalid format - reached an unexpected end of file when loading a command.\n");
             }
-            else if (strlen(cmd) + 1 < CMD_MAX_LEN) {
-                int *temp = &c;
-                strncat(cmd, (char *)temp, 1);
+            int len = strlen(cmd);
+            if (len + 1 < CMD_MAX_LEN) {
+                cmd[len] = (char) c;
             }
             else {
                 error_exit("Invalid command (command too long).\n");
             }
-        } while (!isspace(c = fgetc(in)));
-
-        if (c == EOF) {
+        } while (!isspace(c = fgetc(in)) && (c != '['));
+        if (c == '[') {
+            // get_q_num() needs to see '[' (needed because of OpenQASM 3 new syntax)
+            ungetc(c, in);
+        }
+        else if (c == EOF) {
             error_exit("Invalid format - reached an unexpected end of file immediately after a command.\n");
         }
 
         // Identify the command
         if (strcmp(cmd, "OPENQASM") == 0) {}
         else if (strcmp(cmd, "include") == 0) {}
-        else if (strcmp(cmd, "creg") == 0) {}
-        else if (strcmp(cmd, "qreg") == 0) {
+        else if ((strcmp(cmd, "creg") == 0) || (strcmp(cmd, "bit") == 0)) {
+            if (n_bits != 0) {
+                error_exit("Multiple bit register definitions encountered - currently not supported.\n");
+            }
+
             uint32_t n = get_q_num(in);
-            *n_qubits = (int)n;
+            n_bits = (int)n;
+            if (*n_qubits != 0 && n != *n_qubits) { // != 0 check because maybe it's not initialized yet
+                error_exit("Bit register size is different than the size of the qubit register - currently not supported.\n");
+            }
+
             *bits_to_measure = my_malloc(n * sizeof(int));
             for (int i=0; i < n; i++) {
-                (*bits_to_measure)[i] = -1;
+                (*bits_to_measure)[i] =  Q_NOT_MEASURED;
             }
+
+            while (isspace(c = fgetc(in))) { }
+            // Save the register name to detect measurements
+            do {
+                if (c == ';') {
+                    break; // continue needs to be outside of the loop
+                }
+                else if (c == EOF) {
+                    error_exit("Invalid format - reached an unexpected end of file (bit register name expected).\n");
+                }
+                int len = strlen(bit_reg);
+                if (len + 1 < BIT_REG_ID_MAX_LEN) {
+                    bit_reg[len] = (char) c;
+                }
+                else {
+                    error_exit("Invalid bit register identifier (identifier is too long, max supported length is %d).\n", BIT_REG_ID_MAX_LEN-1);
+                }
+            } while (!isspace(c = fgetc(in)));
+            if (c == ';') {
+                continue; // end of command
+            }
+        }
+        else if ((strcmp(cmd, "qreg") == 0) || (strcmp(cmd, "qubit") == 0)) {
+            if (init) {
+                error_exit("Multiple qubit register definitions encountered - currently not supported.\n");
+            }
+
+            uint32_t n = get_q_num(in);
+            *n_qubits = (int)n;
+            if (n_bits != 0 && n != n_bits) { // != 0 check because maybe it's not initialized yet
+                error_exit("Bit register size is different than the size of the qubit register - currently not supported.\n");
+            }
+
             circuit_init(circ, n);
             mtbdd_protect(circ);
             init = true;
@@ -295,9 +344,20 @@ bool sim_file(FILE *in, MTBDD *circ, int *n_qubits, int **bits_to_measure, bool 
                 }
                 continue; // ';' not expected
             }
-            else if (strcmp(cmd, "measure") == 0) {
-                uint32_t qt = get_q_num(in);
-                uint32_t ct = get_q_num(in);
+            else if ((strcmp(cmd, "measure") == 0) || (strcmp(cmd, bit_reg) == 0)) {
+                if (*bits_to_measure == NULL) {
+                    error_exit("Measuring into an uninitialized bit register.\n");
+                }
+                uint32_t qt, ct;
+                if ((strcmp(cmd, "measure") == 0)) {
+                    qt = get_q_num(in);
+                    ct = get_q_num(in);
+                }
+                else {
+                    ct = get_q_num(in);
+                    qt = get_q_num(in);
+                }
+                
                 *is_measure = true;
                 (*bits_to_measure)[qt] = ct;
             }
@@ -423,7 +483,7 @@ void measure_all(unsigned long samples, FILE *output, MTBDD circ, int n, int *bi
 
         for (int j=0; j < n; j++) {
             curr_ct = bits_to_measure[j];
-            if (curr_ct == -1) {
+            if (curr_ct ==  Q_NOT_MEASURED) {
                 continue;
             }
 
