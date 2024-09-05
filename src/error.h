@@ -21,6 +21,11 @@ void error_exit(const char *error, ...);
 void* my_malloc(size_t size);
 
 /**
+ * Custom calloc function including error handling.
+ */
+void* my_calloc(size_t n, size_t elem_size);
+
+/**
  * Custom realloc function including error handling.
  */
 void* my_realloc(void *p, size_t size);

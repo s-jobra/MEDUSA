@@ -31,6 +31,14 @@ void* my_malloc(size_t size) {
     return p;
 }
 
+void* my_calloc(size_t n, size_t elem_size) {
+    void *p = calloc(n, elem_size);
+    if (p == NULL) {
+        error_exit("Bad memory allocation.\n");
+    }
+    return p;
+}
+
 void* my_realloc(void *p, size_t size) {
     void *p_new = realloc(p, size);
     if (p_new == NULL) {

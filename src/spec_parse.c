@@ -4,72 +4,219 @@
 #include "symexp.h"
 #include "error.h"
 
-/// String length for max supported length of symbolic variable identifier (includes '\0')
+/// Max supported length of symbolic variable identifier
 /// Chosen as max value that is lesser than internal variable mapping max: 52 * 62^9 < uint64_max
-#define MAX_IDENTIF_LEN (10+1)
-/// String length for max supported number of decimals of a number (includes '\0')
-#define MAX_INPUT_NUM_LEN (MAX_NUM_LEN+1)
+#define MAX_IDENTIF_LEN 10
+/// Max supported number of digits in an integer/binary number
+#define MAX_BIN_NUM_LEN 500
 
 /// Type for specifying token types
 typedef enum {
-    TOKEN_NUM,          // For specific amplitudes
-    TOKEN_SYMB_VAR,     // For symbolic amplitudes
-    TOKEN_TUPLE_SEP,    // , (separator between 5-tuple values)
-    TOKEN_AMPL_SEP,     // + (separator between amplitudes)
+    TOKEN_COMMA,        // , (separator between tuple values)
+    TOKEN_PLUS,         // + (separator between amplitudes)
     TOKEN_LPAR,         // (
     TOKEN_RPAR,         // )
-    TOKEN_TENSOR_PROD,  // * (tensor product operator) FIXME: add states or a single TOKEN_STAR?
+    TOKEN_TENSOR_PROD,  // x (tensor product operator)
     TOKEN_KET_START,    // |
-    TOKEN_BASE_VEC,     // Binary string or * for the remaining states
     TOKEN_KET_END,      // >
+    TOKEN_STAR,         // *
+    TOKEN_K_DEF,        // "k=" (accepts both with and without ws between chars)
+    TOKEN_Q_ORDER,      // "Qubit order:"
+    TOKEN_VAR_CONSTR,   // "Variable constraints:" + block of SMT constraints
+    TOKEN_SYM_VAR,      // Symbolic variable identifiers
+    TOKEN_INT,          // Integers (signed)
+    TOKEN_UINT,          // Unsigned integers (for qubit order)
+    TOKEN_BIN_STR,      // Base vector (binary string)
+    TOKEN_NEWLINE,      // \n
     TOKEN_END,          // EOF
-    TOKEN_INVALID
+    TOKEN_INVALID       // unrecognized token
 } token_type_t;
-#define TUPLE_SEP ','
-#define AMPL_SEP '+'
-#define TENSOR_PROD '*'
-#define KET_START '|'
-#define KET_END '>'
-#define REMAINIG_STATES '*'
 
 /// Type for token representation
 typedef struct token {
     token_type_t type;
-    char *value; /// Token value - either number (dec/bin), symbolic variable or start of invalid token, null for other token types
+    char *value; /// Token value - string with number (dec/bin), symbolic variable or start of invalid token, null for other token types
 } token_t;
 
 /**
- * Scanner, returns next token from the given file
+ * Fills the given token for the case of TOKEN_SYM_VAR, includes the string read so far
+ * (separate function because some TOKEN_SYM_VAR can be treated as another token before recognizing).
  */
-static token_t get_token(FILE *spec)
+static void fill_token_symb_var(token_t *tok, FILE *in, char *str_read)
 {
-    token_t tok;    //FIXME: pass by value or reference?
-    tok.value = NULL;
+    tok->value = my_calloc(MAX_IDENTIF_LEN + 1, sizeof(char));
+    if (strlen(str_read) > MAX_IDENTIF_LEN) {
+        error_exit("Max symbolic variable identifier length (%d characters) exceeded in specification.\n", MAX_IDENTIF_LEN);
+    }
+    strcpy(tok->value, str_read);
 
-    int c = fgetc(spec);
-
-    while (isspace(c)) {
-        c = fgetc(spec);
+    int c;
+    int i = strlen(str_read);
+    while(isalnum(c = fgetc(in))) {
+        if (i == MAX_IDENTIF_LEN) {
+            error_exit("Max symbolic variable identifier length (%d characters) exceeded in specification.\n", MAX_IDENTIF_LEN);
+        }
+        tok->value[i] = c;
+        i++;
+    }
+    if (c == EOF) {
+        putc(EOF, in); // So we can return TOKEN_END next time
+    }
+    else if (!isspace(c)) {
+        tok->type = TOKEN_INVALID;
+        if (i < MAX_IDENTIF_LEN) {
+            tok->value[i] = c; // Append for debugging if possible
+        }
+        return;
     }
 
-    if (c == TUPLE_SEP) {
-        tok.type = TOKEN_TUPLE_SEP;
+    tok->type = TOKEN_SYM_VAR;
+}
+
+/**
+ * Scanner, fills the given token with the next token from the stream
+ */
+static void get_next_token(token_t *tok, FILE *in)
+{
+    tok->value = NULL;
+    int c;
+
+    do {
+        c = fgetc(in);
+    } while (isspace(c));
+
+    // Unambiguous single char tokens
+    if (c == EOF) {
+        tok->type = TOKEN_END;
     }
-    //FIXME: add all rules
+    else if (c == '\n') {
+        tok->type = TOKEN_NEWLINE;
+    }
+    else if (c == ',') {
+        tok->type = TOKEN_COMMA;
+    }
+    else if (c == '+') {
+        tok->type = TOKEN_PLUS;
+    }
+    else if (c == '(') {
+        tok->type = TOKEN_LPAR;
+    }
+    else if (c == ')') {
+        tok->type = TOKEN_RPAR;
+    }
+    else if (c == '|') {
+        tok->type = TOKEN_KET_START;
+    }
+    else if (c == '>') {
+        tok->type = TOKEN_KET_END;
+    }
+    else if (c == '*') {
+        tok->type = TOKEN_STAR;
+    }
+    // Numbers (int, uint or binary string)
+    else if (isdigit(c) || c == '-') {
+        bool is_unsigned = (c == '-')? false : true;
+        bool is_binary = is_unsigned; // Negative integers are never binary bases, in other cases sets initially true
+        assert(MAX_BIN_NUM_LEN >= MAX_NUM_LEN); // So we can use the same array size for both cases
+        tok->value = my_calloc(MAX_BIN_NUM_LEN+1, sizeof(char));
+        int i = 0;
+        do {
+            is_binary = is_binary && ((c == '0') || (c == '1'));
+            if (is_binary && i == MAX_BIN_NUM_LEN) {
+                error_exit("Specification exceeds max supported number of digits for binary numbers (%d digits).\n", MAX_BIN_NUM_LEN);
+            }
+            else if (!is_binary && i >= MAX_NUM_LEN) { // >= because maybe we treated as a binary number before
+                error_exit("Specification exceeds max supported number of digits for integers (%d digits).\n", MAX_NUM_LEN);
+            }
+            tok->value[i] = c;
+            i++;
+        } while (isdigit(c = fgetc(in)));
+        if (c == EOF) {
+            putc(EOF, in); // So we can return TOKEN_END next time
+        }
+        // Invalid token?
+        if (!isspace(c) && c != EOF) {
+            tok->type = TOKEN_INVALID;
+            tok->value[i] = c; // Append for debugging
+        }
+        else if (is_binary) {
+            tok->type = TOKEN_BIN_STR;
+        }
+        else if (is_unsigned) {
+            tok->type = TOKEN_UINT;
+        }
+        else {
+            tok->type = TOKEN_INT;
+        }
+    }
+    // Either single char token or identifier
+    else if (c == 'x') {
+        c = fgetc(in);
+        if (c == EOF) {
+            putc(EOF, in); // So we can return TOKEN_END next time
+        }
+        else if (!isspace(c)) {
+            // Is actually symbolic variable identifier
+            char str_read[3] = {0};
+            str_read[0] = 'x';
+            str_read[1] = c;
+            fill_token_symb_var(tok, in, str_read);
+            return;
+        }
+        tok->type = TOKEN_TENSOR_PROD;
+    }
+    else if (c == 'k') {
+        bool ws_skipped = false;
+        c = fgetc(in);
+        while (isspace(c)) {
+            c = fgetc(in);
+            ws_skipped = true;
+        }
+        if (c == '=') {
+            tok->type = TOKEN_K_DEF;
+        }
+        else if (!ws_skipped){ // Try if not identifier
+            char str_read[3] = {0};
+            str_read[0] = 'x';
+            str_read[1] = c;
+            fill_token_symb_var(tok, in, str_read);
+        }
+        else {
+            if (ws_skipped) {
+                putc(' ', in);
+            }
+            c = 'k';
+            goto token_invalid;
+        }
+    }
+    else if (c == 'Q') {
+        //FIXME: finish
+        tok->type = TOKEN_Q_ORDER;
+    }
+    else if (c == 'V') {
+        //FIXME: finish
+        tok->type = TOKEN_VAR_CONSTR;
+    }
+    // Symbolic variable identifier
+    else if (isalpha(c)) {
+        char str_read[2] = {0};
+        str_read[0] = c;
+        fill_token_symb_var(tok, in, str_read);
+    }
     else {
-        tok.type = TOKEN_INVALID;
+    token_invalid:
+        tok->type = TOKEN_INVALID;
         // Fill the token value with 10 other character so the start of the invalid token can be printed for debugging
-        tok.value = calloc(MAX_IDENTIF_LEN, sizeof(char));
-        tok.value[0] = c; 
-        for (int i = 1; i < MAX_IDENTIF_LEN; i++) {
-            c = fgetc(spec);
+        tok->value = my_calloc((MAX_IDENTIF_LEN + 1), sizeof(char));
+        tok->value[0] = c; 
+        for (int i = 0; i < MAX_IDENTIF_LEN; i++) {
+            c = fgetc(in);
             if (c == EOF) {
                 break;
             }
-            tok.value[i] = c;
+            tok->value[i] = c;
         }
     }
-    return tok;
 }
 
 /**
@@ -82,7 +229,11 @@ void parse_spec(FILE *spec,  MTBDD *circ)
     char ampl[N_COEFS][MAX_NUM_LEN];
     bool is_symbolic = false;
 
-    while ((tok = get_token(spec)).type != TOKEN_END) {
+    while (true) {
+        get_next_token(&tok, spec);
+        if (tok.type == TOKEN_END) {
+            break;
+        }
         if (tok.type == TOKEN_INVALID) {
             error_exit("Invalid token in precondition specification (starts here %s...).\n", tok.value);
         }
