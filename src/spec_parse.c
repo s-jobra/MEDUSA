@@ -9,6 +9,12 @@
 #define MAX_IDENTIF_LEN 10
 /// Max supported number of digits in an integer/binary number
 #define MAX_BIN_NUM_LEN 500
+/// Variable constraints definition keyword
+#define SYM_VAR_KEYWORD "Constraints:"
+/// Length of variable constraints definition keyword
+#define SYM_VAR_KEYWORD_LEN strlen(SYM_VAR_KEYWORD)
+/// Max supported number of characters in variable constraint smt block
+#define MAX_SMT_BLOCK_LEN 1000
 
 /// Type for specifying token types
 typedef enum {
@@ -22,15 +28,19 @@ typedef enum {
     TOKEN_STAR,         // *
     TOKEN_K_DEF,        // "k=" (accepts both with and without ws between chars)
     TOKEN_Q_ORDER,      // "Qubit order:"
-    TOKEN_VAR_CONSTR,   // "Variable constraints:" + block of SMT constraints
+    TOKEN_VAR_CONSTR,   // "Constraints:" + block of SMT constraints
     TOKEN_SYM_VAR,      // Symbolic variable identifiers
     TOKEN_INT,          // Integers (signed)
     TOKEN_UINT,          // Unsigned integers (for qubit order)
     TOKEN_BIN_STR,      // Base vector (binary string)
-    TOKEN_NEWLINE,      // \n
     TOKEN_END,          // EOF
-    TOKEN_INVALID       // unrecognized token
+    TOKEN_INVALID       // Unrecognized token
 } token_type_t;
+
+/// Separator between tuple values/qubit order indices (for checking if the current token is a valid symbolic variable)
+#define TUPLE_SEP ','
+/// Ket start character (needed for TOKEN_SYM_VAR look ahead check)
+#define KET_START '|'
 
 /// Type for token representation
 typedef struct token {
@@ -39,16 +49,35 @@ typedef struct token {
 } token_t;
 
 /**
+ * Sets the given token type as TOKEN_INVALID and sets its value to the given string.
+ * If the string is NULL, it is assumed the value of the token is properly set already and only the type is changed.
+ */
+static void fill_token_invalid(token_t *tok, char *str)
+{
+    tok->type = TOKEN_INVALID;
+    if (str != NULL) {
+        tok->value = my_calloc(strlen(str) + 1, sizeof(char));
+        strcpy(tok->value, str);
+    }
+}
+
+/**
  * Fills the given token for the case of TOKEN_SYM_VAR, includes the string read so far
  * (separate function because some TOKEN_SYM_VAR can be treated as another token before recognizing).
+ * Also sets the last read character if necessary.
+ * @param tok token to fill in case we are not dealing with a keyword
+ * @param in specification input
+ * @param str_read start of the symbolic variable identifier we have already processed before entering this function (assumed to be a correct identifier so far)
+ * @param read_previous flag that needs to be set to 'true' if the lexer should use the previously read character during the next invocation
+ * @param last_c_read last character read during the current invocation of the lexer
  */
-static void fill_token_symb_var(token_t *tok, FILE *in, char *str_read)
+static void fill_tok_symb_var_from_str(token_t *tok, FILE *in, char *str_read, bool *read_previous, int *last_c_read)
 {
     tok->value = my_calloc(MAX_IDENTIF_LEN + 1, sizeof(char));
     if (strlen(str_read) > MAX_IDENTIF_LEN) {
         error_exit("Max symbolic variable identifier length (%d characters) exceeded in specification.\n", MAX_IDENTIF_LEN);
     }
-    strcpy(tok->value, str_read);
+    strcpy(tok->value, str_read); // Always copy, always at least 1 character
 
     int c;
     int i = strlen(str_read);
@@ -59,18 +88,191 @@ static void fill_token_symb_var(token_t *tok, FILE *in, char *str_read)
         tok->value[i] = c;
         i++;
     }
-    if (c == EOF) {
-        putc(EOF, in); // So we can return TOKEN_END next time
-    }
-    else if (!isspace(c)) {
-        tok->type = TOKEN_INVALID;
+
+    if (!isspace(c) && c != EOF && c != TUPLE_SEP && c != KET_START) {
         if (i < MAX_IDENTIF_LEN) {
             tok->value[i] = c; // Append for debugging if possible
         }
+        fill_token_invalid(tok, NULL);
         return;
     }
-
     tok->type = TOKEN_SYM_VAR;
+    *last_c_read = c;
+    *read_previous = true;
+}
+
+/**
+ * Checks if the current token is the given short keyword by checking the character that should follow after whitespace. If yes, returns true, else 
+ * reads the symbolic variable or the invalid token and fills the given data structures.
+ * @param start first character of the keyword (currently supports only format char-ws-c_follow)
+ * @param c_follow character after whitespace that is present only in the keyword
+ * @param tok token to fill in case we are not dealing with a keyword
+ * @param in specification input
+ * @param read_previous flag that needs to be set to 'true' if the lexer should use the previously read character during the next invocation
+ * @param last_c_read last character read during the current invocation of the lexer
+ */
+static bool check_if_short_keyword_else_fill_token(char start, char c_follow, token_t *tok, FILE *in, bool *read_previous, int *last_c_read)
+{
+    int c;
+    bool ws_skipped = false;
+    while (isspace(c = fgetc(in))) { ws_skipped = true;}
+    if (c == c_follow) {
+        return true;
+    }
+    else if (!ws_skipped) {
+        // Already read a next character from the identifier
+        if (isalnum(c)) {
+            char buf[3] = {0};
+            buf[0] = start;
+            buf[1] = c;
+            fill_tok_symb_var_from_str(tok, in, buf, read_previous, last_c_read);
+        }
+        else {
+            // Invalid
+            char buf[MAX_IDENTIF_LEN + 1] = {0};
+            buf[0] = start;
+            for (int i = 0; i < MAX_IDENTIF_LEN; i++) {
+                if (c == EOF) {
+                    break;
+                }
+                buf[i] = c;
+                c = fgetc(in);
+            }
+            fill_token_invalid(tok, buf);
+        }
+    }
+    else {
+        // Only identifier 'start' - set manually
+        tok->type = TOKEN_SYM_VAR;
+        tok->value = my_calloc(MAX_IDENTIF_LEN + 1, sizeof(char));
+        tok->value[0] = start;
+        *read_previous = true;
+        *last_c_read = c;
+    }
+
+    return false;
+}
+
+/**
+ * Checks if is case of long keyword with multiple words or if it is actually a symbolic variable. In both cases fills the given token.
+ * @param keyword string containing the keyword
+ * @param ttype token type corresponding to the keyword
+ * @param tok token to fill
+ * @param in specification input stream
+ * @param read_previous flag that needs to be set to 'true' if the lexer should use the previously read character during the next invocation
+ * @param last_c_read last character read during the current invocation of the lexer
+ */
+static void check_if_long_keyword_w_space_or_identif(char *keyword, token_type_t ttype, token_t *tok, FILE *in, bool *read_previous, int *last_c_read)
+{
+    int c;
+    bool keyword_match = true;
+    char *first_space = strchr(keyword, ' ');
+    int first_space_index = first_space - keyword;
+    int i = 1;
+
+    for (; i <= first_space_index; i++) { // Starts from 1 because we know the first character is matching
+        c = fgetc(in);
+        if (c != keyword[i]) {
+            keyword_match = false;
+            break;
+        }
+    }
+
+    if (keyword_match) {
+        // Try to match the rest of the keyword, still possibly a symbolic variable identifier
+        for (; i < strlen(keyword); i++) {
+            c = fgetc(in);
+            if (c != keyword[i]) {
+                keyword_match = false;
+                break;
+            }
+        }
+
+        if (keyword_match) {
+            tok->type = ttype;
+            // No need to set last character read since we read only the keyword
+            return;
+        }
+    }
+
+    // Else either a symbolic variable or an invalid token
+    char buf[i+2];
+    strcpy(buf, keyword);
+    buf[i] = c;
+    buf[i+1] = '\0';
+    bool is_alnum = true;
+    for (int i = 1; i < i+2; i++) { // First character isalpha() = true
+        if (!isalnum(buf[i])) {
+            is_alnum = false;
+            break;
+        }
+    }
+    if (is_alnum) {
+        // Symbolic variable
+        fill_tok_symb_var_from_str(tok, in, buf, read_previous, last_c_read);
+    }
+    else {
+        //Invalid
+        fill_token_invalid(tok, buf); //FIXME: print longer? like full 10 chars
+    }
+}
+
+/**
+ * Handles case when the current token can be either a keyword or a symbolic variable
+ * (parts of the keyword or the whole keyword is a possible symbolic variable identifier)
+ * @param tok token to be filled
+ * @param in specification input stream
+ * @param start first character read by the lexer (because we read a character, we entered this handle)
+ * @param read_previous flag that needs to be set to 'true' if the lexer should use the previously read character during the next invocation
+ * @param last_c_read last character read during the current invocation of the lexer
+ */
+static void handle_alpha(token_t *tok, FILE *in, char start, bool *read_previous, int *last_c_read)
+{
+    if (start == 'x') {
+        // Possibly tensor product
+        if (check_if_short_keyword_else_fill_token('x', '(', tok, in, read_previous, last_c_read)) {
+            tok->type = TOKEN_TENSOR_PROD;
+            *last_c_read = '(';
+            *read_previous = true;
+        }
+    }
+    else if (start == 'k') {
+        // Possibly k definition
+        if (check_if_short_keyword_else_fill_token('k', '=', tok, in, read_previous, last_c_read)) {
+            tok->type = TOKEN_K_DEF;
+            // Not setting last read here since = is actually part of the keyword
+        }
+    }
+    else if (start == 'Q') {
+        // Possibly qubit order definition
+        check_if_long_keyword_w_space_or_identif("Qubit order:", TOKEN_Q_ORDER, tok, in, read_previous, last_c_read); //FIXME: check last c read if correct + identif creating
+    }
+    else {
+        // Loading symbolic var from the start
+        tok->value = my_calloc(MAX_IDENTIF_LEN + 1, sizeof(char));
+        tok->value[0] = start;
+
+        int c;
+        int i = 1;
+        while(isalnum(c = fgetc(in))) {
+            if (i == MAX_IDENTIF_LEN) {
+                error_exit("Max symbolic variable identifier length (%d characters) exceeded in specification.\n", MAX_IDENTIF_LEN);
+            }
+            tok->value[i] = c;
+            i++;
+        }
+
+        if (!isspace(c) && c != EOF && c != TUPLE_SEP && c != KET_START) {
+            if (i < MAX_IDENTIF_LEN) {
+                tok->value[i] = c; // Append for debugging if possible
+            }
+            fill_token_invalid(tok, NULL);
+            return;
+        }
+        tok->type = TOKEN_SYM_VAR;
+        *last_c_read = c;
+        *read_previous = true;
+    }
 }
 
 /**
@@ -79,20 +281,21 @@ static void fill_token_symb_var(token_t *tok, FILE *in, char *str_read)
 static void get_next_token(token_t *tok, FILE *in)
 {
     tok->value = NULL;
-    int c;
+    static bool use_last_read = false;
+    static int c; // Last read character
 
-    do {
-        c = fgetc(in);
-    } while (isspace(c));
+    if (!use_last_read || isspace(c)) {
+        do {
+            c = fgetc(in);
+        } while (isspace(c));
+    }
+    use_last_read = false; // Do not propagate further
 
     // Unambiguous single char tokens
     if (c == EOF) {
         tok->type = TOKEN_END;
     }
-    else if (c == '\n') {
-        tok->type = TOKEN_NEWLINE;
-    }
-    else if (c == ',') {
+    else if (c == TUPLE_SEP) {
         tok->type = TOKEN_COMMA;
     }
     else if (c == '+') {
@@ -104,7 +307,7 @@ static void get_next_token(token_t *tok, FILE *in)
     else if (c == ')') {
         tok->type = TOKEN_RPAR;
     }
-    else if (c == '|') {
+    else if (c == KET_START) {
         tok->type = TOKEN_KET_START;
     }
     else if (c == '>') {
@@ -118,7 +321,7 @@ static void get_next_token(token_t *tok, FILE *in)
         bool is_unsigned = (c == '-')? false : true;
         bool is_binary = is_unsigned; // Negative integers are never binary bases, in other cases sets initially true
         assert(MAX_BIN_NUM_LEN >= MAX_NUM_LEN); // So we can use the same array size for both cases
-        tok->value = my_calloc(MAX_BIN_NUM_LEN+1, sizeof(char));
+        tok->value = my_calloc(MAX_BIN_NUM_LEN + 1, sizeof(char));
         int i = 0;
         do {
             is_binary = is_binary && ((c == '0') || (c == '1'));
@@ -131,13 +334,11 @@ static void get_next_token(token_t *tok, FILE *in)
             tok->value[i] = c;
             i++;
         } while (isdigit(c = fgetc(in)));
-        if (c == EOF) {
-            putc(EOF, in); // So we can return TOKEN_END next time
-        }
+        use_last_read = true;
         // Invalid token?
         if (!isspace(c) && c != EOF) {
-            tok->type = TOKEN_INVALID;
             tok->value[i] = c; // Append for debugging
+            fill_token_invalid(tok, NULL);
         }
         else if (is_binary) {
             tok->type = TOKEN_BIN_STR;
@@ -149,73 +350,78 @@ static void get_next_token(token_t *tok, FILE *in)
             tok->type = TOKEN_INT;
         }
     }
-    // Either single char token or identifier
-    else if (c == 'x') {
-        c = fgetc(in);
-        if (c == EOF) {
-            putc(EOF, in); // So we can return TOKEN_END next time
+    // If not keyword, possibly a symbolic variable
+    else if (c == 'C') {
+        //FIXME: probably should move into handle_alpha() and also maybe not totaly correct (identifier too long gives different error)
+        // Because we assume this, a string too long to be the keyword can never actually be an identifier
+        // (important for the following conditions checking TOKEN_INVALID)
+        assert(SYM_VAR_KEYWORD_LEN >= MAX_IDENTIF_LEN);
+
+        // Check for "Constraints:" keyword
+        int i = 0;
+        char buf[SYM_VAR_KEYWORD_LEN + 1];
+        for (int i=0; i < SYM_VAR_KEYWORD_LEN + 1; i++) {
+            buf[i] = 0;
         }
-        else if (!isspace(c)) {
-            // Is actually symbolic variable identifier
-            char str_read[3] = {0};
-            str_read[0] = 'x';
-            str_read[1] = c;
-            fill_token_symb_var(tok, in, str_read);
-            return;
-        }
-        tok->type = TOKEN_TENSOR_PROD;
-    }
-    else if (c == 'k') {
-        bool ws_skipped = false;
-        c = fgetc(in);
-        while (isspace(c)) {
-            c = fgetc(in);
-            ws_skipped = true;
-        }
-        if (c == '=') {
-            tok->type = TOKEN_K_DEF;
-        }
-        else if (!ws_skipped){ // Try if not identifier
-            char str_read[3] = {0};
-            str_read[0] = 'x';
-            str_read[1] = c;
-            fill_token_symb_var(tok, in, str_read);
+        do {
+            if (c == EOF || i == SYM_VAR_KEYWORD_LEN) {
+                fill_token_invalid(tok, buf);
+                return;
+            }
+            buf[i] = c;
+            i++;
+        } while (!isspace(c = fgetc(in)));
+
+        // Is a constraint definition keyword?
+        if (strcmp(buf, SYM_VAR_KEYWORD) == 0) {
+            tok->type = TOKEN_VAR_CONSTR;
+            tok->value = calloc(MAX_SMT_BLOCK_LEN + 1, sizeof(char));
+
+            // Load the SMT block
+            int i = 0;
+            while ((c = fgetc(in)) != EOF) { // c before entering the loop is ws, so no need to save
+                if (i == MAX_SMT_BLOCK_LEN) {
+                    error_exit("Max supported number of characters in SMT constraints exceeded (%d characters).\n", MAX_SMT_BLOCK_LEN);
+                }
+                tok->value[i] = c;
+                i++;
+            }
         }
         else {
-            if (ws_skipped) {
-                putc(' ', in);
+            // Check if can be identifier
+            bool identif_possible = true;
+            // I know first character is 'C' so no need to check
+            for (int j=1; j < i; j++) {
+                if (!isalnum(buf[j]) || j > MAX_IDENTIF_LEN) {
+                    identif_possible = false;
+                    break;
+                }
             }
-            c = 'k';
-            goto token_invalid;
+            if (identif_possible) {
+                fill_tok_symb_var_from_str(tok, in, buf, &use_last_read, &c); //FIXME: check if is the case when only alphanum are present
+            }
+            else {
+                fill_token_invalid(tok, buf);
+            }
         }
     }
-    else if (c == 'Q') {
-        //FIXME: finish
-        tok->type = TOKEN_Q_ORDER;
-    }
-    else if (c == 'V') {
-        //FIXME: finish
-        tok->type = TOKEN_VAR_CONSTR;
-    }
-    // Symbolic variable identifier
+    // Can be both (start of) a keyword or a symbolic variable
     else if (isalpha(c)) {
         char str_read[2] = {0};
         str_read[0] = c;
-        fill_token_symb_var(tok, in, str_read);
+        fill_tok_symb_var_from_str(tok, in, str_read, &use_last_read, &c); //FIXME: check if is the case when only alphanum are present
     }
     else {
-    token_invalid:
-        tok->type = TOKEN_INVALID;
-        // Fill the token value with 10 other character so the start of the invalid token can be printed for debugging
-        tok->value = my_calloc((MAX_IDENTIF_LEN + 1), sizeof(char));
-        tok->value[0] = c; 
+        // Fill the token value with a few other characters so the start of the invalid token can be printed for debugging
+        char buf[MAX_IDENTIF_LEN + 1] = {0};
         for (int i = 0; i < MAX_IDENTIF_LEN; i++) {
-            c = fgetc(in);
             if (c == EOF) {
                 break;
             }
-            tok->value[i] = c;
+            buf[i] = c;
+            c = fgetc(in);
         }
+        fill_token_invalid(tok, buf);
     }
 }
 
