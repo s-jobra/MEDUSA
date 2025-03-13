@@ -57,10 +57,10 @@ int main(int argc, char *argv[])
     FILE *input = stdin;
     FILE *measure_output = stdout;
     bool opt_infile = false;
-    bool opt_info = false;
     bool opt_measure = false;
-    bool opt_symbolic = false;
     bool opt_probability = false;
+    sim_flags_t flags = { .opt_symb = false,
+                          .opt_info = false };
     unsigned long samples = 1024;
     
     int opt;
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
                 printf("%s\n", HELP_MSG);
                 exit(0);
             case 'i':
-                opt_info = true;
+                flags.opt_info = true;
                 break; 
             case 'f':
                 opt_infile = true;
@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
                 }
                 break;
             case 's':
-                opt_symbolic = true;
+                flags.opt_symb = true;
                 break;
             case 'p':
                 opt_probability = true;
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
     // Init:
     init_sylvan();
     init_my_leaf(opt_probability);
-    if (opt_symbolic) {
+    if (flags.opt_symb) {
         init_sylvan_symb();
     }
     FILE *out = fopen(OUT_FILE".dot", "w");
@@ -128,19 +128,18 @@ int main(int argc, char *argv[])
         error_exit("Cannot open the output file.\n");
     }
     MTBDD circ;
-    int *bits_to_measure = NULL;
-    bool is_measure = false;
-    int n_qubits = 0;
+    sim_info_t info;
+    init_sim_info(&info);
 
     // Sim:
     struct timespec t_start, t_finish;
     double t_el;
     clock_gettime(CLOCK_MONOTONIC, &t_start); // Start the timer
 
-    bool sim_successful = sim_file(input, &circ, &n_qubits, &bits_to_measure, &is_measure, opt_symbolic);
+    bool sim_successful = sim_file(input, &circ, &flags, &info);
 
-    if (opt_measure && is_measure) {
-        measure_all(samples, measure_output, circ, n_qubits, bits_to_measure);
+    if (opt_measure && info.is_measure) {
+        measure_all(samples, measure_output, circ, info.n_qubits, info.bits_to_measure);
     }
 
     clock_gettime(CLOCK_MONOTONIC, &t_finish); // End the timer
@@ -159,14 +158,24 @@ int main(int argc, char *argv[])
     }
     lnum_map_clear();
 
-    t_el = t_finish.tv_sec - t_start.tv_sec + (t_finish.tv_nsec - t_start.tv_nsec) * 1.0e-9;
-    if (opt_info) {
+    t_el = get_time_el(t_start, t_finish);
+    if (flags.opt_info) {
         printf("Time=%.3gs\n", t_el);
         #if defined(__unix__) || defined(__APPLE__)
             printf("Peak Memory Usage=%ldkB\n", get_peak_mem());
         #else
             printf("Peak Memory Usage not supported for this OS.\n");
         #endif
+        if (info.n_loops > 0) {
+            printf("\nLoop time stats:\n");
+            for (size_t i = 0; i < info.n_loops; i++) {
+                printf("  Loop[%ld] - Total time=%.3gs", i, info.t_el_loop[i]);
+                if (flags.opt_symb) {
+                    printf(", Eval time=%.3gs", info.t_el_eval[i]);
+                }
+                printf("\n");
+            }
+        }
     }
 
     // Finish:
