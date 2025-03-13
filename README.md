@@ -10,7 +10,7 @@ It is written in C and utilizes the [Sylvan](https://trolando.github.io/sylvan/)
 Before trying to build this project, make sure to have `gmp` library (`libgmp-dev`) installed on your machine.
 Then you can download the remaining dependencies with:
 ```
-make install-deps
+make init
 ```
 You can then build the project with:
 ```
@@ -18,12 +18,9 @@ make
 ```
 
 ## Usage
-The simulator accepts path to the circuit file with `OpenQASM` format either as a program argument or from the standard input, such as:
+The simulator accepts input files in the `OpenQASM` format, several circuit files can be found in the `benchmarks` directory:
 ```
 ./MEDUSA --file benchmarks/no-measure/BernsteinVazirani/01.qasm 
-```
-```
-./MEDUSA <benchmarks/no-measure/BernsteinVazirani/01.qasm 
 ```
 You can also run the simulator with the flag `--info` to print runtime (wall-clock time) and peak physical memory usage to the standard output.
 MEDUSA also supports symbolic loop simulation which can be enabled using `--symbolic`. You can find more information about program options with `--help`.
